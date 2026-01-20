@@ -3,7 +3,7 @@
 ## Step 1: Prepare Repository
 
 ```bash
-cd /workspaces/sylhetlynews
+cd /workspaces/sylhetynews
 
 # Initialize git (if not already done)
 git init

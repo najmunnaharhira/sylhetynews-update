@@ -105,7 +105,7 @@ Open Firebase Console: https://console.firebase.google.com/
 
 ### Step 1: Install Dependencies (1 minute)
 ```bash
-cd /workspaces/sylhetlynews
+cd /workspaces/sylhetynews
 npm install
 ```
 

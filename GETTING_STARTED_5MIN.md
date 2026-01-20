@@ -4,7 +4,7 @@
 
 ### Step 1: Install & Start (2 minutes)
 ```bash
-cd /workspaces/sylhetlynews
+cd /workspaces/sylhetynews
 npm install
 npm run dev
 ```
