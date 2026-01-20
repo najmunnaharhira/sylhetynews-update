@@ -74,7 +74,7 @@ const PhotoCard = () => {
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 48px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("সিলেট ভিউ ২৪", 40, 80);
+      ctx.fillText("সিলেটি নিউজ", 40, 80);
 
       // Headline
       ctx.font = "bold 56px 'Hind Siliguri', sans-serif";
@@ -116,7 +116,7 @@ const PhotoCard = () => {
 
       // Website
       ctx.textAlign = "left";
-      ctx.fillText("sylhetview24.news", 40, size - 40);
+      ctx.fillText("sylhetynews.com", 40, size - 40);
 
       // Generate image URL
       const imageUrl = canvas.toDataURL("image/png");
@@ -143,7 +143,7 @@ const PhotoCard = () => {
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 48px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText("সিলেট ভিউ ২৪", 40, 80);
+      ctx.fillText("সিলেটি নিউজ", 40, 80);
 
       ctx.font = "bold 56px 'Hind Siliguri', sans-serif";
       const maxWidth = size - 80;
@@ -178,7 +178,7 @@ const PhotoCard = () => {
       ctx.textAlign = "right";
       ctx.fillText(selectedNews.date, size - 40, size - 40);
       ctx.textAlign = "left";
-      ctx.fillText("sylhetview24.news", 40, size - 40);
+      ctx.fillText("sylhetynews.com", 40, size - 40);
 
       const imageUrl = canvas.toDataURL("image/png");
       setGeneratedImage(imageUrl);
