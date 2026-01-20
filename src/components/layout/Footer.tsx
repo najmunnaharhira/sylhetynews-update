@@ -9,10 +9,10 @@ const Footer = () => {
           {/* About Section */}
           <div>
             <h3 className="text-xl font-bold font-bengali mb-4 text-primary">
-              সিলেট ভিউ ২৪
+              সিলেটি নিউজ
             </h3>
             <p className="text-sm font-bengali opacity-80 leading-relaxed">
-              সিলেট ভিউ ২৪ হলো সিলেটের একটি জনপ্রিয় অনলাইন সংবাদ পোর্টাল। আমরা সিলেট, বাংলাদেশ এবং আন্তর্জাতিক সব খবর প্রকাশ করি।
+              সিলেটি নিউজ হলো সিলেটের একটি জনপ্রিয় অনলাইন সংবাদ পোর্টাল। আমরা সিলেট, বাংলাদেশ এবং আন্তর্জাতিক সব খবর প্রকাশ করি।
             </p>
           </div>
 
@@ -57,7 +57,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 opacity-80">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                <span>info@sylhetview24.news</span>
+                <span>info@sylhetynews.com</span>
               </li>
             </ul>
             <div className="flex items-center gap-4 mt-4">
@@ -80,7 +80,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-background/20 mt-8 pt-6 text-center font-bengali text-sm opacity-60">
-          <p>© {new Date().getFullYear()} সিলেট ভিউ ২৪। সর্বস্বত্ব সংরক্ষিত।</p>
+          <p>© {new Date().getFullYear()} সিলেটি নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
       </div>
     </footer>
