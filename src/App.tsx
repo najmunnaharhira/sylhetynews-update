@@ -28,6 +28,8 @@ const App = () => (
             <Route path="/politics" element={<CategoryPage />} />
             <Route path="/expat" element={<CategoryPage />} />
             <Route path="/sports" element={<CategoryPage />} />
+            <Route path="/opinion" element={<CategoryPage />} />
+            <Route path="/others" element={<CategoryPage />} />
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/photocard" element={<PhotoCard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
