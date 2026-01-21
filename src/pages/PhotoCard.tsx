@@ -58,65 +58,71 @@ const PhotoCard = () => {
 
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      // Gradient overlay at bottom
-      const gradient = ctx.createLinearGradient(0, size * 0.4, 0, size);
-      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-      gradient.addColorStop(0.3, "rgba(0, 0, 0, 0.7)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0.95)");
+      // Premium gradient overlay - covers entire image
+      const gradient = ctx.createLinearGradient(0, 0, 0, size);
+      gradient.addColorStop(0, "rgba(15, 23, 42, 0.3)");
+      gradient.addColorStop(0.4, "rgba(15, 23, 42, 0.5)");
+      gradient.addColorStop(0.7, "rgba(15, 23, 42, 0.85)");
+      gradient.addColorStop(1, "rgba(15, 23, 42, 0.95)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, size, size);
 
-      // Red accent bar at top
-      ctx.fillStyle = "#cc0000";
-      ctx.fillRect(0, 0, size, 8);
-
-      // Logo text
+      // Logo at top-center
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 48px 'Hind Siliguri', sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("সিলেটি নিউজ", 40, 80);
+      ctx.font = "bold 52px 'Hind Siliguri', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("সিলেটি নিউজ", size / 2, 70);
+      
+      // Subtle line under logo
+      ctx.strokeStyle = "rgba(153, 27, 27, 0.8)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(size / 2 - 100, 90);
+      ctx.lineTo(size / 2 + 100, 90);
+      ctx.stroke();
 
-      // Headline
-      ctx.font = "bold 56px 'Hind Siliguri', sans-serif";
+      // Headline - positioned lower
+      ctx.font = "bold 58px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "left";
 
-      const maxWidth = size - 80;
-      const lineHeight = 72;
+      const maxWidth = size - 100;
+      const lineHeight = 76;
       const words = selectedNews.title.split(" ");
       let line = "";
-      let y = size * 0.65;
+      let y = size * 0.58;
 
       words.forEach((word) => {
         const testLine = line + word + " ";
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== "") {
-          ctx.fillText(line.trim(), 40, y);
+          ctx.fillText(line.trim(), 50, y);
           line = word + " ";
           y += lineHeight;
         } else {
           line = testLine;
         }
       });
-      ctx.fillText(line.trim(), 40, y);
+      ctx.fillText(line.trim(), 50, y);
 
-      // Category tag
-      ctx.fillStyle = "#cc0000";
-      const categoryY = y + 60;
-      const categoryWidth = ctx.measureText(selectedNews.categoryBn).width + 40;
-      ctx.fillRect(40, categoryY - 30, categoryWidth, 44);
+      // Category tag with premium styling
+      const categoryY = y + 70;
+      ctx.fillStyle = "#991B1B";
+      const categoryWidth = ctx.measureText(selectedNews.categoryBn).width + 50;
+      ctx.beginPath();
+      ctx.roundRect(50, categoryY - 32, categoryWidth, 48, 4);
+      ctx.fill();
       ctx.fillStyle = "#ffffff";
       ctx.font = "600 28px 'Hind Siliguri', sans-serif";
-      ctx.fillText(selectedNews.categoryBn, 60, categoryY);
+      ctx.textAlign = "left";
+      ctx.fillText(selectedNews.categoryBn, 75, categoryY);
 
-      // Date
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      // Bottom bar with date and website
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
       ctx.font = "24px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(selectedNews.date, size - 40, size - 40);
-
-      // Website
+      ctx.fillText(selectedNews.date, size - 50, size - 45);
       ctx.textAlign = "left";
-      ctx.fillText("sylhetynews.com", 40, size - 40);
+      ctx.fillText("sylhetynews.com", 50, size - 45);
 
       // Generate image URL
       const imageUrl = canvas.toDataURL("image/png");
@@ -126,59 +132,67 @@ const PhotoCard = () => {
 
     img.onerror = () => {
       // Fallback with solid color if image fails
-      ctx.fillStyle = "#333333";
-      ctx.fillRect(0, 0, size, size * 0.6);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(0, 0, size, size);
 
-      // Continue with rest of the design
-      const gradient = ctx.createLinearGradient(0, size * 0.4, 0, size);
-      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-      gradient.addColorStop(0.3, "rgba(0, 0, 0, 0.7)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0.95)");
+      // Premium gradient overlay
+      const gradient = ctx.createLinearGradient(0, 0, 0, size);
+      gradient.addColorStop(0, "rgba(15, 23, 42, 0.7)");
+      gradient.addColorStop(1, "rgba(15, 23, 42, 0.95)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, size, size);
 
-      ctx.fillStyle = "#cc0000";
-      ctx.fillRect(0, 0, size, 8);
-
+      // Logo at top-center
       ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 48px 'Hind Siliguri', sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("সিলেটি নিউজ", 40, 80);
+      ctx.font = "bold 52px 'Hind Siliguri', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("সিলেটি নিউজ", size / 2, 70);
+      
+      // Subtle line under logo
+      ctx.strokeStyle = "rgba(153, 27, 27, 0.8)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(size / 2 - 100, 90);
+      ctx.lineTo(size / 2 + 100, 90);
+      ctx.stroke();
 
-      ctx.font = "bold 56px 'Hind Siliguri', sans-serif";
-      const maxWidth = size - 80;
-      const lineHeight = 72;
+      ctx.font = "bold 58px 'Hind Siliguri', sans-serif";
+      ctx.textAlign = "left";
+      const maxWidth = size - 100;
+      const lineHeight = 76;
       const words = selectedNews.title.split(" ");
       let line = "";
-      let y = size * 0.65;
+      let y = size * 0.58;
 
       words.forEach((word) => {
         const testLine = line + word + " ";
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && line !== "") {
-          ctx.fillText(line.trim(), 40, y);
+          ctx.fillText(line.trim(), 50, y);
           line = word + " ";
           y += lineHeight;
         } else {
           line = testLine;
         }
       });
-      ctx.fillText(line.trim(), 40, y);
+      ctx.fillText(line.trim(), 50, y);
 
-      ctx.fillStyle = "#cc0000";
-      const categoryY = y + 60;
-      const categoryWidth = ctx.measureText(selectedNews.categoryBn).width + 40;
-      ctx.fillRect(40, categoryY - 30, categoryWidth, 44);
+      const categoryY = y + 70;
+      ctx.fillStyle = "#991B1B";
+      const categoryWidth = ctx.measureText(selectedNews.categoryBn).width + 50;
+      ctx.beginPath();
+      ctx.roundRect(50, categoryY - 32, categoryWidth, 48, 4);
+      ctx.fill();
       ctx.fillStyle = "#ffffff";
       ctx.font = "600 28px 'Hind Siliguri', sans-serif";
-      ctx.fillText(selectedNews.categoryBn, 60, categoryY);
+      ctx.fillText(selectedNews.categoryBn, 75, categoryY);
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
       ctx.font = "24px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "right";
-      ctx.fillText(selectedNews.date, size - 40, size - 40);
+      ctx.fillText(selectedNews.date, size - 50, size - 45);
       ctx.textAlign = "left";
-      ctx.fillText("sylhetynews.com", 40, size - 40);
+      ctx.fillText("sylhetynews.com", 50, size - 45);
 
       const imageUrl = canvas.toDataURL("image/png");
       setGeneratedImage(imageUrl);

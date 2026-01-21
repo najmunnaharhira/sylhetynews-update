@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Youtube, Mail, MapPin, Calendar } from "lucide-react";
+import { Facebook, Twitter, Youtube, Mail, Thermometer, Calendar } from "lucide-react";
 
 const TopBar = () => {
   const today = new Date();
@@ -10,16 +10,16 @@ const TopBar = () => {
   });
 
   return (
-    <div className="bg-secondary border-b border-news-border">
+    <div className="bg-news-slate text-white/90">
       <div className="container mx-auto px-4 py-2 flex flex-wrap items-center justify-between text-sm">
-        <div className="flex items-center gap-4 text-news-subtext">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-4 h-4" />
-            <span>{banglaDate}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-4 h-4 text-white/70" />
+            <span className="font-bengali">{banglaDate}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            <span>সিলেট, বাংলাদেশ</span>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <Thermometer className="w-4 h-4 text-white/70" />
+            <span className="font-bengali">সিলেট ২৮°সে</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -27,28 +27,28 @@ const TopBar = () => {
             href="https://www.facebook.com/share/1FdPD4PdC9/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-news-subtext hover:text-primary transition-colors"
+            className="text-white/80 hover:text-white transition-colors"
             aria-label="Facebook"
           >
             <Facebook className="w-4 h-4" />
           </a>
           <a
             href="#"
-            className="text-news-subtext hover:text-primary transition-colors"
+            className="text-white/80 hover:text-white transition-colors"
             aria-label="Twitter"
           >
             <Twitter className="w-4 h-4" />
           </a>
           <a
             href="#"
-            className="text-news-subtext hover:text-primary transition-colors"
+            className="text-white/80 hover:text-white transition-colors"
             aria-label="Youtube"
           >
             <Youtube className="w-4 h-4" />
           </a>
           <a
-            href="mailto:info@sylhetview24.news"
-            className="text-news-subtext hover:text-primary transition-colors"
+            href="mailto:info@sylhetynews.com"
+            className="text-white/80 hover:text-white transition-colors"
             aria-label="Email"
           >
             <Mail className="w-4 h-4" />

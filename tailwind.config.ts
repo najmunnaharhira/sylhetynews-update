@@ -63,8 +63,10 @@ export default {
         news: {
           red: "hsl(var(--news-red))",
           "dark-red": "hsl(var(--news-dark-red))",
+          slate: "hsl(var(--news-slate))",
           headline: "hsl(var(--news-headline))",
           subtext: "hsl(var(--news-subtext))",
+          body: "hsl(var(--news-body))",
           border: "hsl(var(--news-border))",
           highlight: "hsl(var(--news-highlight))",
         },
