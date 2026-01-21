@@ -1,19 +1,36 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
-import { LogOut, Plus, Settings } from 'lucide-react';
+import { 
+  LogOut, 
+  Plus, 
+  Settings, 
+  Newspaper, 
+  FolderOpen, 
+  Home,
+  Menu,
+  X
+} from 'lucide-react';
 import AdminNewsForm from '../components/admin/AdminNewsForm';
 import AdminNewsList from '../components/admin/AdminNewsList';
 import AdminCategoryManager from '../components/admin/AdminCategoryManager';
 
 type AdminTab = 'news' | 'categories' | 'settings';
 
+const sidebarItems = [
+  { id: 'news' as AdminTab, name: 'সংবাদ ব্যবস্থাপনা', icon: Newspaper },
+  { id: 'categories' as AdminTab, name: 'ক্যাটাগরি', icon: FolderOpen },
+  { id: 'settings' as AdminTab, name: 'সেটিংস', icon: Settings },
+];
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, userData, isAdmin, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>('news');
   const [showForm, setShowForm] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !isAdmin) {
@@ -23,8 +40,8 @@ export default function AdminDashboard() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Loading...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <p className="text-news-subtext font-bengali">লোড হচ্ছে...</p>
       </div>
     );
   }
@@ -35,108 +52,143 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-sm text-gray-600">
-              Welcome, {userData?.displayName || user.email}
+    <div className="min-h-screen bg-muted flex">
+      {/* Sidebar */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-news-slate text-white transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-white/10">
+            <Link to="/" className="flex items-center gap-2 text-white hover:text-primary transition-colors">
+              <Home className="w-5 h-5" />
+              <span className="font-bengali font-bold">সিলেটি নিউজ</span>
+            </Link>
+            <p className="text-xs text-white/60 font-bengali mt-1">অ্যাডমিন প্যানেল</p>
+          </div>
+
+          {/* User Info */}
+          <div className="p-4 border-b border-white/10">
+            <p className="text-sm text-white/80 font-bengali truncate">
+              {userData?.displayName || user.email}
+            </p>
+            <p className="text-xs text-white/50 font-bengali">
+              {userData?.role === 'admin' ? 'অ্যাডমিন' : 'এডিটর'}
             </p>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="flex gap-2"
-          >
-            <LogOut size={18} />
-            Logout
-          </Button>
-        </div>
-      </header>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 flex gap-8">
-          <button
-            onClick={() => setActiveTab('news')}
-            className={`py-4 font-medium border-b-2 transition-colors ${
-              activeTab === 'news'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Manage News
-          </button>
-          <button
-            onClick={() => setActiveTab('categories')}
-            className={`py-4 font-medium border-b-2 transition-colors ${
-              activeTab === 'categories'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Categories
-          </button>
-          {userData?.role === 'admin' && (
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`py-4 font-medium border-b-2 transition-colors flex gap-2 items-center ${
-                activeTab === 'settings'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
-              }`}
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-md font-bengali text-sm transition-colors ${
+                  activeTab === item.id
+                    ? 'bg-primary text-white'
+                    : 'text-white/80 hover:bg-white/10'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.name}
+              </button>
+            ))}
+          </nav>
+
+          {/* Logout Button */}
+          <div className="p-4 border-t border-white/10">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full flex gap-2 bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white"
             >
-              <Settings size={18} />
-              Settings
-            </button>
-          )}
+              <LogOut size={18} />
+              <span className="font-bengali">লগআউট</span>
+            </Button>
+          </div>
         </div>
-      </div>
+      </aside>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {activeTab === 'news' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">News Articles</h2>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header */}
+        <header className="bg-card border-b border-news-border sticky top-0 z-30">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 hover:bg-muted rounded-md"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <h1 className="text-lg font-bold text-news-headline font-bengali">
+                {sidebarItems.find(item => item.id === activeTab)?.name}
+              </h1>
+            </div>
+            {activeTab === 'news' && (
               <Button
                 onClick={() => setShowForm(!showForm)}
-                className="flex gap-2 bg-indigo-600 hover:bg-indigo-700"
+                className="flex gap-2"
+                size="sm"
               >
-                <Plus size={18} />
-                {showForm ? 'Cancel' : 'New Article'}
+                {showForm ? <X size={16} /> : <Plus size={16} />}
+                <span className="hidden sm:inline font-bengali">
+                  {showForm ? 'বাতিল' : 'নতুন সংবাদ'}
+                </span>
               </Button>
-            </div>
-
-            {showForm && (
-              <div className="mb-8">
-                <AdminNewsForm onSuccess={() => setShowForm(false)} />
-              </div>
             )}
-
-            <AdminNewsList />
           </div>
-        )}
+        </header>
 
-        {activeTab === 'categories' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Manage Categories
-            </h2>
-            <AdminCategoryManager />
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Settings</h2>
-            <div className="bg-white rounded-lg p-6">
-              <p className="text-gray-600">Settings page coming soon...</p>
+        {/* Page Content */}
+        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+          {activeTab === 'news' && (
+            <div className="space-y-6">
+              {showForm && (
+                <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
+                  <h2 className="text-lg font-bold text-news-headline font-bengali mb-4">
+                    নতুন সংবাদ যোগ করুন
+                  </h2>
+                  <AdminNewsForm onSuccess={() => setShowForm(false)} />
+                </div>
+              )}
+              <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
+                <AdminNewsList />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {activeTab === 'categories' && (
+            <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
+              <AdminCategoryManager />
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
+              <h2 className="text-lg font-bold text-news-headline font-bengali mb-4">
+                সেটিংস
+              </h2>
+              <p className="text-news-subtext font-bengali">
+                সেটিংস পেজ শীঘ্রই আসছে...
+              </p>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
