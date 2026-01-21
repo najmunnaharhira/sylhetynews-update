@@ -101,6 +101,17 @@ export const newsData: NewsItem[] = [
     date: "১৩ জানুয়ারি, ২০২৬",
     author: "নাজমুল ইসলাম",
   },
+  {
+    id: "9",
+    title: "সিলেটে নতুন পর্যটন উৎসবের ঘোষণা",
+    excerpt: "সিলেটে পর্যটন খাতকে উৎসাহিত করতে নতুন উৎসবের ঘোষণা দেওয়া হয়েছে।",
+    content: "সিলেটে পর্যটন খাতকে উৎসাহিত করতে নতুন উৎসবের ঘোষণা দেওয়া হয়েছে।",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80",
+    category: "others",
+    categoryBn: "অন্যান্য",
+    date: "১২ জানুয়ারি, ২০২৬",
+    author: "সালেহা ইসলাম",
+  },
 ];
 
 export const getNewsByCategory = (category: string) => {

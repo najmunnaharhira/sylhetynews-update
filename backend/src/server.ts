@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
-import adminRoutes from './routes/admin.js';
-import newsRoutes from './routes/news.js';
-import authRoutes from './routes/auth.js';
+import adminRoutes from './routes/admin';
+import newsRoutes from './routes/news';
+import authRoutes from './routes/auth';
 
 dotenv.config();
 

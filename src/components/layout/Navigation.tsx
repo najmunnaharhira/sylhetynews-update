@@ -10,6 +10,7 @@ const navItems = [
   { name: "প্রবাস", path: "/expat" },
   { name: "খেলাধুলা", path: "/sports" },
   { name: "মতামত", path: "/opinion" },
+  { name: "অন্যান্য", path: "/others" },
   { name: "ফটোকার্ড", path: "/photocard" },
 ];
 

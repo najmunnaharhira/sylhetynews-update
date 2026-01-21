@@ -6,6 +6,7 @@ import { Card } from '../ui/card';
 import { AlertCircle, Upload, X } from 'lucide-react';
 import { newsService, imageService, categoryService } from '../../services/firebaseService';
 import { NewsArticle, NewsCategory } from '../../types/news';
+import { firebaseInitError, firebaseReady } from '../../config/firebase';
 
 interface AdminNewsFormProps {
   news?: NewsArticle;
@@ -38,6 +39,10 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
 
   const loadCategories = async () => {
     try {
+      if (!firebaseReady) {
+        setError(firebaseInitError || 'Firebase is not configured.');
+        return;
+      }
       const cats = await categoryService.getAllCategories();
       setCategories(cats);
     } catch (err) {
@@ -62,6 +67,9 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
       setError('');
       setSuccess('');
       setLoading(true);
+      if (!firebaseReady) {
+        throw new Error(firebaseInitError || 'Firebase is not configured.');
+      }
 
       let imageUrl = imagePreview;
 

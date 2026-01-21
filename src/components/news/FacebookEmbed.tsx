@@ -17,8 +17,16 @@ const FacebookEmbed = () => {
 
   return (
     <div className="bg-card border border-news-border rounded-sm">
-      <div className="bg-primary text-primary-foreground px-4 py-2">
+      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between">
         <h2 className="font-bengali font-semibold">ফেসবুক পেজ</h2>
+        <a
+          href="https://www.facebook.com/share/1FdPD4PdC9/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-primary-foreground/90 hover:text-white transition-colors"
+        >
+          ভিজিট করুন
+        </a>
       </div>
       <div className="p-4">
         <div
@@ -26,7 +34,7 @@ const FacebookEmbed = () => {
           data-href="https://www.facebook.com/share/1FdPD4PdC9/"
           data-tabs="timeline"
           data-width=""
-          data-height="400"
+          data-height="520"
           data-small-header="true"
           data-adapt-container-width="true"
           data-hide-cover="false"

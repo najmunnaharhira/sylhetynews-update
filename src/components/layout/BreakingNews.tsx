@@ -6,8 +6,17 @@ const breakingNews = [
   "আন্তর্জাতিক ক্রিকেটে বাংলাদেশের ঐতিহাসিক জয়",
 ];
 
+import { useEffect, useState } from "react";
+
 const BreakingNews = () => {
-  const duplicatedNews = [...breakingNews, ...breakingNews];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % breakingNews.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="bg-muted border-b border-news-border">
@@ -16,16 +25,21 @@ const BreakingNews = () => {
           সংবাদ শিরোনাম
         </div>
         <div className="overflow-hidden flex-1 py-2">
-          <div className="ticker-content">
-            {duplicatedNews.map((news, index) => (
-              <span
-                key={index}
-                className="inline-block mx-6 text-news-headline font-bengali text-sm"
-              >
-                <span className="text-primary mr-2">●</span>
-                {news}
-              </span>
-            ))}
+          <div className="h-7 overflow-hidden">
+            <div
+              className="transition-transform duration-500"
+              style={{ transform: `translateY(-${index * 28}px)` }}
+            >
+              {breakingNews.map((news, itemIndex) => (
+                <div
+                  key={itemIndex}
+                  className="flex items-center gap-3 text-news-headline font-bengali text-sm h-7"
+                >
+                  <span className="text-primary">●</span>
+                  <span>{news}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

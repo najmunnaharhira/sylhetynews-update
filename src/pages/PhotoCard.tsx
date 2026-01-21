@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import Layout from "@/components/layout/Layout";
-import { newsData, NewsItem } from "@/data/newsData";
+import { newsData } from "@/data/newsData";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,6 +16,11 @@ const PhotoCard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [taglineBn, setTaglineBn] = useState("সত্যের পথে অবিচল");
+  const [taglineEn, setTaglineEn] = useState("Unwavering on the path of truth");
+  const [contactNumber, setContactNumber] = useState("");
+  const [detailsBn, setDetailsBn] = useState("");
+  const [detailsEn, setDetailsEn] = useState("");
 
   const selectedNews = newsData.find((n) => n.id === selectedNewsId);
 
@@ -72,6 +77,12 @@ const PhotoCard = () => {
       ctx.font = "bold 52px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("সিলেটি নিউজ", size / 2, 70);
+      ctx.font = "24px 'Hind Siliguri', sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillText(taglineBn, size / 2, 104);
+      ctx.font = "20px 'Inter', sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.fillText(taglineEn, size / 2, 132);
       
       // Subtle line under logo
       ctx.strokeStyle = "rgba(153, 27, 27, 0.8)";
@@ -104,8 +115,21 @@ const PhotoCard = () => {
       });
       ctx.fillText(line.trim(), 50, y);
 
+      // Details lines (optional)
+      const detailsY = y + 48;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.font = "22px 'Hind Siliguri', sans-serif";
+      ctx.textAlign = "left";
+      if (detailsBn) {
+        ctx.fillText(detailsBn, 50, detailsY);
+      }
+      ctx.font = "20px 'Inter', sans-serif";
+      if (detailsEn) {
+        ctx.fillText(detailsEn, 50, detailsY + 28);
+      }
+
       // Category tag with premium styling
-      const categoryY = y + 70;
+      const categoryY = y + (detailsBn || detailsEn ? 110 : 70);
       ctx.fillStyle = "#991B1B";
       const categoryWidth = ctx.measureText(selectedNews.categoryBn).width + 50;
       ctx.beginPath();
@@ -116,12 +140,16 @@ const PhotoCard = () => {
       ctx.textAlign = "left";
       ctx.fillText(selectedNews.categoryBn, 75, categoryY);
 
-      // Bottom bar with date and website
+      // Bottom bar with date, contact, and website
       ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
       ctx.font = "24px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "right";
       ctx.fillText(selectedNews.date, size - 50, size - 45);
       ctx.textAlign = "left";
+      const contactText = contactNumber ? `যোগাযোগ: ${contactNumber}` : "";
+      if (contactText) {
+        ctx.fillText(contactText, 50, size - 75);
+      }
       ctx.fillText("sylhetynews.com", 50, size - 45);
 
       // Generate image URL
@@ -147,6 +175,12 @@ const PhotoCard = () => {
       ctx.font = "bold 52px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("সিলেটি নিউজ", size / 2, 70);
+      ctx.font = "24px 'Hind Siliguri', sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillText(taglineBn, size / 2, 104);
+      ctx.font = "20px 'Inter', sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.fillText(taglineEn, size / 2, 132);
       
       // Subtle line under logo
       ctx.strokeStyle = "rgba(153, 27, 27, 0.8)";
@@ -177,7 +211,19 @@ const PhotoCard = () => {
       });
       ctx.fillText(line.trim(), 50, y);
 
-      const categoryY = y + 70;
+      const detailsY = y + 48;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.font = "22px 'Hind Siliguri', sans-serif";
+      ctx.textAlign = "left";
+      if (detailsBn) {
+        ctx.fillText(detailsBn, 50, detailsY);
+      }
+      ctx.font = "20px 'Inter', sans-serif";
+      if (detailsEn) {
+        ctx.fillText(detailsEn, 50, detailsY + 28);
+      }
+
+      const categoryY = y + (detailsBn || detailsEn ? 110 : 70);
       ctx.fillStyle = "#991B1B";
       const categoryWidth = ctx.measureText(selectedNews.categoryBn).width + 50;
       ctx.beginPath();
@@ -192,6 +238,10 @@ const PhotoCard = () => {
       ctx.textAlign = "right";
       ctx.fillText(selectedNews.date, size - 50, size - 45);
       ctx.textAlign = "left";
+      const contactText = contactNumber ? `যোগাযোগ: ${contactNumber}` : "";
+      if (contactText) {
+        ctx.fillText(contactText, 50, size - 75);
+      }
       ctx.fillText("sylhetynews.com", 50, size - 45);
 
       const imageUrl = canvas.toDataURL("image/png");
@@ -225,6 +275,68 @@ const PhotoCard = () => {
               </h2>
 
               <div className="space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      ট্যাগলাইন (বাংলা)
+                    </label>
+                    <input
+                      type="text"
+                      value={taglineBn}
+                      onChange={(e) => setTaglineBn(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                      placeholder="সত্যের পথে অবিচল"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-news-subtext">
+                      Tagline (English)
+                    </label>
+                    <input
+                      type="text"
+                      value={taglineEn}
+                      onChange={(e) => setTaglineEn(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                      placeholder="Unwavering on the path of truth"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      যোগাযোগ নম্বর (ঐচ্ছিক)
+                    </label>
+                    <input
+                      type="text"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                      placeholder="০১XXXXXXXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      সংক্ষিপ্ত তথ্য (বাংলা)
+                    </label>
+                    <input
+                      type="text"
+                      value={detailsBn}
+                      onChange={(e) => setDetailsBn(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                      placeholder="সংক্ষিপ্ত তথ্য লিখুন"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-news-subtext">
+                      Short details (English)
+                    </label>
+                    <input
+                      type="text"
+                      value={detailsEn}
+                      onChange={(e) => setDetailsEn(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                      placeholder="Short detail line"
+                    />
+                  </div>
+                </div>
                 <Select
                   value={selectedNewsId}
                   onValueChange={setSelectedNewsId}

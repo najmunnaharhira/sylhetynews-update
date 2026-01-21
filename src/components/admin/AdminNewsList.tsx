@@ -6,11 +6,12 @@ import { newsService } from '../../services/firebaseService';
 import { NewsArticle } from '../../types/news';
 import AdminNewsForm from './AdminNewsForm';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { db, firebaseInitError, firebaseReady } from '../../config/firebase';
 
 export default function AdminNewsList() {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsArticle | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -21,6 +22,12 @@ export default function AdminNewsList() {
   const loadNews = async () => {
     try {
       setLoading(true);
+      if (!firebaseReady || !db) {
+        setFirebaseError(
+          firebaseInitError || 'Firebase is not configured for this environment.'
+        );
+        return;
+      }
       // Get all news (including unpublished for admin)
       const q = query(collection(db, 'news'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
@@ -64,6 +71,14 @@ export default function AdminNewsList() {
 
   if (loading) {
     return <div className="text-center py-8 text-gray-600">Loading...</div>;
+  }
+
+  if (firebaseError) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <p className="text-gray-700">{firebaseError}</p>
+      </div>
+    );
   }
 
   if (editingId) {

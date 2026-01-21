@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Facebook, Twitter, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Mail, Phone, MapPin, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -69,10 +69,13 @@ const Footer = () => {
               >
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all">
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all">
+              <a
+                href="https://youtube.com/@sylhetynews?si=6bOtmMjZYO3Kn1SF"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all"
+                aria-label="Sylhety News YouTube channel"
+              >
                 <Youtube className="w-4 h-4" />
               </a>
             </div>
