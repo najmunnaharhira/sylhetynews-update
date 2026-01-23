@@ -27,18 +27,18 @@ const sidebarItems = [
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, userData, isAdmin, logout } = useAuth();
+  const { user, userData, isAdmin, logout, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>('news');
   const [showForm, setShowForm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!user || !isAdmin) {
+    if (!loading && (!user || !isAdmin)) {
       navigate('/admin/login');
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, loading, navigate]);
 
-  if (!user) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <p className="text-news-subtext font-bengali">লোড হচ্ছে...</p>
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
           {/* User Info */}
           <div className="p-4 border-b border-white/10">
             <p className="text-sm text-white/80 font-bengali truncate">
-              {userData?.displayName || user.email}
+              {userData?.displayName || user?.email}
             </p>
             <p className="text-xs text-white/50 font-bengali">
               {userData?.role === 'admin' ? 'অ্যাডমিন' : 'এডিটর'}

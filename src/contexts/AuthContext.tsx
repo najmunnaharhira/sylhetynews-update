@@ -47,8 +47,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsAdmin(data.role === 'admin' || data.role === 'editor');
           } else {
             // User doesn't exist in Firestore, create basic entry
-            const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
-            const role = adminEmails.includes(firebaseUser.email)
+            const adminEmails = (() => {
+              const envValue = import.meta.env.VITE_ADMIN_EMAILS ?? '';
+              const list = envValue
+                .split(',')
+                .map((value) => value.trim())
+                .filter(Boolean);
+              return list.length ? list : ['sylhetynews.com@gmail.com'];
+            })();
+            const role = adminEmails.includes(firebaseUser.email || '')
               ? 'admin'
               : 'viewer';
 
