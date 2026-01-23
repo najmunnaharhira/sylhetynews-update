@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/:id/like', async (req, res) => {
-  const sessionId = req.header('x-session-id') || req.ip;
+  const sessionId = req.header('x-session-id') ?? req.ip ?? 'anonymous';
   const opinion = await Opinion.findById(req.params.id);
   if (!opinion) {
     return res.status(404).json({ error: 'Opinion not found' });
