@@ -1,3 +1,0 @@
-module.exports=[78748,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(26438);a.n(d("[project]/OneDrive/Documents/Chat App/sylhetlynews/admin/node_modules/next/dist/client/components/builtin/global-error.js <module evaluation>"))},25721,(a,b,c)=>{let{createClientModuleProxy:d}=a.r(26438);a.n(d("[project]/OneDrive/Documents/Chat App/sylhetlynews/admin/node_modules/next/dist/client/components/builtin/global-error.js"))},34676,a=>{"use strict";a.i(78748);var b=a.i(25721);a.n(b)}];
-
-//# sourceMappingURL=95a12_next_dist_client_components_builtin_global-error_1c52d34e.js.map

@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Dell/OneDrive/Documents/Chat%20App/sylhetlynews/admin/src/app/page.tsx"],"sourcesContent":["import Link from \"next/link\";\r\n\r\nexport default function HomePage() {\r\n  return (\r\n    <main style={{ padding: \"48px\", textAlign: \"center\" }}>\r\n      <h1>Admin Panel</h1>\r\n      <p style={{ color: \"#64748b\" }}>Go to the admin login page.</p>\r\n      <Link\r\n        href=\"/admin/login\"\r\n        style={{\r\n          display: \"inline-block\",\r\n          marginTop: \"16px\",\r\n          padding: \"10px 18px\",\r\n          background: \"#4f46e5\",\r\n          color: \"#fff\",\r\n          borderRadius: \"8px\",\r\n        }}\r\n      >\r\n        Open Admin Login\r\n      </Link>\r\n    </main>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBACE,6SAAC;QAAK,OAAO;YAAE,SAAS;YAAQ,WAAW;QAAS;;0BAClD,6SAAC;0BAAG;;;;;;0BACJ,6SAAC;gBAAE,OAAO;oBAAE,OAAO;gBAAU;0BAAG;;;;;;0BAChC,6SAAC,yPAAI;gBACH,MAAK;gBACL,OAAO;oBACL,SAAS;oBACT,WAAW;oBACX,SAAS;oBACT,YAAY;oBACZ,OAAO;oBACP,cAAc;gBAChB;0BACD;;;;;;;;;;;;AAKP"}}]
-}
