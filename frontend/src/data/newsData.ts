@@ -6,6 +6,7 @@ export interface NewsItem {
   image: string;
   category: string;
   categoryBn: string;
+  district: string;
   date: string;
   author: string;
   featured?: boolean;
@@ -20,6 +21,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80",
     category: "sylhet",
     categoryBn: "সিলেট",
+    district: "sylhet",
     date: "২০ জানুয়ারি, ২০২৬",
     author: "রহিম উদ্দিন",
     featured: true,
@@ -32,6 +34,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",
     category: "national",
     categoryBn: "জাতীয়",
+    district: "",
     date: "১৯ জানুয়ারি, ২০২৬",
     author: "ফাতেমা বেগম",
   },
@@ -43,6 +46,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800&q=80",
     category: "expat",
     categoryBn: "প্রবাস",
+    district: "",
     date: "১৮ জানুয়ারি, ২০২৬",
     author: "আব্দুল করিম",
   },
@@ -54,6 +58,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
     category: "sports",
     categoryBn: "খেলাধুলা",
+    district: "",
     date: "১৭ জানুয়ারি, ২০২৬",
     author: "মাহমুদ হাসান",
   },
@@ -65,6 +70,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80",
     category: "sylhet",
     categoryBn: "সিলেট",
+    district: "sylhet",
     date: "১৬ জানুয়ারি, ২০২৬",
     author: "সাবরিনা আক্তার",
   },
@@ -76,6 +82,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&q=80",
     category: "politics",
     categoryBn: "রাজনীতি",
+    district: "",
     date: "১৫ জানুয়ারি, ২০২৬",
     author: "আনিসুর রহমান",
   },
@@ -87,6 +94,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",
     category: "sylhet",
     categoryBn: "সিলেট",
+    district: "sylhet",
     date: "১৪ জানুয়ারি, ২০২৬",
     author: "তানভীর আহমেদ",
   },
@@ -98,6 +106,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80",
     category: "expat",
     categoryBn: "প্রবাস",
+    district: "",
     date: "১৩ জানুয়ারি, ২০২৬",
     author: "নাজমুল ইসলাম",
   },
@@ -109,6 +118,7 @@ export const newsData: NewsItem[] = [
     image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800&q=80",
     category: "others",
     categoryBn: "অন্যান্য",
+    district: "",
     date: "১২ জানুয়ারি, ২০২৬",
     author: "সালেহা ইসলাম",
   },
@@ -116,6 +126,10 @@ export const newsData: NewsItem[] = [
 
 export const getNewsByCategory = (category: string) => {
   return newsData.filter((news) => news.category === category);
+};
+
+export const getNewsByDistrict = (district: string) => {
+  return newsData.filter((news) => news.district === district);
 };
 
 export const getFeaturedNews = () => {

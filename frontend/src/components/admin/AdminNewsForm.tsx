@@ -7,6 +7,7 @@ import { AlertCircle, Upload, X } from 'lucide-react';
 import { newsService, imageService, categoryService } from '../../services/firebaseService';
 import { NewsArticle, NewsCategory } from '../../types/news';
 import { firebaseInitError, firebaseReady } from '../../config/firebase';
+import { sylhetDistricts } from '@/data/districts';
 
 interface AdminNewsFormProps {
   news?: NewsArticle;
@@ -20,6 +21,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
       content: '',
       summary: '',
       category: '',
+      district: '',
       author: '',
       featured: false,
       tags: [] as string[],
@@ -83,6 +85,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         content: data.content,
         summary: data.summary,
         category: data.category,
+        district: data.district,
         author: data.author,
         imageUrl,
         featured: data.featured || false,
@@ -236,6 +239,24 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
           {errors.category && (
             <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
           )}
+        </div>
+
+        {/* District */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            District
+          </label>
+          <select
+            {...register('district')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">Select a district</option>
+            {sylhetDistricts.map((district) => (
+              <option key={district.id} value={district.id}>
+                {district.nameBn}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Author */}

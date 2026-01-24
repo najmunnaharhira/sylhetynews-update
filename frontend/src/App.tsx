@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import NewsDetail from "./pages/NewsDetail";
 import PhotoCard from "./pages/PhotoCard";
+import Districts from "./pages/Districts";
+import DistrictPage from "./pages/DistrictPage";
+import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -32,6 +35,9 @@ const App = () => (
             <Route path="/others" element={<CategoryPage />} />
             <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/photocard" element={<PhotoCard />} />
+            <Route path="/districts" element={<Districts />} />
+            <Route path="/district/:district" element={<DistrictPage />} />
+            <Route path="/team" element={<Team />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

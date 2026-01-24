@@ -12,7 +12,7 @@ const Footer = () => {
               সিলেটি নিউজ
             </h3>
             <p className="text-sm font-bengali text-white/80 leading-relaxed">
-              সিলেটি নিউজ হলো সিলেটের একটি জনপ্রিয় অনলাইন সংবাদ পোর্টাল। আমরা সিলেট, বাংলাদেশ এবং আন্তর্জাতিক সব খবর প্রকাশ করি।
+              সিলেটি নিউজ হলো উত্তর সিলেটের জনপ্রিয় অনলাইন সংবাদ পোর্টাল। আমরা সিলেট, বাংলাদেশ এবং আন্তর্জাতিক সব খবর প্রকাশ করি।
             </p>
           </div>
 
@@ -40,6 +40,16 @@ const Footer = () => {
                   ফটোকার্ড জেনারেটর
                 </Link>
               </li>
+              <li>
+                <Link to="/districts" className="text-white/80 hover:text-primary transition-colors">
+                  জেলা
+                </Link>
+              </li>
+              <li>
+                <Link to="/team" className="text-white/80 hover:text-primary transition-colors">
+                  টিম
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -47,17 +57,37 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold font-bengali mb-4 text-white">যোগাযোগ</h3>
             <ul className="space-y-3 font-bengali text-sm">
+              <li className="text-white/80">
+                উপদেষ্টা: ড. জিয়াউর রহমান
+              </li>
+              <li className="text-white/80">
+                সম্পাদক ও প্রকাশক: রুহুল আমিন বাবুল
+              </li>
+              <li className="text-white/80">
+                নির্বাহী সম্পাদক: মাহমুদুল হাসান নাঈম
+              </li>
               <li className="flex items-center gap-2 text-white/80">
                 <MapPin className="w-4 h-4 flex-shrink-0 text-primary" />
-                <span>সিলেট, বাংলাদেশ</span>
+                <span>অফিস: আখলু মিয়া মার্কেট, কোম্পানীগঞ্জ, সিলেট।</span>
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Phone className="w-4 h-4 flex-shrink-0 text-primary" />
-                <span>+৮৮০ ১৭১২ ৩৪৫ ৬৭৮</span>
+                <span>মোবাইল: +৮৮০১৬২০-৭৫৬৮২৭</span>
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Mail className="w-4 h-4 flex-shrink-0 text-primary" />
-                <span>info@sylhetynews.com</span>
+                <span>sylhetynews.com@gmail.com</span>
+              </li>
+              <li className="text-white/80">
+                ফেসবুক গ্রুপ:{" "}
+                <a
+                  href="https://www.facebook.com/share/g/17cyNBkTK8/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-primary"
+                >
+                  যুক্ত হন
+                </a>
               </li>
             </ul>
             <div className="flex items-center gap-4 mt-5">
@@ -84,6 +114,7 @@ const Footer = () => {
 
         <div className="border-t border-white/10 mt-8 pt-6 text-center font-bengali text-sm text-white/60">
           <p>© {new Date().getFullYear()} সিলেটি নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
+          <p className="mt-2">পোর্টাল ডেভেলপমেন্ট: চিলেকোঠা</p>
         </div>
       </div>
     </footer>

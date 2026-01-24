@@ -11,7 +11,9 @@ const navItems = [
   { name: "খেলাধুলা", path: "/sports" },
   { name: "মতামত", path: "/opinion" },
   { name: "অন্যান্য", path: "/others" },
+  { name: "জেলা", path: "/districts" },
   { name: "ফটোকার্ড", path: "/photocard" },
+  { name: "টিম", path: "/team" },
 ];
 
 const Navigation = () => {

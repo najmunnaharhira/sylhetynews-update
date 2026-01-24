@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
 import { newsData, getLatestNews } from "@/data/newsData";
-import { Calendar, User, ArrowLeft, Share2, Star } from "lucide-react";
+import { Calendar, User, ArrowLeft, Share2, Star, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type NewsComment = {
@@ -132,15 +132,26 @@ const NewsDetail = () => {
                     <User className="w-4 h-4" />
                     {news.author}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleShare}
-                    className="ml-auto"
-                  >
-                    <Share2 className="w-4 h-4 mr-1" />
-                    শেয়ার
-                  </Button>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/photocard?newsId=${news.id}`}>
+                        <ImageIcon className="w-4 h-4 mr-1" />
+                        ফটোকার্ড
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleShare}
+                    >
+                      <Share2 className="w-4 h-4 mr-1" />
+                      শেয়ার
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="prose prose-lg max-w-none font-bengali">

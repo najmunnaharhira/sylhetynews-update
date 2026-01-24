@@ -30,6 +30,14 @@ const NewsCard = ({ news, variant = "default" }: NewsCardProps) => {
             </span>
           </div>
         </Link>
+        <div className="px-2 pb-2">
+          <Link
+            to={`/photocard?newsId=${news.id}`}
+            className="text-xs text-primary hover:underline font-bengali"
+          >
+            ফটোকার্ড তৈরি করুন
+          </Link>
+        </div>
       </article>
     );
   }
@@ -59,6 +67,14 @@ const NewsCard = ({ news, variant = "default" }: NewsCardProps) => {
             </span>
           </div>
         </Link>
+        <div className="px-4 pb-3 sm:pb-0">
+          <Link
+            to={`/photocard?newsId=${news.id}`}
+            className="text-xs text-primary hover:underline font-bengali"
+          >
+            ফটোকার্ড তৈরি করুন
+          </Link>
+        </div>
       </article>
     );
   }
@@ -86,6 +102,14 @@ const NewsCard = ({ news, variant = "default" }: NewsCardProps) => {
           </span>
         </div>
       </Link>
+      <div className="px-3 pb-3">
+        <Link
+          to={`/photocard?newsId=${news.id}`}
+          className="text-xs text-primary hover:underline font-bengali"
+        >
+          ফটোকার্ড তৈরি করুন
+        </Link>
+      </div>
     </article>
   );
 };

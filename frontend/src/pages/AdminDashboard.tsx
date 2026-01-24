@@ -15,12 +15,14 @@ import {
 import AdminNewsForm from '../components/admin/AdminNewsForm';
 import AdminNewsList from '../components/admin/AdminNewsList';
 import AdminCategoryManager from '../components/admin/AdminCategoryManager';
+import AdminTeamManager from '../components/admin/AdminTeamManager';
 
-type AdminTab = 'news' | 'categories' | 'settings';
+type AdminTab = 'news' | 'categories' | 'team' | 'settings';
 
 const sidebarItems = [
   { id: 'news' as AdminTab, name: 'সংবাদ ব্যবস্থাপনা', icon: Newspaper },
   { id: 'categories' as AdminTab, name: 'ক্যাটাগরি', icon: FolderOpen },
+  { id: 'team' as AdminTab, name: 'টিম', icon: Settings },
   { id: 'settings' as AdminTab, name: 'সেটিংস', icon: Settings },
 ];
 
@@ -175,6 +177,12 @@ export default function AdminDashboard() {
           {activeTab === 'categories' && (
             <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
               <AdminCategoryManager />
+            </div>
+          )}
+
+          {activeTab === 'team' && (
+            <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
+              <AdminTeamManager />
             </div>
           )}
 

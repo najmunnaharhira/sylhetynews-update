@@ -4,6 +4,7 @@ export interface NewsArticle {
   content: string;
   summary: string;
   category: string;
+  district?: string;
   imageUrl: string;
   imageFile?: File;
   author: string;

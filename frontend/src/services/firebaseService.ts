@@ -16,9 +16,11 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import { NewsArticle, NewsCategory } from '../types/news';
+import { TeamMember } from '../types/team';
 
 const NEWS_COLLECTION = 'news';
 const CATEGORIES_COLLECTION = 'categories';
+const TEAM_COLLECTION = 'team';
 
 // News Operations
 export const newsService = {
@@ -179,5 +181,32 @@ export const imageService = {
     const downloadURL = await getDownloadURL(storageRef);
     
     return downloadURL;
+  },
+};
+
+// Team Operations
+export const teamService = {
+  async getTeamMembers(): Promise<TeamMember[]> {
+    const q = query(collection(db, TEAM_COLLECTION), orderBy('order', 'asc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    } as TeamMember));
+  },
+
+  async createTeamMember(member: Omit<TeamMember, 'id'>): Promise<string> {
+    const docRef = await addDoc(collection(db, TEAM_COLLECTION), member);
+    return docRef.id;
+  },
+
+  async updateTeamMember(id: string, member: Partial<TeamMember>): Promise<void> {
+    const docRef = doc(db, TEAM_COLLECTION, id);
+    await updateDoc(docRef, member);
+  },
+
+  async deleteTeamMember(id: string): Promise<void> {
+    const docRef = doc(db, TEAM_COLLECTION, id);
+    await deleteDoc(docRef);
   },
 };
