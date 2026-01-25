@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Download, Image as ImageIcon, Upload, X, Sparkles } from "lucide-react";
-import logoMain from "/sylhety-logo.jpeg";
+import logoMain from "/logo-main.jpeg";
 import { photocardTemplateService, newsService } from "@/services/firebaseService";
 import { firebaseReady } from "@/config/firebase";
 import { NewsArticle } from "@/types/news";
@@ -253,82 +253,30 @@ const PhotoCard = () => {
         const fontStyle = fontItalic ? "italic" : "normal";
         const fontWeight = fontBold ? "bold" : "normal";
 
-        // Load and draw logo image at top center with professional styling
+        // Load and draw logo image at top center
         if (includeLogo) {
           const logoImg = new window.Image();
           logoImg.crossOrigin = "anonymous";
           logoImg.onload = () => {
-            const logoSize = 150 * scale;
-            const logoX = (width - logoSize) / 2; // Center horizontally
-            const logoY = 35 * scale; // Top position
+            // Calculate logo size - adaptive based on card dimensions
+            const logoSize = Math.max(80, Math.min(200 * scale, width * 0.2));
+            const logoX = (width - logoSize) / 2; // Center horizontally (top middle)
+            const logoY = Math.max(20 * scale, 15); // Top position with padding
 
-            // Draw beautiful professional logo with premium styling
+            // Draw logo with high quality
             ctx.save();
-            const cornerRadius = 18 * scale;
-            const bgPadding = 18 * scale;
-            const bgX = logoX - bgPadding;
-            const bgY = logoY - bgPadding;
-            const bgW = logoSize + (bgPadding * 2);
-            const bgH = logoSize + (bgPadding * 2);
-
-            // Enhanced shadow with multiple layers for depth
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-            ctx.shadowBlur = 25 * scale;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 8 * scale;
-
-            // Premium gradient background for logo container
-            const bgGradient = ctx.createLinearGradient(bgX, bgY, bgX + bgW, bgY + bgH);
-            bgGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-            bgGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.98)');
-            bgGradient.addColorStop(0.7, 'rgba(250, 252, 255, 0.98)');
-            bgGradient.addColorStop(1, 'rgba(248, 250, 252, 1)');
-
-            // Rounded rectangle background with premium gradient
-            ctx.beginPath();
-            ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
-            ctx.fillStyle = bgGradient;
-            ctx.fill();
-
-            // Elegant inner border with subtle gradient
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.lineWidth = 2.5 * scale;
-            ctx.stroke();
-
-            // Reset shadow
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-
-            // Clip to rounded rectangle for logo
-            ctx.beginPath();
-            ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
-            ctx.clip();
-
-            // Draw logo with premium quality
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.globalAlpha = 1;
+            
+            // Draw logo directly at top center
             ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-            ctx.restore();
-
-            // Add subtle outer glow ring
-            ctx.save();
-            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
-            ctx.shadowBlur = 10 * scale;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-            ctx.beginPath();
-            ctx.roundRect(bgX - 2, bgY - 2, bgW + 4, bgH + 4, cornerRadius + 2);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 1 * scale;
-            ctx.stroke();
             ctx.restore();
 
             drawHeadline();
           };
           logoImg.onerror = () => {
+            console.error("Logo failed to load");
             drawHeadline();
           };
           logoImg.src = logoMain;
@@ -576,82 +524,30 @@ const PhotoCard = () => {
         const fontStyle = fontItalic ? "italic" : "normal";
         const fontWeight = fontBold ? "bold" : "normal";
 
-        // Load and draw logo image at top center with professional styling
+        // Load and draw logo image at top center
         if (includeLogo) {
           const logoImg = new window.Image();
           logoImg.crossOrigin = "anonymous";
           logoImg.onload = () => {
-            const logoSize = 150 * scale;
-            const logoX = (width - logoSize) / 2; // Center horizontally
-            const logoY = 35 * scale; // Top position
+            // Calculate logo size - adaptive based on card dimensions
+            const logoSize = Math.max(80, Math.min(200 * scale, width * 0.2));
+            const logoX = (width - logoSize) / 2; // Center horizontally (top middle)
+            const logoY = Math.max(20 * scale, 15); // Top position with padding
 
-            // Draw beautiful professional logo with premium styling
+            // Draw logo with high quality
             ctx.save();
-            const cornerRadius = 18 * scale;
-            const bgPadding = 18 * scale;
-            const bgX = logoX - bgPadding;
-            const bgY = logoY - bgPadding;
-            const bgW = logoSize + (bgPadding * 2);
-            const bgH = logoSize + (bgPadding * 2);
-
-            // Enhanced shadow with multiple layers for depth
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-            ctx.shadowBlur = 25 * scale;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 8 * scale;
-
-            // Premium gradient background for logo container
-            const bgGradient = ctx.createLinearGradient(bgX, bgY, bgX + bgW, bgY + bgH);
-            bgGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-            bgGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.98)');
-            bgGradient.addColorStop(0.7, 'rgba(250, 252, 255, 0.98)');
-            bgGradient.addColorStop(1, 'rgba(248, 250, 252, 1)');
-
-            // Rounded rectangle background with premium gradient
-            ctx.beginPath();
-            ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
-            ctx.fillStyle = bgGradient;
-            ctx.fill();
-
-            // Elegant inner border with subtle gradient
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.lineWidth = 2.5 * scale;
-            ctx.stroke();
-
-            // Reset shadow
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-
-            // Clip to rounded rectangle for logo
-            ctx.beginPath();
-            ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
-            ctx.clip();
-
-            // Draw logo with premium quality
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.globalAlpha = 1;
+            
+            // Draw logo directly at top center
             ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-            ctx.restore();
-
-            // Add subtle outer glow ring
-            ctx.save();
-            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
-            ctx.shadowBlur = 10 * scale;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-            ctx.beginPath();
-            ctx.roundRect(bgX - 2, bgY - 2, bgW + 4, bgH + 4, cornerRadius + 2);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 1 * scale;
-            ctx.stroke();
             ctx.restore();
 
             drawHeadlineError();
           };
           logoImg.onerror = () => {
+            console.error("Logo failed to load");
             drawHeadlineError();
           };
           logoImg.src = logoMain;
@@ -674,7 +570,9 @@ const PhotoCard = () => {
           const words = (selectedNews?.title || "").split(" ");
           let line = "";
           // Position headline - calculate based on logo or top
-          const logoBottom = includeLogo ? (Math.max(80, Math.min(150 * scale, width * 0.15)) + Math.max(15 * scale, 10) + Math.max(8, 12 * scale) * 2) : 0;
+          const logoSize = includeLogo ? Math.max(80, Math.min(200 * scale, width * 0.2)) : 0;
+          const logoY = includeLogo ? Math.max(20 * scale, 15) : 0;
+          const logoBottom = includeLogo ? (logoY + logoSize) : 0;
           const headlineGap = Math.max(15 * scale, 12);
           let y = logoBottom + headlineGap + headlineFontSize;
 
