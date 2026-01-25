@@ -384,7 +384,7 @@ const PhotoCard = () => {
             const lastLineY = y + lineHeight;
             const detailsGap = Math.max(15 * scale, 12); // Less space after headline
             let currentY = lastLineY + detailsGap;
-            
+
             // First: "বিস্তারিত কমেন্টে" button (centered, right after headline)
             const detailsText = "বিস্তারিত কমেন্টে";
             const detailsFontSize = Math.max(16, Math.min(24 * scale, width * 0.04));
@@ -466,17 +466,17 @@ const PhotoCard = () => {
 
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
-            
+
             // Second: Website and Chilekotha (below button, not much space)
             const footerGap = Math.max(18 * scale, 15); // Not much space
             currentY = detailsY + buttonH / 2 + footerGap;
             const footerFontSize = Math.max(12, Math.min(18 * scale, width * 0.025));
-            
+
             // Website link (left aligned)
             const websiteText = "sylhetynews.com";
             ctx.font = `${fontStyle} ${fontWeight} ${footerFontSize}px 'Inter', sans-serif`;
             ctx.textAlign = "left";
-            
+
             if (useGradient) {
               const websiteGradient = ctx.createLinearGradient(
                 paddingX,
@@ -487,12 +487,12 @@ const PhotoCard = () => {
               websiteGradient.addColorStop(0, accentColor);
               websiteGradient.addColorStop(0.5, accentColor2);
               websiteGradient.addColorStop(1, accentColor);
-              
+
               ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
               ctx.fillText(websiteText, paddingX + 1 * scale, currentY + 1 * scale);
               ctx.fillStyle = websiteGradient;
               ctx.fillText(websiteText, paddingX, currentY);
-              
+
               ctx.shadowColor = accentColor;
               ctx.shadowBlur = Math.max(4, 6 * scale);
               ctx.shadowOffsetX = 0;
@@ -504,11 +504,11 @@ const PhotoCard = () => {
               ctx.fillStyle = accentColor;
               ctx.fillText(websiteText, paddingX, currentY);
             }
-            
+
             // Right side: Chilekotha
             const chilekothaText = "TechPartner: Chilekotha";
             ctx.textAlign = "right";
-            
+
             if (useGradient) {
               const chilekothaGradient = ctx.createLinearGradient(
                 width - paddingX - ctx.measureText(chilekothaText).width,
@@ -519,12 +519,12 @@ const PhotoCard = () => {
               chilekothaGradient.addColorStop(0, accentColor);
               chilekothaGradient.addColorStop(0.5, accentColor2);
               chilekothaGradient.addColorStop(1, accentColor);
-              
+
               ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
               ctx.fillText(chilekothaText, width - paddingX + 1 * scale, currentY + 1 * scale);
               ctx.fillStyle = chilekothaGradient;
               ctx.fillText(chilekothaText, width - paddingX, currentY);
-              
+
               ctx.shadowColor = accentColor;
               ctx.shadowBlur = Math.max(4, 6 * scale);
               ctx.shadowOffsetX = 0;
@@ -659,24 +659,24 @@ const PhotoCard = () => {
           drawHeadlineError();
         }
 
-      function drawHeadlineError() {
-        // Draw headline positioned right under top with better alignment
-        // Adaptive font size for small dimensions
-        const baseFontSize = Math.max(24, 58 * scale * headlineScale);
-        const headlineFontSize = Math.min(baseFontSize, width * 0.08);
-        // Make headline extra bold for professional look
-        const boldWeight = 'bold';
-        ctx.font = `${fontStyle} ${boldWeight} ${headlineFontSize}px 'Hind Siliguri', sans-serif`;
-        ctx.textAlign = "left";
-        
-        const maxWidth = width - Math.max(60 * scale, 40);
-        const lineHeight = headlineFontSize * 1.3; // Tighter line height
-        const words = (selectedNews?.title || "").split(" ");
-        let line = "";
-        // Position headline - calculate based on logo or top
-        const logoBottom = includeLogo ? (Math.max(80, Math.min(150 * scale, width * 0.15)) + Math.max(15 * scale, 10) + Math.max(8, 12 * scale) * 2) : 0;
-        const headlineGap = Math.max(15 * scale, 12);
-        let y = logoBottom + headlineGap + headlineFontSize;
+        function drawHeadlineError() {
+          // Draw headline positioned right under top with better alignment
+          // Adaptive font size for small dimensions
+          const baseFontSize = Math.max(24, 58 * scale * headlineScale);
+          const headlineFontSize = Math.min(baseFontSize, width * 0.08);
+          // Make headline extra bold for professional look
+          const boldWeight = 'bold';
+          ctx.font = `${fontStyle} ${boldWeight} ${headlineFontSize}px 'Hind Siliguri', sans-serif`;
+          ctx.textAlign = "left";
+
+          const maxWidth = width - Math.max(60 * scale, 40);
+          const lineHeight = headlineFontSize * 1.3; // Tighter line height
+          const words = (selectedNews?.title || "").split(" ");
+          let line = "";
+          // Position headline - calculate based on logo or top
+          const logoBottom = includeLogo ? (Math.max(80, Math.min(150 * scale, width * 0.15)) + Math.max(15 * scale, 10) + Math.max(8, 12 * scale) * 2) : 0;
+          const headlineGap = Math.max(15 * scale, 12);
+          let y = logoBottom + headlineGap + headlineFontSize;
 
           words.forEach((word) => {
             const testLine = line + word + " ";
@@ -707,7 +707,7 @@ const PhotoCard = () => {
             const lastLineY = y + lineHeight;
             const detailsGap = Math.max(15 * scale, 12); // Less space after headline
             let currentY = lastLineY + detailsGap;
-            
+
             // First: "বিস্তারিত কমেন্টে" button (centered, right after headline)
             const detailsText = "বিস্তারিত কমেন্টে";
             const detailsFontSize = Math.max(16, Math.min(24 * scale, width * 0.04));
@@ -789,17 +789,17 @@ const PhotoCard = () => {
 
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
-            
+
             // Second: Website and Chilekotha (below button, not much space)
             const footerGap = Math.max(18 * scale, 15); // Not much space
             currentY = detailsY + buttonH / 2 + footerGap;
             const footerFontSize = Math.max(12, Math.min(18 * scale, width * 0.025));
-            
+
             // Website link (left aligned)
             const websiteText = "sylhetynews.com";
             ctx.font = `${fontStyle} ${fontWeight} ${footerFontSize}px 'Inter', sans-serif`;
             ctx.textAlign = "left";
-            
+
             if (useGradient) {
               const websiteGradient = ctx.createLinearGradient(
                 paddingX,
@@ -810,12 +810,12 @@ const PhotoCard = () => {
               websiteGradient.addColorStop(0, accentColor);
               websiteGradient.addColorStop(0.5, accentColor2);
               websiteGradient.addColorStop(1, accentColor);
-              
+
               ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
               ctx.fillText(websiteText, paddingX + 1 * scale, currentY + 1 * scale);
               ctx.fillStyle = websiteGradient;
               ctx.fillText(websiteText, paddingX, currentY);
-              
+
               ctx.shadowColor = accentColor;
               ctx.shadowBlur = Math.max(4, 6 * scale);
               ctx.shadowOffsetX = 0;
@@ -827,11 +827,11 @@ const PhotoCard = () => {
               ctx.fillStyle = accentColor;
               ctx.fillText(websiteText, paddingX, currentY);
             }
-            
+
             // Right side: Chilekotha
             const chilekothaText = "TechPartner: Chilekotha";
             ctx.textAlign = "right";
-            
+
             if (useGradient) {
               const chilekothaGradient = ctx.createLinearGradient(
                 width - paddingX - ctx.measureText(chilekothaText).width,
@@ -842,12 +842,12 @@ const PhotoCard = () => {
               chilekothaGradient.addColorStop(0, accentColor);
               chilekothaGradient.addColorStop(0.5, accentColor2);
               chilekothaGradient.addColorStop(1, accentColor);
-              
+
               ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
               ctx.fillText(chilekothaText, width - paddingX + 1 * scale, currentY + 1 * scale);
               ctx.fillStyle = chilekothaGradient;
               ctx.fillText(chilekothaText, width - paddingX, currentY);
-              
+
               ctx.shadowColor = accentColor;
               ctx.shadowBlur = Math.max(4, 6 * scale);
               ctx.shadowOffsetX = 0;
@@ -1087,8 +1087,8 @@ const PhotoCard = () => {
                             type="button"
                             onClick={() => setFontBold((prev) => !prev)}
                             className={`px-3 py-2 text-xs border rounded ${fontBold
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-news-border text-news-subtext"
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-news-border text-news-subtext"
                               }`}
                           >
                             Bold
@@ -1097,8 +1097,8 @@ const PhotoCard = () => {
                             type="button"
                             onClick={() => setFontItalic((prev) => !prev)}
                             className={`px-3 py-2 text-xs border rounded ${fontItalic
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "border-news-border text-news-subtext"
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-news-border text-news-subtext"
                               }`}
                           >
                             Italic
