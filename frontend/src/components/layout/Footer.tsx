@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Facebook, Mail, Phone, MapPin, Youtube } from "lucide-react";
+import chillekothaLogo from "@/assets/photo of portart Development.jpeg";
 
 const Footer = () => {
   return (
@@ -33,6 +34,26 @@ const Footer = () => {
               <li>
                 <Link to="/national" className="text-white/80 hover:text-primary transition-colors">
                   জাতীয়
+                </Link>
+              </li>
+              <li>
+                <Link to="/politics" className="text-white/80 hover:text-primary transition-colors">
+                  রাজনীতি
+                </Link>
+              </li>
+              <li>
+                <Link to="/international" className="text-white/80 hover:text-primary transition-colors">
+                  আন্তর্জাতিক
+                </Link>
+              </li>
+              <li>
+                <Link to="/economy" className="text-white/80 hover:text-primary transition-colors">
+                  অর্থনীতি ও বাণিজ্য
+                </Link>
+              </li>
+              <li>
+                <Link to="/technology" className="text-white/80 hover:text-primary transition-colors">
+                  তথ্য ও প্রযুক্তি
                 </Link>
               </li>
               <li>
@@ -114,7 +135,15 @@ const Footer = () => {
 
         <div className="border-t border-white/10 mt-8 pt-6 text-center font-bengali text-sm text-white/60">
           <p>© {new Date().getFullYear()} সিলেটি নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
-          <p className="mt-2">পোর্টাল ডেভেলপমেন্ট: চিলেকোঠা</p>
+          <p className="mt-2 inline-flex items-center justify-center gap-2">
+            <span>Portal Development: Chillekotha</span>
+            <img
+              src={chillekothaLogo}
+              alt="Chillekotha logo"
+              className="h-6 w-6 rounded-sm object-contain bg-white/90 p-0.5"
+              loading="lazy"
+            />
+          </p>
         </div>
       </div>
     </footer>

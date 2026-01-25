@@ -47,15 +47,22 @@ if (hasFirebaseConfig) {
     db = getFirestore(app);
     storage = getStorage(app);
     if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
-      analytics = getAnalytics(app);
+      try {
+        analytics = getAnalytics(app);
+      } catch (analyticsError) {
+        // Analytics is optional, continue without it
+        console.warn('Analytics initialization failed:', analyticsError);
+      }
     }
   } catch (error) {
     firebaseInitError =
       error instanceof Error ? error.message : 'Failed to initialize Firebase.';
     console.warn('Firebase initialization failed:', error);
+    // Don't throw, let the app continue with fallback data
   }
 } else {
-  firebaseInitError = 'Missing Firebase environment variables.';
+  // Don't set error, just mark as not ready
+  firebaseInitError = null;
 }
 
 export const firebaseReady = !!app;

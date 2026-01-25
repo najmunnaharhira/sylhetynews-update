@@ -24,7 +24,12 @@ const CategorySection = ({ title, news, categoryPath }: CategorySectionProps) =>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {news.slice(0, 3).map((item) => (
-          <NewsCard key={item.id} news={item} />
+          <div
+            key={item.id}
+            className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <NewsCard news={item} />
+          </div>
         ))}
       </div>
     </section>

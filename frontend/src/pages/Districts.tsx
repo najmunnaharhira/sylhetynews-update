@@ -6,7 +6,7 @@ const Districts = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
-        <h1 className="section-title text-2xl mb-6">সিলেট বিভাগের জেলা</h1>
+        <h1 className="section-title text-2xl mb-6">সিলেট জেলার উপজেলা</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {sylhetDistricts.map((district) => (
             <Link

@@ -10,7 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Image as ImageIcon, Upload, X } from "lucide-react";
+import { Download, Image as ImageIcon, Upload, X, Sparkles } from "lucide-react";
+import logoMain from "/logo-main.jpeg";
+import { photocardTemplateService, newsService } from "@/services/firebaseService";
+import { firebaseReady } from "@/config/firebase";
+import { NewsArticle } from "@/types/news";
 
 const PhotoCard = () => {
   const [searchParams] = useSearchParams();
@@ -28,14 +32,57 @@ const PhotoCard = () => {
   const [cardWidth, setCardWidth] = useState(1080);
   const [cardHeight, setCardHeight] = useState(1080);
   const [accentColor, setAccentColor] = useState("#991B1B");
-  const [headlineScale, setHeadlineScale] = useState(1);
+  const [accentColor2, setAccentColor2] = useState("#DC2626");
+  const [useGradient, setUseGradient] = useState(true);
+  const [headlineScale, setHeadlineScale] = useState(1.15);
+  const [imageHeightRatio, setImageHeightRatio] = useState(0.6);
+  const [textColor, setTextColor] = useState("#ffffff");
+  const [overlayStrength, setOverlayStrength] = useState(0.9);
+  const [fontBold, setFontBold] = useState(true);
+  const [fontItalic, setFontItalic] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [firebaseNews, setFirebaseNews] = useState<NewsArticle[]>([]);
 
-  const selectedNews = newsData.find((n) => n.id === selectedNewsId);
+  // Load news from Firebase
+  useEffect(() => {
+    const loadNews = async () => {
+      if (firebaseReady) {
+        try {
+          const news = await newsService.getAllNews();
+          if (news && news.length > 0) {
+            setFirebaseNews(news);
+          }
+        } catch (error) {
+          console.error("Failed to load news from Firebase:", error);
+          // Silently fallback to static data
+        }
+      }
+    };
+    loadNews();
+  }, []);
+
+  // Use Firebase news if available, otherwise fallback to static data
+  const availableNews = firebaseNews.length > 0 ? firebaseNews : newsData;
+  const selectedNews = availableNews.find((n) => n.id === selectedNewsId);
 
   const dimensionOptions = [
-    { label: "1080 x 1080", value: "1080x1080" },
-    { label: "1080 x 1350", value: "1080x1350" },
-    { label: "1080 x 1920", value: "1080x1920" },
+    { label: "1080 x 1080 (Square)", value: "1080x1080" },
+    { label: "1080 x 1350 (Portrait)", value: "1080x1350" },
+    { label: "1080 x 1920 (Story)", value: "1080x1920" },
+    { label: "1200 x 630 (Facebook)", value: "1200x630" },
+    { label: "1280 x 720 (HD)", value: "1280x720" },
+    { label: "1600 x 900 (HD+)", value: "1600x900" },
+    { label: "1920 x 1080 (Full HD)", value: "1920x1080" },
+    { label: "2048 x 1152 (2K)", value: "2048x1152" },
+    { label: "2560 x 1440 (2K+)", value: "2560x1440" },
+    { label: "1080 x 566 (Twitter)", value: "1080x566" },
+    { label: "1080 x 608 (LinkedIn)", value: "1080x608" },
+    { label: "1500 x 1500 (Large Square)", value: "1500x1500" },
+    { label: "2000 x 2000 (XL Square)", value: "2000x2000" },
+    { label: "1200 x 1600 (Large Portrait)", value: "1200x1600" },
+    { label: "1500 x 2000 (XL Portrait)", value: "1500x2000" },
   ];
 
   const handleDimensionChange = (value: string) => {
@@ -53,6 +100,31 @@ const PhotoCard = () => {
     }
   }, [searchParams, selectedNewsId]);
 
+  useEffect(() => {
+    const loadTemplates = async () => {
+      if (firebaseReady) {
+        try {
+          const templateList = await photocardTemplateService.getTemplates();
+          if (templateList && templateList.length > 0) {
+            setTemplates(templateList);
+          }
+        } catch (error) {
+          console.error("Failed to load templates from Firebase:", error);
+          // Silently continue without templates
+        }
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  const handleDownloadTemplate = (template: any) => {
+    const link = document.createElement("a");
+    link.download = `${template.name || 'photocard'}.png`;
+    link.href = template.imageUrl;
+    link.target = "_blank";
+    link.click();
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -69,14 +141,33 @@ const PhotoCard = () => {
     setUploadedImagePreview(null);
   };
 
-  const generatePhotoCard = async () => {
-    if (!selectedNews || !canvasRef.current) return;
+  const generatePhotoCard = async (
+    includeLogo: boolean = true,
+    updatePreview: boolean = true
+  ) => {
+    if (!selectedNews || !canvasRef.current) return null;
 
     setIsGenerating(true);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    if (!ctx) return;
+    if (!ctx) return null;
+
+    // Polyfill for roundRect if not available
+    if (!ctx.roundRect) {
+      (ctx as any).roundRect = function(x: number, y: number, w: number, h: number, r: number) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.beginPath();
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+      };
+    }
 
     const width = cardWidth;
     const height = cardHeight;
@@ -92,229 +183,603 @@ const PhotoCard = () => {
     const img = new window.Image();
     img.crossOrigin = "anonymous";
 
-    img.onload = () => {
-      const paddingX = 50 * scale;
-      const imgRatio = img.width / img.height;
-      let drawWidth = width;
-      let drawHeight = height * 0.6;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (imgRatio > width / drawHeight) {
-        drawWidth = drawHeight * imgRatio;
-        offsetX = (width - drawWidth) / 2;
-      } else {
-        drawHeight = width / imgRatio;
-        offsetY = 0;
-      }
-
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, "rgba(15, 23, 42, 0.3)");
-      gradient.addColorStop(0.4, "rgba(15, 23, 42, 0.5)");
-      gradient.addColorStop(0.7, "rgba(15, 23, 42, 0.85)");
-      gradient.addColorStop(1, "rgba(15, 23, 42, 0.95)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `bold ${52 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "center";
-      ctx.fillText("সিলেটি নিউজ", width / 2, 70 * scale);
-      ctx.font = `${24 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.fillText(taglineBn, width / 2, 104 * scale);
-      ctx.font = `${20 * scale}px 'Inter', sans-serif`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.fillText(taglineEn, width / 2, 132 * scale);
-
-      ctx.strokeStyle = accentColor;
-      ctx.lineWidth = 3 * scale;
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - 100 * scale, 90 * scale);
-      ctx.lineTo(width / 2 + 100 * scale, 90 * scale);
-      ctx.stroke();
-
-      ctx.font = `bold ${58 * scale * headlineScale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "left";
-
-      const maxWidth = width - 100 * scale;
-      const lineHeight = 76 * scale * headlineScale;
-      const words = selectedNews.title.split(" ");
-      let line = "";
-      let y = height * 0.58;
-
-      words.forEach((word) => {
-        const testLine = line + word + " ";
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && line !== "") {
-          ctx.fillText(line.trim(), paddingX, y);
-          line = word + " ";
-          y += lineHeight;
-        } else {
-          line = testLine;
+    return new Promise<string | null>((resolve) => {
+      const finalize = (imageUrl: string) => {
+        if (updatePreview) {
+          setGeneratedImage(imageUrl);
         }
-      });
-      ctx.fillText(line.trim(), paddingX, y);
+        setIsGenerating(false);
+        resolve(imageUrl);
+      };
 
-      const detailsY = y + 48 * scale;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.font = `${22 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "left";
-      if (detailsBn) {
-        ctx.fillText(detailsBn, paddingX, detailsY);
-      }
-      ctx.font = `${20 * scale}px 'Inter', sans-serif`;
-      if (detailsEn) {
-        ctx.fillText(detailsEn, paddingX, detailsY + 28 * scale);
-      }
+      img.onload = () => {
+        const paddingX = 50 * scale;
+        const imgRatio = img.width / img.height;
+        let drawWidth = width;
+        let drawHeight = height * imageHeightRatio;
+        let offsetX = 0;
+        let offsetY = 0;
 
-      const categoryY = y + (detailsBn || detailsEn ? 110 * scale : 70 * scale);
-      ctx.fillStyle = accentColor;
-      const categoryWidth =
-        ctx.measureText(selectedNews.categoryBn).width + 50 * scale;
-      ctx.beginPath();
-      ctx.roundRect(
-        paddingX,
-        categoryY - 32 * scale,
-        categoryWidth,
-        48 * scale,
-        4 * scale
-      );
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `600 ${28 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "left";
-      ctx.fillText(selectedNews.categoryBn, paddingX + 25 * scale, categoryY);
+        if (imgRatio > width / drawHeight) {
+          drawWidth = drawHeight * imgRatio;
+          offsetX = (width - drawWidth) / 2;
+        } else {
+          drawHeight = width / imgRatio;
+          offsetY = 0;
+        }
 
-      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-      ctx.font = `${24 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "right";
-      ctx.fillText(selectedNews.date, width - 50 * scale, height - 45 * scale);
-      ctx.textAlign = "left";
-      const contactText = contactNumber ? `যোগাযোগ: ${contactNumber}` : "";
-      if (contactText) {
-        ctx.fillText(contactText, paddingX, height - 75 * scale);
-      }
-      ctx.fillText("sylhetynews.com", paddingX, height - 45 * scale);
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-      const imageUrl = canvas.toDataURL("image/png");
-      setGeneratedImage(imageUrl);
-      setIsGenerating(false);
-    };
+        // Enhanced gradient overlay with multiple color stops for more attractive look
+        const gradient = ctx.createLinearGradient(0, 0, 0, height);
+        const overlayLight = 0.2 * overlayStrength;
+        const overlayMid = 0.5 * overlayStrength;
+        const overlayDeep = 0.75 * overlayStrength;
+        const overlayMax = overlayStrength;
+        // Add subtle color tint to gradient
+        gradient.addColorStop(0, `rgba(15, 23, 42, ${overlayLight})`);
+        gradient.addColorStop(0.3, `rgba(30, 41, 59, ${overlayMid * 0.8})`);
+        gradient.addColorStop(0.5, `rgba(15, 23, 42, ${overlayMid})`);
+        gradient.addColorStop(0.7, `rgba(15, 23, 42, ${overlayDeep})`);
+        gradient.addColorStop(0.9, `rgba(15, 23, 42, ${overlayMax * 0.95})`);
+        gradient.addColorStop(1, `rgba(15, 23, 42, ${overlayMax})`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        // Add subtle vignette effect
+        const vignette = ctx.createRadialGradient(
+          width / 2, height / 2, 0,
+          width / 2, height / 2, Math.max(width, height) * 0.8
+        );
+        vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vignette.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+        ctx.fillStyle = vignette;
+        ctx.fillRect(0, 0, width, height);
+
+        const fontStyle = fontItalic ? "italic" : "normal";
+        const fontWeight = fontBold ? "bold" : "normal";
+
+        // Load and draw logo image at top right with professional styling
+        if (includeLogo) {
+          const logoImg = new window.Image();
+          logoImg.crossOrigin = "anonymous";
+          logoImg.onload = () => {
+            const logoSize = 150 * scale;
+            const logoX = width - logoSize - 35 * scale;
+            const logoY = 35 * scale;
+            
+            // Draw beautiful professional logo with premium styling
+            ctx.save();
+            const cornerRadius = 18 * scale;
+            const bgPadding = 18 * scale;
+            const bgX = logoX - bgPadding;
+            const bgY = logoY - bgPadding;
+            const bgW = logoSize + (bgPadding * 2);
+            const bgH = logoSize + (bgPadding * 2);
+            
+            // Enhanced shadow with multiple layers for depth
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+            ctx.shadowBlur = 25 * scale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 8 * scale;
+            
+            // Premium gradient background for logo container
+            const bgGradient = ctx.createLinearGradient(bgX, bgY, bgX + bgW, bgY + bgH);
+            bgGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            bgGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.98)');
+            bgGradient.addColorStop(0.7, 'rgba(250, 252, 255, 0.98)');
+            bgGradient.addColorStop(1, 'rgba(248, 250, 252, 1)');
+            
+            // Rounded rectangle background with premium gradient
+            ctx.beginPath();
+            ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
+            ctx.fillStyle = bgGradient;
+            ctx.fill();
+            
+            // Elegant inner border with subtle gradient
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 2.5 * scale;
+            ctx.stroke();
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Clip to rounded rectangle for logo
+            ctx.beginPath();
+            ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
+            ctx.clip();
+            
+            // Draw logo with premium quality
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.globalAlpha = 1;
+            ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+            ctx.restore();
+            
+            // Add subtle outer glow ring
+            ctx.save();
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+            ctx.shadowBlur = 10 * scale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.beginPath();
+            ctx.roundRect(bgX - 2, bgY - 2, bgW + 4, bgH + 4, cornerRadius + 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1 * scale;
+            ctx.stroke();
+            ctx.restore();
+            
+            drawHeadline();
+          };
+          logoImg.onerror = () => {
+            drawHeadline();
+          };
+          logoImg.src = logoMain;
+        } else {
+          drawHeadline();
+        }
+
+        function drawHeadline() {
+          // Draw headline with text shadow for better readability
+          const headlineFontSize = 58 * scale * headlineScale;
+          ctx.font = `${fontStyle} ${fontWeight} ${headlineFontSize}px 'Hind Siliguri', sans-serif`;
+          ctx.textAlign = "left";
+          
+          const maxWidth = width - 100 * scale;
+          const lineHeight = 76 * scale * headlineScale;
+          const words = (selectedNews?.title || "").split(" ");
+          let line = "";
+          let y = height * 0.58;
+
+          words.forEach((word) => {
+            const testLine = line + word + " ";
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && line !== "") {
+              // Draw text shadow
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+              ctx.fillText(line.trim(), paddingX + 2 * scale, y + 2 * scale);
+              // Draw main text
+              ctx.fillStyle = textColor;
+              ctx.fillText(line.trim(), paddingX, y);
+              line = word + " ";
+              y += lineHeight;
+            } else {
+              line = testLine;
+            }
+          });
+          
+          // Draw last line with shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+          ctx.fillText(line.trim(), paddingX + 2 * scale, y + 2 * scale);
+          ctx.fillStyle = textColor;
+          ctx.fillText(line.trim(), paddingX, y);
+
+          // Footer: TechPartner and Details text with website
+          if (includeLogo) {
+            const footerY = height - 50 * scale;
+            
+            // TechPartner with beautiful gradient highlight (right)
+            const techPartnerText = "TechPartner: Chilekotha";
+            ctx.font = `${fontStyle} ${fontWeight} ${20 * scale}px 'Inter', sans-serif`;
+            ctx.textAlign = "right";
+            
+            if (useGradient) {
+              // Draw gradient text for TechPartner
+              const gradient = ctx.createLinearGradient(
+                width - 50 * scale - ctx.measureText(techPartnerText).width,
+                footerY - 15 * scale,
+                width - 50 * scale,
+                footerY + 15 * scale
+              );
+              gradient.addColorStop(0, accentColor);
+              gradient.addColorStop(0.5, accentColor2);
+              gradient.addColorStop(1, accentColor);
+              
+              // Text shadow for depth
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+              ctx.fillText(techPartnerText, width - 48 * scale, footerY + 2 * scale);
+              
+              // Gradient text
+              ctx.fillStyle = gradient;
+              ctx.fillText(techPartnerText, width - 50 * scale, footerY);
+              
+              // Add subtle glow
+              ctx.shadowColor = accentColor;
+              ctx.shadowBlur = 8 * scale;
+              ctx.shadowOffsetX = 0;
+              ctx.shadowOffsetY = 0;
+              ctx.fillText(techPartnerText, width - 50 * scale, footerY);
+              ctx.shadowColor = 'transparent';
+              ctx.shadowBlur = 0;
+            } else {
+              ctx.fillStyle = accentColor;
+              ctx.fillText(techPartnerText, width - 50 * scale, footerY);
+            }
+            
+            // "বিস্তারিত কমেন্টে" button with website link (center bottom)
+            const websiteText = "sylhetynews.com";
+            const detailsText = "বিস্তারিত কমেন্টে";
+            const combinedText = `${detailsText} | ${websiteText}`;
+            ctx.font = `${fontStyle} ${fontWeight} ${22 * scale}px 'Hind Siliguri', sans-serif`;
+            ctx.textAlign = "center";
+            const detailsTextWidth = ctx.measureText(combinedText).width;
+            const detailsPadding = 25 * scale;
+            const detailsX = width / 2;
+            const detailsY = footerY - 50 * scale;
+            
+            // Draw button background with gradient
+            ctx.save();
+            ctx.beginPath();
+            const buttonX = detailsX - (detailsTextWidth / 2) - detailsPadding;
+            const buttonY = detailsY - 30 * scale;
+            const buttonW = detailsTextWidth + (detailsPadding * 2);
+            const buttonH = 45 * scale;
+            
+            ctx.roundRect(buttonX, buttonY, buttonW, buttonH, 10 * scale);
+            
+            if (useGradient) {
+              const buttonGradient = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
+              buttonGradient.addColorStop(0, accentColor);
+              buttonGradient.addColorStop(1, accentColor2);
+              ctx.fillStyle = buttonGradient;
+            } else {
+              ctx.fillStyle = accentColor;
+            }
+            ctx.fill();
+            
+            // Button shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 12 * scale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 4 * scale;
+            ctx.fill();
+            ctx.restore();
+            
+            // Draw button text with website
+            ctx.fillStyle = "#ffffff";
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 4 * scale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2 * scale;
+            ctx.fillText(combinedText, detailsX, detailsY);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+          }
+
+          const imageUrl = canvas.toDataURL("image/png");
+          finalize(imageUrl);
+        }
+      };
 
     img.onerror = () => {
       const paddingX = 50 * scale;
+      
+      // Polyfill for roundRect if not available
+      if (!ctx.roundRect) {
+        (ctx as any).roundRect = function(x: number, y: number, w: number, h: number, r: number) {
+          if (w < 2 * r) r = w / 2;
+          if (h < 2 * r) r = h / 2;
+          this.beginPath();
+          this.moveTo(x + r, y);
+          this.arcTo(x + w, y, x + w, y + h, r);
+          this.arcTo(x + w, y + h, x, y + h, r);
+          this.arcTo(x, y + h, x, y, r);
+          this.arcTo(x, y, x + w, y, r);
+          this.closePath();
+          return this;
+        };
+      }
+      
       ctx.fillStyle = "#0F172A";
       ctx.fillRect(0, 0, width, height);
 
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, "rgba(15, 23, 42, 0.7)");
-      gradient.addColorStop(1, "rgba(15, 23, 42, 0.95)");
+      const overlayLight = 0.3 * overlayStrength;
+      const overlayMax = overlayStrength;
+      gradient.addColorStop(0, `rgba(15, 23, 42, ${overlayLight})`);
+      gradient.addColorStop(1, `rgba(15, 23, 42, ${overlayMax})`);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `bold ${52 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "center";
-      ctx.fillText("সিলেটি নিউজ", width / 2, 70 * scale);
-      ctx.font = `${24 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.fillText(taglineBn, width / 2, 104 * scale);
-      ctx.font = `${20 * scale}px 'Inter', sans-serif`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.fillText(taglineEn, width / 2, 132 * scale);
+      const fontStyle = fontItalic ? "italic" : "normal";
+      const fontWeight = fontBold ? "bold" : "normal";
 
-      ctx.strokeStyle = accentColor;
-      ctx.lineWidth = 3 * scale;
-      ctx.beginPath();
-      ctx.moveTo(width / 2 - 100 * scale, 90 * scale);
-      ctx.lineTo(width / 2 + 100 * scale, 90 * scale);
-      ctx.stroke();
+      // Load and draw logo image at top right with professional styling
+      if (includeLogo) {
+        const logoImg = new window.Image();
+        logoImg.crossOrigin = "anonymous";
+        logoImg.onload = () => {
+          const logoSize = 150 * scale;
+          const logoX = width - logoSize - 35 * scale;
+          const logoY = 35 * scale;
+          
+          // Draw beautiful professional logo with premium styling
+          ctx.save();
+          const cornerRadius = 18 * scale;
+          const bgPadding = 18 * scale;
+          const bgX = logoX - bgPadding;
+          const bgY = logoY - bgPadding;
+          const bgW = logoSize + (bgPadding * 2);
+          const bgH = logoSize + (bgPadding * 2);
+          
+          // Enhanced shadow with multiple layers for depth
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+          ctx.shadowBlur = 25 * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 8 * scale;
+          
+          // Premium gradient background for logo container
+          const bgGradient = ctx.createLinearGradient(bgX, bgY, bgX + bgW, bgY + bgH);
+          bgGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+          bgGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.98)');
+          bgGradient.addColorStop(0.7, 'rgba(250, 252, 255, 0.98)');
+          bgGradient.addColorStop(1, 'rgba(248, 250, 252, 1)');
+          
+          // Rounded rectangle background with premium gradient
+          ctx.beginPath();
+          ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
+          ctx.fillStyle = bgGradient;
+          ctx.fill();
+          
+          // Elegant inner border with subtle gradient
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 2.5 * scale;
+          ctx.stroke();
+          
+          // Reset shadow
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          
+          // Clip to rounded rectangle for logo
+          ctx.beginPath();
+          ctx.roundRect(bgX, bgY, bgW, bgH, cornerRadius);
+          ctx.clip();
+          
+          // Draw logo with premium quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.globalAlpha = 1;
+          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+          ctx.restore();
+          
+          // Add subtle outer glow ring
+          ctx.save();
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+          ctx.shadowBlur = 10 * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.beginPath();
+          ctx.roundRect(bgX - 2, bgY - 2, bgW + 4, bgH + 4, cornerRadius + 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.lineWidth = 1 * scale;
+          ctx.stroke();
+          ctx.restore();
+          
+          drawHeadlineError();
+        };
+        logoImg.onerror = () => {
+          drawHeadlineError();
+        };
+        logoImg.src = logoMain;
+      } else {
+        drawHeadlineError();
+      }
 
-      ctx.font = `bold ${58 * scale * headlineScale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "left";
-      const maxWidth = width - 100 * scale;
-      const lineHeight = 76 * scale * headlineScale;
-      const words = selectedNews.title.split(" ");
-      let line = "";
-      let y = height * 0.58;
+      function drawHeadlineError() {
+        // Draw headline with text shadow for better readability
+        const headlineFontSize = 58 * scale * headlineScale;
+        ctx.font = `${fontStyle} ${fontWeight} ${headlineFontSize}px 'Hind Siliguri', sans-serif`;
+        ctx.textAlign = "left";
+        
+        const maxWidth = width - 100 * scale;
+        const lineHeight = 76 * scale * headlineScale;
+        const words = (selectedNews?.title || "").split(" ");
+        let line = "";
+        let y = height * 0.58;
 
-      words.forEach((word) => {
-        const testLine = line + word + " ";
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && line !== "") {
-          ctx.fillText(line.trim(), paddingX, y);
-          line = word + " ";
-          y += lineHeight;
-        } else {
-          line = testLine;
+        words.forEach((word) => {
+          const testLine = line + word + " ";
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && line !== "") {
+            // Draw text shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillText(line.trim(), paddingX + 2 * scale, y + 2 * scale);
+            // Draw main text
+            ctx.fillStyle = textColor;
+            ctx.fillText(line.trim(), paddingX, y);
+            line = word + " ";
+            y += lineHeight;
+          } else {
+            line = testLine;
+          }
+        });
+        
+        // Draw last line with shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillText(line.trim(), paddingX + 2 * scale, y + 2 * scale);
+        ctx.fillStyle = textColor;
+        ctx.fillText(line.trim(), paddingX, y);
+
+        // Footer: TechPartner and Details text with website
+        if (includeLogo) {
+          const footerY = height - 50 * scale;
+          
+          // TechPartner with beautiful gradient highlight (right)
+          const techPartnerText = "TechPartner: Chilekotha";
+          ctx.font = `${fontStyle} ${fontWeight} ${20 * scale}px 'Inter', sans-serif`;
+          ctx.textAlign = "right";
+          
+          if (useGradient) {
+            // Draw gradient text for TechPartner
+            const gradient = ctx.createLinearGradient(
+              width - 50 * scale - ctx.measureText(techPartnerText).width,
+              footerY - 15 * scale,
+              width - 50 * scale,
+              footerY + 15 * scale
+            );
+            gradient.addColorStop(0, accentColor);
+            gradient.addColorStop(0.5, accentColor2);
+            gradient.addColorStop(1, accentColor);
+            
+            // Text shadow for depth
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            ctx.fillText(techPartnerText, width - 48 * scale, footerY + 2 * scale);
+            
+            // Gradient text
+            ctx.fillStyle = gradient;
+            ctx.fillText(techPartnerText, width - 50 * scale, footerY);
+            
+            // Add subtle glow
+            ctx.shadowColor = accentColor;
+            ctx.shadowBlur = 8 * scale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.fillText(techPartnerText, width - 50 * scale, footerY);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+          } else {
+            ctx.fillStyle = accentColor;
+            ctx.fillText(techPartnerText, width - 50 * scale, footerY);
+          }
+          
+          // "বিস্তারিত কমেন্টে" button with website link (center bottom)
+          const websiteText = "sylhetynews.com";
+          const detailsText = "বিস্তারিত কমেন্টে";
+          const combinedText = `${detailsText} | ${websiteText}`;
+          ctx.font = `${fontStyle} ${fontWeight} ${22 * scale}px 'Hind Siliguri', sans-serif`;
+          ctx.textAlign = "center";
+          const detailsTextWidth = ctx.measureText(combinedText).width;
+          const detailsPadding = 25 * scale;
+          const detailsX = width / 2;
+          const detailsY = footerY - 50 * scale;
+          
+          // Draw button background with gradient
+          ctx.save();
+          ctx.beginPath();
+          const buttonX = detailsX - (detailsTextWidth / 2) - detailsPadding;
+          const buttonY = detailsY - 30 * scale;
+          const buttonW = detailsTextWidth + (detailsPadding * 2);
+          const buttonH = 45 * scale;
+          
+          ctx.roundRect(buttonX, buttonY, buttonW, buttonH, 10 * scale);
+          
+          if (useGradient) {
+            const buttonGradient = ctx.createLinearGradient(buttonX, buttonY, buttonX, buttonY + buttonH);
+            buttonGradient.addColorStop(0, accentColor);
+            buttonGradient.addColorStop(1, accentColor2);
+            ctx.fillStyle = buttonGradient;
+          } else {
+            ctx.fillStyle = accentColor;
+          }
+          ctx.fill();
+          
+          // Button shadow
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+          ctx.shadowBlur = 12 * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 4 * scale;
+          ctx.fill();
+          ctx.restore();
+          
+          // Draw button text with website
+          ctx.fillStyle = "#ffffff";
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+          ctx.shadowBlur = 4 * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2 * scale;
+          ctx.fillText(combinedText, detailsX, detailsY);
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
         }
-      });
-      ctx.fillText(line.trim(), paddingX, y);
 
-      const detailsY = y + 48 * scale;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.font = `${22 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "left";
-      if (detailsBn) {
-        ctx.fillText(detailsBn, paddingX, detailsY);
+        const imageUrl = canvas.toDataURL("image/png");
+        finalize(imageUrl);
       }
-      ctx.font = `${20 * scale}px 'Inter', sans-serif`;
-      if (detailsEn) {
-        ctx.fillText(detailsEn, paddingX, detailsY + 28 * scale);
-      }
-
-      const categoryY = y + (detailsBn || detailsEn ? 110 * scale : 70 * scale);
-      ctx.fillStyle = accentColor;
-      const categoryWidth =
-        ctx.measureText(selectedNews.categoryBn).width + 50 * scale;
-      ctx.beginPath();
-      ctx.roundRect(
-        paddingX,
-        categoryY - 32 * scale,
-        categoryWidth,
-        48 * scale,
-        4 * scale
-      );
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = `600 ${28 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.fillText(selectedNews.categoryBn, paddingX + 25 * scale, categoryY);
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-      ctx.font = `${24 * scale}px 'Hind Siliguri', sans-serif`;
-      ctx.textAlign = "right";
-      ctx.fillText(selectedNews.date, width - 50 * scale, height - 45 * scale);
-      ctx.textAlign = "left";
-      const contactText = contactNumber ? `যোগাযোগ: ${contactNumber}` : "";
-      if (contactText) {
-        ctx.fillText(contactText, paddingX, height - 75 * scale);
-      }
-      ctx.fillText("sylhetynews.com", paddingX, height - 45 * scale);
-
-      const imageUrl = canvas.toDataURL("image/png");
-      setGeneratedImage(imageUrl);
-      setIsGenerating(false);
     };
 
-    img.src = uploadedImagePreview || selectedNews.image;
+    let newsImage = '';
+    if (selectedNews) {
+      if ('imageUrl' in selectedNews) {
+        newsImage = (selectedNews as NewsArticle).imageUrl;
+      } else if ('image' in selectedNews) {
+        newsImage = (selectedNews as any).image;
+      }
+    }
+    img.src = uploadedImagePreview || newsImage || "";
+    });
   };
 
-  const downloadImage = () => {
-    if (!generatedImage) return;
+  const downloadImage = async () => {
+    const imageUrl = await generatePhotoCard(true, false);
+    if (!imageUrl) return;
 
     const link = document.createElement("a");
-    link.download = `photocard-${selectedNewsId}.png`;
-    link.href = generatedImage;
+    link.download = `photocard-${selectedNewsId || 'custom'}.png`;
+    link.href = imageUrl;
     link.click();
   };
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-6">
-        <h1 className="section-title text-2xl mb-6">ফটোকার্ড জেনারেটর</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="section-title text-2xl">ফটোকার্ড জেনারেটর</h1>
+          <Button
+            onClick={() => setShowTemplates(!showTemplates)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            {showTemplates ? "কাস্টম তৈরি করুন" : "রেডিমেড টেমপ্লেট"}
+          </Button>
+        </div>
+
+        {/* Template Gallery */}
+        {showTemplates && templates.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bengali font-semibold mb-4 text-news-headline">
+              রেডিমেড ফটোকার্ড টেমপ্লেট
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="bg-card border border-news-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                  onClick={() => handleDownloadTemplate(template)}
+                >
+                  <div className="relative aspect-square overflow-hidden">
+                    <img
+                      src={template.previewUrl || template.imageUrl}
+                      alt={template.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <Download className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-bengali text-sm font-semibold text-news-headline truncate">
+                      {template.name}
+                    </h3>
+                    {template.description && (
+                      <p className="text-xs text-news-subtext mt-1 line-clamp-2">
+                        {template.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!showTemplates && (
+          <>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Controls */}
@@ -420,6 +885,80 @@ const PhotoCard = () => {
                       </span>
                     </div>
                   </div>
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      গ্রেডিয়েন্ট রঙ (ঐচ্ছিক)
+                    </label>
+                    <div className="mt-1 flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={accentColor2}
+                        onChange={(e) => setAccentColor2(e.target.value)}
+                        className="h-9 w-12 rounded-md border border-news-border bg-transparent"
+                      />
+                      <span className="text-xs text-news-subtext">
+                        {accentColor2.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={useGradient}
+                        onChange={(e) => setUseGradient(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span>গ্রেডিয়েন্ট ব্যবহার করুন</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      ফন্ট স্টাইল
+                    </label>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFontBold((prev) => !prev)}
+                        className={`px-3 py-2 text-xs border rounded ${
+                          fontBold
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-news-border text-news-subtext"
+                        }`}
+                      >
+                        Bold
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFontItalic((prev) => !prev)}
+                        className={`px-3 py-2 text-xs border rounded ${
+                          fontItalic
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-news-border text-news-subtext"
+                        }`}
+                      >
+                        Italic
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      টেক্সট রঙ
+                    </label>
+                    <div className="mt-1 flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                        className="h-9 w-12 rounded-md border border-news-border bg-transparent"
+                      />
+                      <span className="text-xs text-news-subtext">
+                        {textColor.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-bengali text-news-subtext">
@@ -440,6 +979,44 @@ const PhotoCard = () => {
                     </span>
                   </div>
                 </div>
+                <div>
+                  <label className="text-sm font-bengali text-news-subtext">
+                    ছবি অংশের উচ্চতা
+                  </label>
+                  <div className="mt-1 flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="0.75"
+                      step="0.05"
+                      value={imageHeightRatio}
+                      onChange={(e) => setImageHeightRatio(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="text-xs text-news-subtext">
+                      {Math.round(imageHeightRatio * 100)}%
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-bengali text-news-subtext">
+                    ওভারলে শক্তি
+                  </label>
+                  <div className="mt-1 flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={overlayStrength}
+                      onChange={(e) => setOverlayStrength(Number(e.target.value))}
+                      className="w-full"
+                    />
+                    <span className="text-xs text-news-subtext">
+                      {Math.round(overlayStrength * 100)}%
+                    </span>
+                  </div>
+                </div>
                 <Select
                   value={selectedNewsId}
                   onValueChange={setSelectedNewsId}
@@ -448,7 +1025,7 @@ const PhotoCard = () => {
                     <SelectValue placeholder="একটি সংবাদ নির্বাচন করুন" />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
-                    {newsData.map((news) => (
+                    {availableNews.map((news) => (
                       <SelectItem key={news.id} value={news.id}>
                         <span className="line-clamp-1">{news.title}</span>
                       </SelectItem>
@@ -496,7 +1073,7 @@ const PhotoCard = () => {
                 </div>
 
                 <Button
-                  onClick={generatePhotoCard}
+                  onClick={() => generatePhotoCard(true, true)}
                   disabled={!selectedNewsId || isGenerating}
                   className="w-full"
                 >
@@ -548,6 +1125,8 @@ const PhotoCard = () => {
             <canvas ref={canvasRef} className="hidden" />
           </div>
         </div>
+          </>
+        )}
       </div>
     </Layout>
   );

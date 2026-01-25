@@ -4,6 +4,9 @@ import Layout from "@/components/layout/Layout";
 import NewsCard from "@/components/news/NewsCard";
 import FacebookEmbed from "@/components/news/FacebookEmbed";
 import { getNewsByCategory, newsData } from "@/data/newsData";
+import { newsService } from "@/services/firebaseService";
+import { NewsArticle } from "@/types/news";
+import { firebaseReady } from "@/config/firebase";
 import { Share2, ThumbsUp, Star } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -11,8 +14,15 @@ const categoryNames: Record<string, string> = {
   sylhet: "সিলেট",
   national: "জাতীয়",
   politics: "রাজনীতি",
+  mofoshol: "মফস্বল সংবাদ",
+  international: "আন্তর্জাতিক",
+  economy: "অর্থনীতি ও বাণিজ্য",
+  entertainment: "বিনোদন",
   expat: "প্রবাস",
   sports: "খেলাধুলা",
+  lifestyle: "লাইফ-স্টাইল",
+  technology: "তথ্য ও প্রযুক্তি",
+  law: "আইন ও আদালত",
   opinion: "মতামত",
   others: "অন্যান্য",
 };
@@ -27,15 +37,46 @@ const CategoryPage = () => {
       : location.pathname === "/others"
         ? "others"
         : undefined);
-  const categoryNews = resolvedCategory
-    ? getNewsByCategory(resolvedCategory)
-    : newsData;
   const categoryTitle = resolvedCategory
     ? categoryNames[resolvedCategory] || resolvedCategory
     : "সকল সংবাদ";
   const sectionLabel = resolvedCategory ? `${categoryTitle} সংবাদ` : "সব সংবাদ";
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 1;
+  const [allNews, setAllNews] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadNews = async () => {
+      if (firebaseReady) {
+        try {
+          let news: NewsArticle[] = [];
+          if (resolvedCategory) {
+            news = await newsService.getNewsByCategory(resolvedCategory);
+          } else {
+            news = await newsService.getAllNews();
+          }
+          if (news && news.length > 0) {
+            setAllNews(news);
+          } else {
+            // Fallback to static data if no news from Firebase
+            setAllNews(resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+          }
+        } catch (error) {
+          console.error("Failed to load news from Firebase:", error);
+          // Silently fallback to static data
+          setAllNews(resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+        }
+      } else {
+        // Silently use static data if Firebase not ready
+        setAllNews(resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+      }
+      setLoading(false);
+    };
+    loadNews();
+  }, [resolvedCategory]);
+
+  const categoryNews = allNews.length > 0 ? allNews : (resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
   const [opinionName, setOpinionName] = useState("");
   const [opinionText, setOpinionText] = useState("");
   const [opinionRating, setOpinionRating] = useState(0);
@@ -225,6 +266,18 @@ const CategoryPage = () => {
     await navigator.clipboard.writeText(shareUrl);
     toast({ description: "Link copied to clipboard" });
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center py-12">
+            <p className="text-news-subtext font-bengali">লোড হচ্ছে...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

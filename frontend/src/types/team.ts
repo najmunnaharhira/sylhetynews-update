@@ -3,4 +3,5 @@ export interface TeamMember {
   name: string;
   role: string;
   order: number;
+  introduction?: string;
 }

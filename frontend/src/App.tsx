@@ -29,8 +29,15 @@ const App = () => (
             <Route path="/sylhet" element={<CategoryPage />} />
             <Route path="/national" element={<CategoryPage />} />
             <Route path="/politics" element={<CategoryPage />} />
+            <Route path="/mofoshol" element={<CategoryPage />} />
+            <Route path="/international" element={<CategoryPage />} />
+            <Route path="/economy" element={<CategoryPage />} />
+            <Route path="/entertainment" element={<CategoryPage />} />
             <Route path="/expat" element={<CategoryPage />} />
             <Route path="/sports" element={<CategoryPage />} />
+            <Route path="/lifestyle" element={<CategoryPage />} />
+            <Route path="/technology" element={<CategoryPage />} />
+            <Route path="/law" element={<CategoryPage />} />
             <Route path="/opinion" element={<CategoryPage />} />
             <Route path="/others" element={<CategoryPage />} />
             <Route path="/news/:id" element={<NewsDetail />} />

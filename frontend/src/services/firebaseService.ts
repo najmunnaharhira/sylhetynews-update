@@ -21,42 +21,59 @@ import { TeamMember } from '../types/team';
 const NEWS_COLLECTION = 'news';
 const CATEGORIES_COLLECTION = 'categories';
 const TEAM_COLLECTION = 'team';
+const PHOTOCARD_TEMPLATES_COLLECTION = 'photocardTemplates';
 
 // News Operations
 export const newsService = {
   // Get all published news
   async getAllNews(): Promise<NewsArticle[]> {
-    const q = query(
-      collection(db, NEWS_COLLECTION),
-      where('published', '==', true),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    } as NewsArticle));
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
+    try {
+      const q = query(
+        collection(db, NEWS_COLLECTION),
+        where('published', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      } as NewsArticle));
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      throw error;
+    }
   },
 
   // Get news by category
   async getNewsByCategory(category: string): Promise<NewsArticle[]> {
-    const q = query(
-      collection(db, NEWS_COLLECTION),
-      where('category', '==', category),
-      where('published', '==', true),
-      orderBy('createdAt', 'desc'),
-      limit(20)
-    );
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate() || new Date(),
-      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-    } as NewsArticle));
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
+    try {
+      const q = query(
+        collection(db, NEWS_COLLECTION),
+        where('category', '==', category),
+        where('published', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(20)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+      } as NewsArticle));
+    } catch (error) {
+      console.error('Error fetching news by category:', error);
+      throw error;
+    }
   },
 
   // Get featured news
@@ -187,12 +204,20 @@ export const imageService = {
 // Team Operations
 export const teamService = {
   async getTeamMembers(): Promise<TeamMember[]> {
-    const q = query(collection(db, TEAM_COLLECTION), orderBy('order', 'asc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    } as TeamMember));
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
+    try {
+      const q = query(collection(db, TEAM_COLLECTION), orderBy('order', 'asc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as TeamMember));
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      throw error;
+    }
   },
 
   async createTeamMember(member: Omit<TeamMember, 'id'>): Promise<string> {
@@ -207,6 +232,65 @@ export const teamService = {
 
   async deleteTeamMember(id: string): Promise<void> {
     const docRef = doc(db, TEAM_COLLECTION, id);
+    await deleteDoc(docRef);
+  },
+};
+
+// PhotoCard Template Operations
+export const photocardTemplateService = {
+  async getTemplates(): Promise<any[]> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
+    try {
+      const q = query(
+        collection(db, PHOTOCARD_TEMPLATES_COLLECTION),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      }));
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      throw error;
+    }
+  },
+
+  async getAllTemplates(): Promise<any[]> {
+    const q = query(
+      collection(db, PHOTOCARD_TEMPLATES_COLLECTION),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+    }));
+  },
+
+  async createTemplate(template: Omit<any, 'id' | 'createdAt'>): Promise<string> {
+    const docRef = await addDoc(collection(db, PHOTOCARD_TEMPLATES_COLLECTION), {
+      ...template,
+      createdAt: Timestamp.now(),
+    });
+    return docRef.id;
+  },
+
+  async updateTemplate(id: string, template: Partial<any>): Promise<void> {
+    const docRef = doc(db, PHOTOCARD_TEMPLATES_COLLECTION, id);
+    await updateDoc(docRef, {
+      ...template,
+      updatedAt: Timestamp.now(),
+    });
+  },
+
+  async deleteTemplate(id: string): Promise<void> {
+    const docRef = doc(db, PHOTOCARD_TEMPLATES_COLLECTION, id);
     await deleteDoc(docRef);
   },
 };

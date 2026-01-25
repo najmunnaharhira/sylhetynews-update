@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import groupImage from "@/assets/group image.jpeg";
 
 const FacebookEmbed = () => {
   useEffect(() => {
@@ -28,7 +29,7 @@ const FacebookEmbed = () => {
           ভিজিট করুন
         </a>
       </div>
-      <div className="p-4">
+      <div className="p-4 space-y-4">
         <div
           className="fb-page"
           data-href="https://www.facebook.com/share/1FdPD4PdC9/"
@@ -48,6 +49,27 @@ const FacebookEmbed = () => {
               আমাদের ফেসবুক পেজ দেখুন
             </a>
           </blockquote>
+        </div>
+        <div className="border border-news-border rounded-sm overflow-hidden">
+          <img
+            src={groupImage}
+            alt="Sylhety News Facebook group"
+            className="w-full h-40 object-cover"
+            loading="lazy"
+          />
+          <div className="p-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-bengali text-news-body">
+              ফেসবুক গ্রুপে যুক্ত হন
+            </p>
+            <a
+              href="https://www.facebook.com/share/g/17cyNBkTK8/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              গ্রুপ ভিজিট করুন
+            </a>
+          </div>
         </div>
       </div>
     </div>
