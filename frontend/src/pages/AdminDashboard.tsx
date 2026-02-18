@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdminAuth } from '../contexts/AdminAuthContext';
+import { api } from '../services/dataService';
+import { isBackendConfigured } from '../config/api';
 import { Button } from '../components/ui/button';
 import { 
   LogOut, 
@@ -29,7 +32,16 @@ const sidebarItems = [
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, userData, isAdmin, logout, loading } = useAuth();
+  const firebaseAuth = useAuth();
+  const adminApiAuth = useAdminAuth();
+  const useApiAuth = isBackendConfigured();
+
+  const user = useApiAuth ? adminApiAuth.user : firebaseAuth.user;
+  const userData = useApiAuth ? (adminApiAuth.user ? { displayName: adminApiAuth.user.email, role: 'admin' as const } : null) : firebaseAuth.userData;
+  const isAdmin = useApiAuth ? adminApiAuth.isAuthenticated : firebaseAuth.isAdmin;
+  const loading = useApiAuth ? adminApiAuth.loading : firebaseAuth.loading;
+  const logout = useApiAuth ? () => { adminApiAuth.logout(); navigate('/admin/login'); } : firebaseAuth.logout;
+
   const [activeTab, setActiveTab] = useState<AdminTab>('news');
   const [showForm, setShowForm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,8 +61,13 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/admin/login');
+    if (useApiAuth) {
+      adminApiAuth.logout();
+      navigate('/admin/login');
+    } else {
+      await logout();
+      navigate('/admin/login');
+    }
   };
 
   return (
@@ -74,11 +91,16 @@ export default function AdminDashboard() {
           {/* User Info */}
           <div className="p-4 border-b border-white/10">
             <p className="text-sm text-white/80 font-bengali truncate">
-              {userData?.displayName || user?.email}
+              {userData?.displayName || (user && 'email' in user ? user.email : '')}
             </p>
             <p className="text-xs text-white/50 font-bengali">
               {userData?.role === 'admin' ? 'অ্যাডমিন' : 'এডিটর'}
             </p>
+            {useApiAuth && (
+              <p className="text-xs text-green-400/80 font-bengali mt-1">
+                Backend সংযুক্ত
+              </p>
+            )}
           </div>
 
           {/* Navigation */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NewsArticle } from '../types/news';
-import { newsService } from '../services/firebaseService';
+import { newsService } from '../services/dataService';
 
 export const useNews = () => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);

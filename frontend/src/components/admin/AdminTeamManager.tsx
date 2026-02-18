@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { AlertCircle, Trash2, Save } from "lucide-react";
-import { teamService } from "../../services/firebaseService";
+import { teamService, api } from "../../services/dataService";
 import { TeamMember } from "../../types/team";
 import { firebaseInitError, firebaseReady } from "../../config/firebase";
 
@@ -14,7 +14,7 @@ const AdminTeamManager = () => {
   const [error, setError] = useState("");
 
   const loadMembers = async () => {
-    if (!firebaseReady) {
+    if (!api.isConfigured() && !firebaseReady) {
       setError(firebaseInitError || "Firebase is not configured.");
       return;
     }
@@ -40,8 +40,8 @@ const AdminTeamManager = () => {
       setName("");
       setRole("");
       await loadMembers();
-    } catch (err: any) {
-      setError(err.message || "Error adding team member");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error adding team member");
     } finally {
       setLoading(false);
     }
@@ -57,8 +57,10 @@ const AdminTeamManager = () => {
         order: member.order,
       });
       await loadMembers();
-    } catch (err: any) {
-      setError(err.message || "Error updating team member");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Error updating team member"
+      );
     } finally {
       setLoading(false);
     }
@@ -70,8 +72,10 @@ const AdminTeamManager = () => {
       setError("");
       await teamService.deleteTeamMember(id);
       await loadMembers();
-    } catch (err: any) {
-      setError(err.message || "Error deleting team member");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Error deleting team member"
+      );
     } finally {
       setLoading(false);
     }
@@ -86,7 +90,10 @@ const AdminTeamManager = () => {
         </div>
       )}
 
-      <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <form
+        onSubmit={handleAdd}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             নাম

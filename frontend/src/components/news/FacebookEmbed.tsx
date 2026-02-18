@@ -1,18 +1,24 @@
 import { useEffect } from "react";
 import groupImage from "@/assets/group image.jpeg";
 
+declare global {
+  interface Window {
+    FB?: { XFBML: { parse: () => void } };
+  }
+}
+
 const FacebookEmbed = () => {
   useEffect(() => {
     // Load Facebook SDK
-    if (typeof window !== "undefined" && !(window as any).FB) {
+    if (typeof window !== "undefined" && !window.FB) {
       const script = document.createElement("script");
       script.src = "https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v18.0";
       script.async = true;
       script.defer = true;
       script.crossOrigin = "anonymous";
       document.body.appendChild(script);
-    } else if ((window as any).FB) {
-      (window as any).FB.XFBML.parse();
+    } else if (window.FB) {
+      window.FB.XFBML.parse();
     }
   }, []);
 

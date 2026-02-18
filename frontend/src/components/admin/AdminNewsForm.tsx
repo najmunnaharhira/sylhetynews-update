@@ -1,39 +1,77 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Card } from '../ui/card';
-import { AlertCircle, Upload, X } from 'lucide-react';
-import { newsService, imageService, categoryService } from '../../services/firebaseService';
-import { NewsArticle, NewsCategory } from '../../types/news';
-import { firebaseInitError, firebaseReady } from '../../config/firebase';
-import { sylhetDistricts } from '@/data/districts';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Card } from "../ui/card";
+import { AlertCircle, Upload, X } from "lucide-react";
+import {
+  newsService,
+  imageService,
+  categoryService,
+  api,
+} from "../../services/dataService";
+import { NewsArticle, NewsCategory } from "../../types/news";
+import { firebaseInitError, firebaseReady } from "../../config/firebase";
+import { sylhetDistricts } from "@/data/districts";
 
 interface AdminNewsFormProps {
   news?: NewsArticle;
   onSuccess?: () => void;
 }
 
+type NewsFormData = {
+  title: string;
+  content: string;
+  summary: string;
+  category: string;
+  district: string;
+  author: string;
+  featured: boolean;
+  tags: string;
+  published: boolean;
+};
+
 export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
-    defaultValues: news || {
-      title: '',
-      content: '',
-      summary: '',
-      category: '',
-      district: '',
-      author: '',
-      featured: false,
-      tags: [] as string[],
-    },
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<NewsFormData>({
+    defaultValues: news
+      ? {
+          title: news.title ?? "",
+          content: news.content ?? "",
+          summary: news.summary ?? "",
+          category: news.category ?? "",
+          district: news.district ?? "",
+          author: news.author ?? "",
+          featured: news.featured ?? false,
+          tags: (news.tags ?? []).join(", "),
+          published: news.published ?? false,
+        }
+      : {
+          title: "",
+          content: "",
+          summary: "",
+          category: "",
+          district: "",
+          author: "",
+          featured: false,
+          tags: "",
+          published: false,
+        },
   });
 
   const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>(news?.imageUrl || '');
+  const [imagePreview, setImagePreview] = useState<string>(
+    news?.imageUrl || ""
+  );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     loadCategories();
@@ -41,14 +79,14 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
 
   const loadCategories = async () => {
     try {
-      if (!firebaseReady) {
-        setError(firebaseInitError || 'Firebase is not configured.');
+      if (!api.isConfigured() && !firebaseReady) {
+        setError(firebaseInitError || "Firebase is not configured.");
         return;
       }
       const cats = await categoryService.getAllCategories();
       setCategories(cats);
     } catch (err) {
-      console.error('Error loading categories:', err);
+      console.error("Error loading categories:", err);
     }
   };
 
@@ -64,20 +102,20 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
     }
   };
 
-  const onSubmit = async (data: Record<string, any>) => {
+  const onSubmit = async (data: NewsFormData) => {
     try {
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
       setLoading(true);
-      if (!firebaseReady) {
-        throw new Error(firebaseInitError || 'Firebase is not configured.');
+      if (!api.isConfigured() && !firebaseReady) {
+        throw new Error(firebaseInitError || "Firebase is not configured.");
       }
 
       let imageUrl = imagePreview;
 
       // Upload image if new one selected
       if (image) {
-        imageUrl = await imageService.uploadImage(image, 'news');
+        imageUrl = await imageService.uploadImage(image, "news");
       }
 
       const articleData = {
@@ -88,26 +126,29 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         district: data.district,
         author: data.author,
         imageUrl,
-        featured: data.featured || false,
-        tags: data.tags.split(',').map((t: string) => t.trim()),
-        published: data.published || false,
+        featured: data.featured,
+        tags: data.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        published: data.published,
       };
 
       if (news?.id) {
         // Update existing
         await newsService.updateNews(news.id, articleData);
-        setSuccess('Article updated successfully!');
+        setSuccess("Article updated successfully!");
       } else {
         // Create new
         await newsService.createNews(articleData);
-        setSuccess('Article created successfully!');
+        setSuccess("Article created successfully!");
       }
 
       setTimeout(() => {
         onSuccess?.();
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Error saving article');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error saving article");
     } finally {
       setLoading(false);
     }
@@ -145,9 +186,11 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
                 {image && (
                   <button
                     type="button"
+                    aria-label="Remove selected image"
+                    title="Remove selected image"
                     onClick={() => {
                       setImage(null);
-                      setImagePreview(news?.imageUrl || '');
+                      setImagePreview(news?.imageUrl || "");
                     }}
                     className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded hover:bg-red-600"
                   >
@@ -160,7 +203,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors">
                 <Upload className="mx-auto text-gray-400 mb-2" size={24} />
                 <p className="text-sm text-gray-600">
-                  {image ? 'Click to change image' : 'Click or drag image here'}
+                  {image ? "Click to change image" : "Click or drag image here"}
                 </p>
                 <input
                   type="file"
@@ -179,7 +222,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             Title *
           </label>
           <Input
-            {...register('title', { required: 'Title is required' })}
+            {...register("title", { required: "Title is required" })}
             placeholder="Article title"
             className="w-full"
           />
@@ -194,13 +237,15 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             Summary *
           </label>
           <textarea
-            {...register('summary', { required: 'Summary is required' })}
+            {...register("summary", { required: "Summary is required" })}
             placeholder="Brief summary (shown in listings)"
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           />
           {errors.summary && (
-            <p className="text-red-500 text-sm mt-1">{errors.summary.message}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {errors.summary.message}
+            </p>
           )}
         </div>
 
@@ -210,13 +255,15 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             Content *
           </label>
           <textarea
-            {...register('content', { required: 'Content is required' })}
+            {...register("content", { required: "Content is required" })}
             placeholder="Full article content"
             rows={8}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
           />
           {errors.content && (
-            <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {errors.content.message}
+            </p>
           )}
         </div>
 
@@ -226,7 +273,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             Category *
           </label>
           <select
-            {...register('category', { required: 'Category is required' })}
+            {...register("category", { required: "Category is required" })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">Select a category</option>
@@ -237,7 +284,9 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             ))}
           </select>
           {errors.category && (
-            <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+            <p className="text-red-500 text-sm mt-1">
+              {errors.category.message}
+            </p>
           )}
         </div>
 
@@ -247,7 +296,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             District
           </label>
           <select
-            {...register('district')}
+            {...register("district")}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">Select a district</option>
@@ -265,7 +314,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             Author
           </label>
           <Input
-            {...register('author')}
+            {...register("author")}
             placeholder="Author name"
             className="w-full"
           />
@@ -277,11 +326,13 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             Tags
           </label>
           <Input
-            {...register('tags')}
+            {...register("tags")}
             placeholder="tag1, tag2, tag3"
             className="w-full"
           />
-          <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Separate tags with commas
+          </p>
         </div>
 
         {/* Checkboxes */}
@@ -289,17 +340,18 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
-              {...register('featured')}
+              {...register("featured")}
               className="rounded border-gray-300"
             />
-            <span className="text-sm font-medium text-gray-700">Featured Article</span>
+            <span className="text-sm font-medium text-gray-700">
+              Featured Article
+            </span>
           </label>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
-              {...register('published')}
+              {...register("published")}
               className="rounded border-gray-300"
-              defaultChecked={news?.published || false}
             />
             <span className="text-sm font-medium text-gray-700">Published</span>
           </label>
@@ -312,7 +364,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             disabled={loading}
             className="flex-1 bg-indigo-600 hover:bg-indigo-700"
           >
-            {loading ? 'Saving...' : news ? 'Update Article' : 'Create Article'}
+            {loading ? "Saving..." : news ? "Update Article" : "Create Article"}
           </Button>
           <Button
             type="button"

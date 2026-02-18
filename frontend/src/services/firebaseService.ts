@@ -17,6 +17,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import { NewsArticle, NewsCategory } from '../types/news';
 import { TeamMember } from '../types/team';
+import { PhotoCardTemplate } from '../types/photocard';
 
 const NEWS_COLLECTION = 'news';
 const CATEGORIES_COLLECTION = 'categories';
@@ -25,6 +26,19 @@ const PHOTOCARD_TEMPLATES_COLLECTION = 'photocardTemplates';
 
 // News Operations
 export const newsService = {
+  // Get all news for admin (including unpublished)
+  async getAdminAllNews(): Promise<NewsArticle[]> {
+    if (!db) throw new Error('Firebase is not initialized');
+    const q = query(collection(db, NEWS_COLLECTION), orderBy('createdAt', 'desc'), limit(200));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate() || new Date(),
+      updatedAt: doc.data().updatedAt?.toDate() || new Date(),
+    } as NewsArticle));
+  },
+
   // Get all published news
   async getAllNews(): Promise<NewsArticle[]> {
     if (!db) {
@@ -78,6 +92,9 @@ export const newsService = {
 
   // Get featured news
   async getFeaturedNews(): Promise<NewsArticle[]> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const q = query(
       collection(db, NEWS_COLLECTION),
       where('featured', '==', true),
@@ -96,6 +113,9 @@ export const newsService = {
 
   // Get single news article
   async getNews(id: string): Promise<NewsArticle | null> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, NEWS_COLLECTION, id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
@@ -111,6 +131,9 @@ export const newsService = {
 
   // Create news article
   async createNews(article: Omit<NewsArticle, 'id' | 'createdAt' | 'updatedAt' | 'views'>): Promise<string> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = await addDoc(collection(db, NEWS_COLLECTION), {
       ...article,
       views: 0,
@@ -122,6 +145,9 @@ export const newsService = {
 
   // Update news article
   async updateNews(id: string, article: Partial<NewsArticle>): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, NEWS_COLLECTION, id);
     await updateDoc(docRef, {
       ...article,
@@ -131,12 +157,18 @@ export const newsService = {
 
   // Delete news article
   async deleteNews(id: string): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, NEWS_COLLECTION, id);
     await deleteDoc(docRef);
   },
 
   // Publish/Unpublish news
   async togglePublish(id: string, published: boolean): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, NEWS_COLLECTION, id);
     await updateDoc(docRef, {
       published,
@@ -146,6 +178,9 @@ export const newsService = {
 
   // Increment views
   async incrementViews(id: string): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, NEWS_COLLECTION, id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
@@ -161,6 +196,9 @@ export const newsService = {
 export const categoryService = {
   // Get all categories
   async getAllCategories(): Promise<NewsCategory[]> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const snapshot = await getDocs(collection(db, CATEGORIES_COLLECTION));
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -170,18 +208,27 @@ export const categoryService = {
 
   // Create category
   async createCategory(category: Omit<NewsCategory, 'id'>): Promise<string> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = await addDoc(collection(db, CATEGORIES_COLLECTION), category);
     return docRef.id;
   },
 
   // Update category
   async updateCategory(id: string, category: Partial<NewsCategory>): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, CATEGORIES_COLLECTION, id);
     await updateDoc(docRef, category);
   },
 
   // Delete category
   async deleteCategory(id: string): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, CATEGORIES_COLLECTION, id);
     await deleteDoc(docRef);
   },
@@ -190,6 +237,9 @@ export const categoryService = {
 // Image Upload
 export const imageService = {
   async uploadImage(file: File, folder: string = 'news'): Promise<string> {
+    if (!storage) {
+      throw new Error('Firebase Storage is not initialized');
+    }
     const timestamp = Date.now();
     const filename = `${folder}/${timestamp}_${file.name}`;
     const storageRef = ref(storage, filename);
@@ -221,16 +271,25 @@ export const teamService = {
   },
 
   async createTeamMember(member: Omit<TeamMember, 'id'>): Promise<string> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = await addDoc(collection(db, TEAM_COLLECTION), member);
     return docRef.id;
   },
 
   async updateTeamMember(id: string, member: Partial<TeamMember>): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, TEAM_COLLECTION, id);
     await updateDoc(docRef, member);
   },
 
   async deleteTeamMember(id: string): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, TEAM_COLLECTION, id);
     await deleteDoc(docRef);
   },
@@ -238,7 +297,7 @@ export const teamService = {
 
 // PhotoCard Template Operations
 export const photocardTemplateService = {
-  async getTemplates(): Promise<any[]> {
+  async getTemplates(): Promise<PhotoCardTemplate[]> {
     if (!db) {
       throw new Error('Firebase is not initialized');
     }
@@ -253,14 +312,17 @@ export const photocardTemplateService = {
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
-      }));
+      } as PhotoCardTemplate));
     } catch (error) {
       console.error('Error fetching templates:', error);
       throw error;
     }
   },
 
-  async getAllTemplates(): Promise<any[]> {
+  async getAllTemplates(): Promise<PhotoCardTemplate[]> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const q = query(
       collection(db, PHOTOCARD_TEMPLATES_COLLECTION),
       orderBy('createdAt', 'desc')
@@ -270,10 +332,13 @@ export const photocardTemplateService = {
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate() || new Date(),
-    }));
+    } as PhotoCardTemplate));
   },
 
-  async createTemplate(template: Omit<any, 'id' | 'createdAt'>): Promise<string> {
+  async createTemplate(template: Omit<PhotoCardTemplate, 'id' | 'createdAt'>): Promise<string> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = await addDoc(collection(db, PHOTOCARD_TEMPLATES_COLLECTION), {
       ...template,
       createdAt: Timestamp.now(),
@@ -281,7 +346,10 @@ export const photocardTemplateService = {
     return docRef.id;
   },
 
-  async updateTemplate(id: string, template: Partial<any>): Promise<void> {
+  async updateTemplate(id: string, template: Partial<PhotoCardTemplate>): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, PHOTOCARD_TEMPLATES_COLLECTION, id);
     await updateDoc(docRef, {
       ...template,
@@ -290,6 +358,9 @@ export const photocardTemplateService = {
   },
 
   async deleteTemplate(id: string): Promise<void> {
+    if (!db) {
+      throw new Error('Firebase is not initialized');
+    }
     const docRef = doc(db, PHOTOCARD_TEMPLATES_COLLECTION, id);
     await deleteDoc(docRef);
   },

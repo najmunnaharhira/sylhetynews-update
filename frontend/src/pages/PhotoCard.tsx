@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/select";
 import { Download, Image as ImageIcon, Upload, X, Sparkles } from "lucide-react";
 import logoMain from "/logo-main.jpeg";
-import { photocardTemplateService, newsService } from "@/services/firebaseService";
+import { photocardTemplateService, newsService } from "@/services/dataService";
 import { firebaseReady } from "@/config/firebase";
 import { NewsArticle } from "@/types/news";
+import { PhotoCardTemplate } from "@/types/photocard";
 
 const PhotoCard = () => {
   const [searchParams] = useSearchParams();
@@ -40,7 +41,7 @@ const PhotoCard = () => {
   const [overlayStrength, setOverlayStrength] = useState(0.9);
   const [fontBold, setFontBold] = useState(true);
   const [fontItalic, setFontItalic] = useState(false);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<PhotoCardTemplate[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [firebaseNews, setFirebaseNews] = useState<NewsArticle[]>([]);
@@ -131,7 +132,7 @@ const PhotoCard = () => {
     loadTemplates();
   }, []);
 
-  const handleDownloadTemplate = (template: any) => {
+  const handleDownloadTemplate = (template: PhotoCardTemplate) => {
     const link = document.createElement("a");
     link.download = `${template.name || 'photocard'}.png`;
     link.href = template.imageUrl;
@@ -168,8 +169,9 @@ const PhotoCard = () => {
     if (!ctx) return null;
 
     // Polyfill for roundRect if not available
-    if (!ctx.roundRect) {
-      (ctx as any).roundRect = function (x: number, y: number, w: number, h: number, r: number) {
+    type CtxWithRoundRect = CanvasRenderingContext2D & { roundRect?(x: number, y: number, w: number, h: number, r: number): void };
+    if (!(ctx as CtxWithRoundRect).roundRect) {
+      (ctx as CtxWithRoundRect).roundRect = function (x: number, y: number, w: number, h: number, r: number) {
         if (w < 2 * r) r = w / 2;
         if (h < 2 * r) r = h / 2;
         this.beginPath();
@@ -326,7 +328,7 @@ const PhotoCard = () => {
           ctx.fillStyle = textColor;
           ctx.fillText(line.trim(), paddingX, y);
 
-          // Footer: Vertical layout - বিস্তারিত কমেন্টে first, then Website and Chilekotha
+          // Footer: Vertical layout - বিস্তারিত কমেন্টে first, then Website
           if (includeLogo) {
             // Calculate position right after headline
             const lastLineY = y + lineHeight;
@@ -415,7 +417,7 @@ const PhotoCard = () => {
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
 
-            // Second: Website and Chilekotha (below button, not much space)
+            // Second: Website (below button, not much space)
             const footerGap = Math.max(18 * scale, 15); // Not much space
             currentY = detailsY + buttonH / 2 + footerGap;
             const footerFontSize = Math.max(12, Math.min(18 * scale, width * 0.025));
@@ -453,37 +455,7 @@ const PhotoCard = () => {
               ctx.fillText(websiteText, paddingX, currentY);
             }
 
-            // Right side: Chilekotha
-            const chilekothaText = "TechPartner: Chilekotha";
-            ctx.textAlign = "right";
-
-            if (useGradient) {
-              const chilekothaGradient = ctx.createLinearGradient(
-                width - paddingX - ctx.measureText(chilekothaText).width,
-                currentY - 10 * scale,
-                width - paddingX,
-                currentY + 10 * scale
-              );
-              chilekothaGradient.addColorStop(0, accentColor);
-              chilekothaGradient.addColorStop(0.5, accentColor2);
-              chilekothaGradient.addColorStop(1, accentColor);
-
-              ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-              ctx.fillText(chilekothaText, width - paddingX + 1 * scale, currentY + 1 * scale);
-              ctx.fillStyle = chilekothaGradient;
-              ctx.fillText(chilekothaText, width - paddingX, currentY);
-
-              ctx.shadowColor = accentColor;
-              ctx.shadowBlur = Math.max(4, 6 * scale);
-              ctx.shadowOffsetX = 0;
-              ctx.shadowOffsetY = 0;
-              ctx.fillText(chilekothaText, width - paddingX, currentY);
-              ctx.shadowColor = 'transparent';
-              ctx.shadowBlur = 0;
-            } else {
-              ctx.fillStyle = accentColor;
-              ctx.fillText(chilekothaText, width - paddingX, currentY);
-            }
+          // Right side partner text removed
           }
 
           const imageUrl = canvas.toDataURL("image/png");
@@ -495,8 +467,9 @@ const PhotoCard = () => {
         const paddingX = 50 * scale;
 
         // Polyfill for roundRect if not available
-        if (!ctx.roundRect) {
-          (ctx as any).roundRect = function (x: number, y: number, w: number, h: number, r: number) {
+        type CtxWithRoundRect = CanvasRenderingContext2D & { roundRect?(x: number, y: number, w: number, h: number, r: number): void };
+        if (!(ctx as CtxWithRoundRect).roundRect) {
+          (ctx as CtxWithRoundRect).roundRect = function (x: number, y: number, w: number, h: number, r: number) {
             if (w < 2 * r) r = w / 2;
             if (h < 2 * r) r = h / 2;
             this.beginPath();
@@ -599,7 +572,7 @@ const PhotoCard = () => {
           ctx.fillStyle = textColor;
           ctx.fillText(line.trim(), paddingX, y);
 
-          // Footer: Vertical layout - বিস্তারিত কমেন্টে first, then Website and Chilekotha
+          // Footer: Vertical layout - বিস্তারিত কমেন্টে first, then Website
           if (includeLogo) {
             // Calculate position right after headline
             const lastLineY = y + lineHeight;
@@ -688,7 +661,7 @@ const PhotoCard = () => {
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
 
-            // Second: Website and Chilekotha (below button, not much space)
+            // Second: Website (below button, not much space)
             const footerGap = Math.max(18 * scale, 15); // Not much space
             currentY = detailsY + buttonH / 2 + footerGap;
             const footerFontSize = Math.max(12, Math.min(18 * scale, width * 0.025));
@@ -726,37 +699,7 @@ const PhotoCard = () => {
               ctx.fillText(websiteText, paddingX, currentY);
             }
 
-            // Right side: Chilekotha
-            const chilekothaText = "TechPartner: Chilekotha";
-            ctx.textAlign = "right";
-
-            if (useGradient) {
-              const chilekothaGradient = ctx.createLinearGradient(
-                width - paddingX - ctx.measureText(chilekothaText).width,
-                currentY - 10 * scale,
-                width - paddingX,
-                currentY + 10 * scale
-              );
-              chilekothaGradient.addColorStop(0, accentColor);
-              chilekothaGradient.addColorStop(0.5, accentColor2);
-              chilekothaGradient.addColorStop(1, accentColor);
-
-              ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-              ctx.fillText(chilekothaText, width - paddingX + 1 * scale, currentY + 1 * scale);
-              ctx.fillStyle = chilekothaGradient;
-              ctx.fillText(chilekothaText, width - paddingX, currentY);
-
-              ctx.shadowColor = accentColor;
-              ctx.shadowBlur = Math.max(4, 6 * scale);
-              ctx.shadowOffsetX = 0;
-              ctx.shadowOffsetY = 0;
-              ctx.fillText(chilekothaText, width - paddingX, currentY);
-              ctx.shadowColor = 'transparent';
-              ctx.shadowBlur = 0;
-            } else {
-              ctx.fillStyle = accentColor;
-              ctx.fillText(chilekothaText, width - paddingX, currentY);
-            }
+          // Right side partner text removed
           }
 
           const imageUrl = canvas.toDataURL("image/png");
@@ -768,8 +711,8 @@ const PhotoCard = () => {
       if (selectedNews) {
         if ('imageUrl' in selectedNews) {
           newsImage = (selectedNews as NewsArticle).imageUrl;
-        } else if ('image' in selectedNews) {
-          newsImage = (selectedNews as any).image;
+        } else if ('image' in selectedNews && typeof (selectedNews as { image?: string }).image === 'string') {
+          newsImage = (selectedNews as { image: string }).image;
         }
       }
       img.src = uploadedImagePreview || newsImage || "";
@@ -923,6 +866,7 @@ const PhotoCard = () => {
                           value={`${cardWidth}x${cardHeight}`}
                           onChange={(e) => handleDimensionChange(e.target.value)}
                           className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                          aria-label="Photocard size"
                         >
                           {dimensionOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -941,6 +885,7 @@ const PhotoCard = () => {
                             value={accentColor}
                             onChange={(e) => setAccentColor(e.target.value)}
                             className="h-9 w-12 rounded-md border border-news-border bg-transparent"
+                            aria-label="Accent color"
                           />
                           <span className="text-xs text-news-subtext">
                             {accentColor.toUpperCase()}
@@ -957,6 +902,7 @@ const PhotoCard = () => {
                             value={accentColor2}
                             onChange={(e) => setAccentColor2(e.target.value)}
                             className="h-9 w-12 rounded-md border border-news-border bg-transparent"
+                            aria-label="Gradient color"
                           />
                           <span className="text-xs text-news-subtext">
                             {accentColor2.toUpperCase()}
@@ -1013,6 +959,7 @@ const PhotoCard = () => {
                             value={textColor}
                             onChange={(e) => setTextColor(e.target.value)}
                             className="h-9 w-12 rounded-md border border-news-border bg-transparent"
+                            aria-label="Text color"
                           />
                           <span className="text-xs text-news-subtext">
                             {textColor.toUpperCase()}
@@ -1033,6 +980,7 @@ const PhotoCard = () => {
                           value={headlineScale}
                           onChange={(e) => setHeadlineScale(Number(e.target.value))}
                           className="w-full"
+                          aria-label="Headline font size"
                         />
                         <span className="text-xs text-news-subtext">
                           {Math.round(headlineScale * 100)}%
@@ -1052,6 +1000,7 @@ const PhotoCard = () => {
                           value={imageHeightRatio}
                           onChange={(e) => setImageHeightRatio(Number(e.target.value))}
                           className="w-full"
+                          aria-label="Image height"
                         />
                         <span className="text-xs text-news-subtext">
                           {Math.round(imageHeightRatio * 100)}%
@@ -1071,6 +1020,7 @@ const PhotoCard = () => {
                           value={overlayStrength}
                           onChange={(e) => setOverlayStrength(Number(e.target.value))}
                           className="w-full"
+                          aria-label="Overlay strength"
                         />
                         <span className="text-xs text-news-subtext">
                           {Math.round(overlayStrength * 100)}%

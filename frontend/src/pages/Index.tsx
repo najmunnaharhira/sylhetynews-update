@@ -8,14 +8,14 @@ import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
 import FacebookEmbed from "@/components/news/FacebookEmbed";
 import WeatherWidget from "@/components/news/WeatherWidget";
 import CategorySection from "@/components/news/CategorySection";
-import { newsService } from "@/services/firebaseService";
+import { newsService } from "@/services/dataService";
 import { NewsArticle } from "@/types/news";
-import { firebaseReady } from "@/config/firebase";
 import {
   getFeaturedNews,
   getLatestNews,
   getNewsByCategory,
 } from "@/data/newsData";
+import { toDisplayItem } from "@/utils/newsDisplay";
 
 const Index = () => {
   const [allNews, setAllNews] = useState<NewsArticle[]>([]);
@@ -23,22 +23,11 @@ const Index = () => {
 
   useEffect(() => {
     const loadNews = async () => {
-      if (firebaseReady) {
-        try {
-          const news = await newsService.getAllNews();
-          if (news && news.length > 0) {
-            setAllNews(news);
-          } else {
-            // Fallback to static data if no news from Firebase
-            setAllNews([]);
-          }
-        } catch (error) {
-          console.error("Failed to load news from Firebase:", error);
-          // Silently fallback to static data
-          setAllNews([]);
-        }
-      } else {
-        // Silently use static data if Firebase not ready
+      try {
+        const news = await newsService.getAllNews();
+        setAllNews(news && news.length > 0 ? news : []);
+      } catch (error) {
+        console.error("Failed to load news:", error);
         setAllNews([]);
       }
       setLoading(false);
@@ -61,20 +50,33 @@ const Index = () => {
     { name: "আইন ও আদালত", path: "/law" },
   ];
 
-  // Use Firebase data if available, otherwise fallback to static data
-  const featuredNews = allNews.find(n => n.featured) || (allNews.length > 0 ? allNews[0] : getFeaturedNews());
-  const latestNews = allNews.length > 0 ? allNews.slice(0, 6) : getLatestNews(6);
-  const sylhetNews = allNews.length > 0 
-    ? allNews.filter(n => n.category === "sylhet" || n.categoryBn === "সিলেট")
-    : getNewsByCategory("sylhet");
-  const nationalNews = allNews.length > 0
-    ? allNews.filter(n => n.category === "national" || n.categoryBn === "জাতীয়")
-    : getNewsByCategory("national");
-  const sportsNews = allNews.length > 0
-    ? allNews.filter(n => n.category === "sports" || n.categoryBn === "খেলাধুলা")
-    : getNewsByCategory("sports");
+  // Use Firebase/API data if available (admin-uploaded news), otherwise fallback to static data.
+  // Normalize to display shape (NewsItem) so LeadNews, NewsCard, etc. show image, excerpt, date, categoryBn.
+  const featuredRaw = allNews.find((n) => n.featured) || (allNews.length > 0 ? allNews[0] : null);
+  const featuredNews = featuredRaw ? toDisplayItem(featuredRaw) : getFeaturedNews();
+  const latestNews =
+    allNews.length > 0
+      ? allNews.slice(0, 6).map(toDisplayItem)
+      : getLatestNews(6);
+  const sylhetNews =
+    allNews.length > 0
+      ? allNews
+          .filter((n) => n.category === "sylhet" || (n as NewsArticle & { categoryBn?: string }).categoryBn === "সিলেট")
+          .map(toDisplayItem)
+      : getNewsByCategory("sylhet");
+  const nationalNews =
+    allNews.length > 0
+      ? allNews
+          .filter((n) => n.category === "national" || (n as NewsArticle & { categoryBn?: string }).categoryBn === "জাতীয়")
+          .map(toDisplayItem)
+      : getNewsByCategory("national");
+  const sportsNews =
+    allNews.length > 0
+      ? allNews
+          .filter((n) => n.category === "sports" || (n as NewsArticle & { categoryBn?: string }).categoryBn === "খেলাধুলা")
+          .map(toDisplayItem)
+      : getNewsByCategory("sports");
 
-  // Get a featured Sylhet news for the special section
   const sylhetSpecialNews = sylhetNews[0] || featuredNews;
 
   if (loading) {

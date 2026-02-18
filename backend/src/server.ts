@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import adminRoutes from './routes/admin.js';
 import newsRoutes from './routes/news.js';
+import categoryRoutes from './routes/categories.js';
+import teamRoutes from './routes/team.js';
 import authRoutes from './routes/auth.js';
 import opinionRoutes from './routes/opinions.js';
 import uploadRoutes from './routes/upload.js';
@@ -29,6 +31,8 @@ connectDB();
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/team', teamRoutes);
 app.use('/api/opinions', opinionRoutes);
 app.use('/api/upload', uploadRoutes);
 
@@ -38,9 +42,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const message = err instanceof Error ? err.message : 'Internal server error';
+  const stack = err instanceof Error ? err.stack : undefined;
+  if (stack) console.error(stack);
+  res.status(500).json({ error: message });
 });
 
 app.listen(PORT, () => {

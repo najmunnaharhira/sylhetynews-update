@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
-import { teamService } from "@/services/firebaseService";
+import { teamService, api } from "@/services/dataService";
 import { TeamMember } from "@/types/team";
-import { firebaseInitError, firebaseReady } from "@/config/firebase";
 
 const Team = () => {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -15,18 +14,14 @@ const Team = () => {
 
   useEffect(() => {
     const loadMembers = async () => {
-      if (!firebaseReady) {
-        // Silently use default members if Firebase is not ready
-        return;
-      }
       try {
         const list = await teamService.getTeamMembers();
         if (list && list.length > 0) {
           setMembers(list);
         }
-      } catch (error) {
-        console.error("Failed to load team members:", error);
-        // Silently use default members on error
+      } catch (err) {
+        console.error("Failed to load team members:", err);
+        if (api.isConfigured()) setError("Failed to load team");
       }
     };
     loadMembers();

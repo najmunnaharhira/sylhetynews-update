@@ -2,16 +2,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
-import { newsService } from '../../services/firebaseService';
+import { newsService, api } from '../../services/dataService';
 import { NewsArticle } from '../../types/news';
 import AdminNewsForm from './AdminNewsForm';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
-import { db, firebaseInitError, firebaseReady } from '../../config/firebase';
 
 export default function AdminNewsList() {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [firebaseError, setFirebaseError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsArticle | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -22,24 +20,12 @@ export default function AdminNewsList() {
   const loadNews = async () => {
     try {
       setLoading(true);
-      if (!firebaseReady || !db) {
-        setFirebaseError(
-          firebaseInitError || 'Firebase is not configured for this environment.'
-        );
-        return;
-      }
-      // Get all news (including unpublished for admin)
-      const q = query(collection(db, 'news'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      const allArticles = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      } as NewsArticle));
+      setLoadError(null);
+      const allArticles = await newsService.getAdminAllNews();
       setNews(allArticles);
     } catch (err) {
       console.error('Error loading news:', err);
+      setLoadError(err instanceof Error ? err.message : 'Failed to load news');
     } finally {
       setLoading(false);
     }
@@ -73,10 +59,10 @@ export default function AdminNewsList() {
     return <div className="text-center py-8 text-gray-600">Loading...</div>;
   }
 
-  if (firebaseError) {
+  if (loadError) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg">
-        <p className="text-gray-700">{firebaseError}</p>
+        <p className="text-gray-700">{loadError}</p>
       </div>
     );
   }

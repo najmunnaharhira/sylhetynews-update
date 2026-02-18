@@ -3,10 +3,11 @@ import { useParams, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import NewsCard from "@/components/news/NewsCard";
 import FacebookEmbed from "@/components/news/FacebookEmbed";
-import { getNewsByCategory, newsData } from "@/data/newsData";
-import { newsService } from "@/services/firebaseService";
+import { getNewsByCategory, newsData, type NewsItem } from "@/data/newsData";
+import { newsService } from "@/services/dataService";
 import { NewsArticle } from "@/types/news";
 import { firebaseReady } from "@/config/firebase";
+import { toDisplayItem } from "@/utils/newsDisplay";
 import { Share2, ThumbsUp, Star } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -27,6 +28,22 @@ const categoryNames: Record<string, string> = {
   others: "অন্যান্য",
 };
 
+/** Normalized opinion item (used in state and API). */
+type OpinionItem = {
+  id: string;
+  name: string;
+  comment: string;
+  created_at: string;
+  rating: number;
+  likes_count: number;
+};
+
+/** Raw shape when parsing from localStorage (legacy fields supported). */
+type StoredOpinionItem = Partial<OpinionItem> & {
+  text?: string;
+  likes?: number;
+};
+
 const CategoryPage = () => {
   const { category } = useParams<{ category: string }>();
   const location = useLocation();
@@ -35,15 +52,15 @@ const CategoryPage = () => {
     (location.pathname === "/opinion"
       ? "opinion"
       : location.pathname === "/others"
-        ? "others"
-        : undefined);
+      ? "others"
+      : undefined);
   const categoryTitle = resolvedCategory
     ? categoryNames[resolvedCategory] || resolvedCategory
     : "সকল সংবাদ";
   const sectionLabel = resolvedCategory ? `${categoryTitle} সংবাদ` : "সব সংবাদ";
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 1;
-  const [allNews, setAllNews] = useState<NewsArticle[]>([]);
+  const [allNews, setAllNews] = useState<(NewsArticle | NewsItem)[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,36 +77,43 @@ const CategoryPage = () => {
             setAllNews(news);
           } else {
             // Fallback to static data if no news from Firebase
-            setAllNews(resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+            setAllNews(
+              resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData
+            );
           }
         } catch (error) {
           console.error("Failed to load news from Firebase:", error);
           // Silently fallback to static data
-          setAllNews(resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+          setAllNews(
+            resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData
+          );
         }
       } else {
         // Silently use static data if Firebase not ready
-        setAllNews(resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+        setAllNews(
+          resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData
+        );
       }
       setLoading(false);
     };
     loadNews();
   }, [resolvedCategory]);
 
-  const categoryNews = allNews.length > 0 ? allNews : (resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData);
+  const categoryNews: (NewsArticle | NewsItem)[] =
+    allNews.length > 0
+      ? allNews
+      : resolvedCategory
+      ? getNewsByCategory(resolvedCategory)
+      : newsData;
+
+  const displayNews = useMemo(
+    () => categoryNews.map((n) => toDisplayItem(n as NewsArticle | NewsItem)),
+    [categoryNews]
+  );
   const [opinionName, setOpinionName] = useState("");
   const [opinionText, setOpinionText] = useState("");
   const [opinionRating, setOpinionRating] = useState(0);
-  const [opinions, setOpinions] = useState<
-    {
-      id: string;
-      name: string;
-      comment: string;
-      created_at: string;
-      rating: number;
-      likes_count: number;
-    }[]
-  >([]);
+  const [opinions, setOpinions] = useState<OpinionItem[]>([]);
   const [likedIds, setLikedIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -137,9 +161,9 @@ const CategoryPage = () => {
         try {
           const parsed = JSON.parse(stored);
           const normalized = Array.isArray(parsed)
-            ? parsed.map((item: any) => ({
-                id: item.id,
-                name: item.name,
+            ? (parsed as StoredOpinionItem[]).map((item) => ({
+                id: item.id ?? "",
+                name: item.name ?? "",
                 comment: item.comment ?? item.text ?? "",
                 rating: item.rating ?? 0,
                 likes_count: item.likes_count ?? item.likes ?? 0,
@@ -155,7 +179,7 @@ const CategoryPage = () => {
       }
     };
     loadOpinions();
-  }, [resolvedCategory]);
+  }, [resolvedCategory, apiBase]);
 
   useEffect(() => {
     if (resolvedCategory !== "opinion") return;
@@ -163,11 +187,11 @@ const CategoryPage = () => {
     localStorage.setItem(likedKey, JSON.stringify(likedIds));
   }, [opinions, likedIds, resolvedCategory]);
 
-  const totalPages = Math.max(1, Math.ceil(categoryNews.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(displayNews.length / pageSize));
   const pagedNews = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return categoryNews.slice(start, start + pageSize);
-  }, [categoryNews, currentPage]);
+    return displayNews.slice(start, start + pageSize);
+  }, [displayNews, currentPage]);
 
   const handleOpinionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,7 +377,9 @@ const CategoryPage = () => {
                     {isSubmitting ? "পাঠানো হচ্ছে..." : "পাঠান"}
                   </button>
                   {formError && (
-                    <p className="text-sm text-red-600 font-bengali">{formError}</p>
+                    <p className="text-sm text-red-600 font-bengali">
+                      {formError}
+                    </p>
                   )}
                   {submitSuccess && (
                     <p className="text-sm text-green-600 font-bengali">
@@ -393,67 +419,74 @@ const CategoryPage = () => {
                         new Date(a.created_at).getTime()
                     )
                     .map((item) => (
-                    <div
-                      key={item.id}
-                      className="border border-news-border rounded-md p-4"
-                      id={item.id}
-                    >
-                      <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
-                        <p className="font-bengali font-semibold text-news-headline">
-                          {item.name || "Anonymous"}
+                      <div
+                        key={item.id}
+                        className="border border-news-border rounded-md p-4"
+                        id={item.id}
+                      >
+                        <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                          <p className="font-bengali font-semibold text-news-headline">
+                            {item.name || "Anonymous"}
+                          </p>
+                          <p className="text-xs text-news-subtext">
+                            {new Date(item.created_at).toLocaleDateString(
+                              "bn-BD",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 text-primary mb-2">
+                          {Array.from({ length: 5 }).map((_, index) => (
+                            <Star
+                              key={index}
+                              className={`w-4 h-4 ${
+                                item.rating > index
+                                  ? "text-primary"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm text-news-body font-bengali">
+                          {item.comment}
                         </p>
-                        <p className="text-xs text-news-subtext">
-                          {new Date(item.created_at).toLocaleDateString("bn-BD", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 text-primary mb-2">
-                        {Array.from({ length: 5 }).map((_, index) => (
-                          <Star
-                            key={index}
-                            className={`w-4 h-4 ${
-                              item.rating > index ? "text-primary" : "text-gray-300"
+                        <div className="flex items-center gap-3 mt-4">
+                          <button
+                            type="button"
+                            onClick={() => handleOpinionLike(item.id)}
+                            className={`inline-flex items-center gap-2 text-sm transition-colors ${
+                              likedIds.includes(item.id)
+                                ? "text-primary"
+                                : "text-news-subtext hover:text-primary"
                             }`}
-                          />
-                        ))}
+                          >
+                            <ThumbsUp className="w-4 h-4" />
+                            লাইক ({item.likes_count})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpinionShare(item.id)}
+                            className="inline-flex items-center gap-1 text-sm text-news-subtext hover:text-primary"
+                          >
+                            <Share2 className="w-4 h-4" />
+                            শেয়ার
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-sm text-news-body font-bengali">
-                        {item.comment}
-                      </p>
-                      <div className="flex items-center gap-3 mt-4">
-                        <button
-                          type="button"
-                          onClick={() => handleOpinionLike(item.id)}
-                          className={`inline-flex items-center gap-2 text-sm transition-colors ${
-                            likedIds.includes(item.id)
-                              ? "text-primary"
-                              : "text-news-subtext hover:text-primary"
-                          }`}
-                        >
-                          <ThumbsUp className="w-4 h-4" />
-                          লাইক ({item.likes_count})
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpinionShare(item.id)}
-                          className="inline-flex items-center gap-1 text-sm text-news-subtext hover:text-primary"
-                        >
-                          <Share2 className="w-4 h-4" />
-                          শেয়ার
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             )}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
                 <button
-                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
                   disabled={currentPage === 1}
                   className="px-3 py-2 text-sm border border-news-border rounded disabled:opacity-50"
                 >

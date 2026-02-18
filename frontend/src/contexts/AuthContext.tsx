@@ -1,8 +1,18 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth, db } from '../config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { User } from '../types/news';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import {
+  User as FirebaseUser,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import { auth, db } from "../config/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { User } from "../types/news";
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -33,41 +43,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       try {
         if (firebaseUser) {
           setUser(firebaseUser);
 
           // Fetch user data from Firestore
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDocRef = doc(db, "users", firebaseUser.uid);
           const userDocSnap = await getDoc(userDocRef);
 
           if (userDocSnap.exists()) {
             const data = userDocSnap.data() as User;
             setUserData(data);
-            setIsAdmin(data.role === 'admin' || data.role === 'editor');
+            setIsAdmin(data.role === "admin" || data.role === "editor");
           } else {
             // User doesn't exist in Firestore, create basic entry
             const adminEmails = (() => {
-              const envValue = import.meta.env.VITE_ADMIN_EMAILS ?? '';
+              const envValue = import.meta.env.VITE_ADMIN_EMAILS ?? "";
               const list = envValue
-                .split(',')
+                .split(",")
                 .map((value) => value.trim())
                 .filter(Boolean);
-              return list.length ? list : ['sylhetynews.com@gmail.com'];
+              return list.length ? list : ["sylhetynews.com@gmail.com"];
             })();
-            const role = adminEmails.includes(firebaseUser.email || '')
-              ? 'admin'
-              : 'viewer';
+            const role = adminEmails.includes(firebaseUser.email || "")
+              ? "admin"
+              : "viewer";
 
             setUserData({
               id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || '',
-              photoURL: firebaseUser.photoURL || '',
+              email: firebaseUser.email || "",
+              displayName: firebaseUser.displayName || "",
+              photoURL: firebaseUser.photoURL || "",
               role,
               createdAt: new Date(),
             });
-            setIsAdmin(role === 'admin');
+            setIsAdmin(role === "admin");
           }
         } else {
           setUser(null);
@@ -75,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdmin(false);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       } finally {
         setLoading(false);
       }
@@ -99,7 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };

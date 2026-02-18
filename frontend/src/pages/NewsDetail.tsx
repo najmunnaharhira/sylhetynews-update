@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
-import { newsData, getLatestNews } from "@/data/newsData";
+import { newsData, getLatestNews, type NewsItem } from "@/data/newsData";
+import { newsService } from "@/services/dataService";
+import { toDisplayItem } from "@/utils/newsDisplay";
 import { Calendar, User, ArrowLeft, Share2, Star, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,12 +18,57 @@ type NewsComment = {
 
 const NewsDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const news = newsData.find((n) => n.id === id);
-  const latestNews = getLatestNews(5);
+  const [news, setNews] = useState<NewsItem | null>(null);
+  const [latestNews, setLatestNews] = useState<NewsItem[]>(getLatestNews(5));
+  const [loading, setLoading] = useState(!!id);
   const [comments, setComments] = useState<NewsComment[]>([]);
   const [name, setName] = useState("");
   const [rating, setRating] = useState(5);
   const [commentText, setCommentText] = useState("");
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      setNews(null);
+      return;
+    }
+    setLoading(true);
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const fromApi = await newsService.getNews(id);
+        if (cancelled) return;
+        if (fromApi) {
+          setNews(toDisplayItem(fromApi));
+          setLoading(false);
+          return;
+        }
+      } catch {
+        if (cancelled) return;
+      }
+      const fromStatic = newsData.find((n) => n.id === id);
+      setNews(fromStatic || null);
+      setLoading(false);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    const loadLatest = async () => {
+      try {
+        const list = await newsService.getAllNews();
+        if (list && list.length > 0) {
+          setLatestNews(list.slice(0, 5).map(toDisplayItem));
+        }
+      } catch {
+        // keep static latest
+      }
+    };
+    loadLatest();
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -48,6 +95,16 @@ const NewsDetail = () => {
     return Math.round((total / comments.length) * 10) / 10;
   }, [comments]);
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-12 text-center">
+          <p className="text-news-subtext font-bengali">লোড হচ্ছে...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!news) {
     return (
       <Layout>
@@ -64,11 +121,15 @@ const NewsDetail = () => {
   }
 
   const handleShare = () => {
+    const baseUrl =
+      (import.meta.env.VITE_FRONTEND_URL as string)?.replace(/\/$/, "") ||
+      (typeof window !== "undefined" ? window.location.origin : "");
+    const shareUrl = id ? `${baseUrl}/news/${id}` : window.location.href;
     if (navigator.share) {
       navigator.share({
         title: news.title,
         text: news.excerpt,
-        url: window.location.href,
+        url: shareUrl,
       });
     }
   };
@@ -193,13 +254,15 @@ const NewsDetail = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bengali text-news-subtext mb-1">
+                    <label htmlFor="rating-select" className="block text-sm font-bengali text-news-subtext mb-1">
                       রেটিং
                     </label>
                     <select
+                      id="rating-select"
                       value={rating}
                       onChange={(e) => setRating(Number(e.target.value))}
                       className="w-full rounded-md border border-news-border px-3 py-2 text-sm"
+                      aria-label="রেটিং"
                     >
                       {[5, 4, 3, 2, 1].map((value) => (
                         <option key={value} value={value}>

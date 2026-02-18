@@ -43,41 +43,46 @@ Business, politics, sports, technology, entertainment, world, opinion
 }
 ```
 
-### Step 3: Set Security Rules
+### Step 3: Set Security Rules (fixes "Missing or insufficient permissions")
 
-1. Go to Firestore → Rules
-2. Replace with this:
+The admin panel uses **Firebase Auth** (email/password). It does **not** use custom claims like `admin`. So rules must allow **any authenticated user** to write (the admin app already restricts who can log in via `NEXT_PUBLIC_ADMIN_EMAILS`).
+
+1. Go to **Firebase Console** → **Firestore Database** → **Rules**
+2. Replace everything with this (or copy from the repo file `firestore.rules`):
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public read access to published news
-    match /news/{document=**} {
-      allow read: if resource.data.published == true;
+    // News: public reads published only; logged-in admin reads all + writes
+    match /news/{docId} {
+      allow read: if request.auth != null || resource.data.published == true;
+      allow create, update, delete: if request.auth != null;
     }
 
-    // Admin write access
-    match /news/{document=**} {
-      allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-
-    // Categories readable by all, writable by admin
-    match /categories/{document=**} {
+    match /categories/{docId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow create, update, delete: if request.auth != null;
     }
 
-    // User profiles
+    match /team/{docId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+
+    match /photocardTemplates/{docId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null;
+    }
+
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
-      allow read: if request.auth != null && request.auth.token.admin == true;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
 ```
 
-3. Click "Publish"
+3. Click **Publish**
 
 ### Step 4: Enable Storage (For Images)
 
@@ -89,8 +94,8 @@ service cloud.firestore {
 
 ### Step 5: Set Storage Rules
 
-1. Go to Storage → Rules
-2. Replace with this:
+1. Go to **Storage** → **Rules**
+2. Replace with this (or use repo file `storage.rules`):
 
 ```javascript
 rules_version = '2';
@@ -98,13 +103,17 @@ service firebase.storage {
   match /b/{bucket}/o {
     match /news/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if request.auth != null;
+    }
+    match /photocardTemplates/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }
 ```
 
-3. Click "Publish"
+3. Click **Publish**
 
 ### Step 6: Enable Authentication
 

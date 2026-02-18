@@ -4,18 +4,20 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { getAnalytics, type Analytics } from 'firebase/analytics';
 
+// For production: use only env vars (set VITE_FIREBASE_* in your host).
+// Defaults below are for local dev only; do not rely on them when publishing.
 const defaultFirebaseConfig = {
-  apiKey: 'AIzaSyAANJPMvjERlt8WtDAU4pdP5e6xrmWIHWY',
-  authDomain: 'sylhetly-news.firebaseapp.com',
-  databaseURL: 'https://sylhetly-news-default-rtdb.firebaseio.com',
-  projectId: 'sylhetly-news',
-  storageBucket: 'sylhetly-news.firebasestorage.app',
-  messagingSenderId: '237118055873',
-  appId: '1:237118055873:web:ef0dc6ef896d2e7b7cfb40',
-  measurementId: 'G-K0W44WGXKC',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? '',
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL ?? '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? '',
 };
 
-// Firebase config (prefer .env, fallback to defaults)
+// Firebase config (env vars; no hardcoded secrets for production)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || defaultFirebaseConfig.apiKey,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || defaultFirebaseConfig.authDomain,
@@ -31,7 +33,13 @@ const firebaseConfig = {
     import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || defaultFirebaseConfig.measurementId,
 };
 
-const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);
+// Only require core fields (Auth, Firestore, Storage). databaseURL and measurementId are optional.
+const requiredKeys: (keyof typeof firebaseConfig)[] = [
+  'apiKey', 'authDomain', 'projectId', 'storageBucket', 'appId'
+];
+const hasFirebaseConfig = requiredKeys.every(
+  (key) => Boolean(firebaseConfig[key])
+);
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
