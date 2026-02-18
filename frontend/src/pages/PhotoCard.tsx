@@ -17,6 +17,53 @@ import { firebaseReady } from "@/config/firebase";
 import { NewsArticle } from "@/types/news";
 import { PhotoCardTemplate } from "@/types/photocard";
 
+function createLogoCutoutCanvas(
+  img: HTMLImageElement,
+  opts?: { tolerance?: number; soften?: number }
+) {
+  const tolerance = Math.max(0, Math.min(255, opts?.tolerance ?? 245));
+  const soften = Math.max(0, Math.min(60, opts?.soften ?? 18));
+
+  const c = document.createElement("canvas");
+  c.width = img.naturalWidth || img.width;
+  c.height = img.naturalHeight || img.height;
+  const cctx = c.getContext("2d");
+  if (!cctx) return c;
+
+  cctx.clearRect(0, 0, c.width, c.height);
+  cctx.drawImage(img, 0, 0, c.width, c.height);
+
+  const imageData = cctx.getImageData(0, 0, c.width, c.height);
+  const d = imageData.data;
+
+  // Remove near-white backgrounds with a soft edge.
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i];
+    const g = d[i + 1];
+    const b = d[i + 2];
+
+    const minRGB = Math.min(r, g, b);
+    const maxRGB = Math.max(r, g, b);
+
+    // Background heuristic: very bright and low saturation (close to gray/white)
+    if (minRGB >= tolerance && maxRGB - minRGB <= 18) {
+      d[i + 3] = 0;
+      continue;
+    }
+
+    // Soft transition for pixels close to the tolerance.
+    const brightness = (r + g + b) / 3;
+    if (brightness >= tolerance - soften && maxRGB - minRGB <= 30) {
+      const t = (brightness - (tolerance - soften)) / soften; // 0..1
+      const alpha = Math.round(255 * (1 - t));
+      d[i + 3] = Math.min(d[i + 3], alpha);
+    }
+  }
+
+  cctx.putImageData(imageData, 0, 0);
+  return c;
+}
+
 const PhotoCard = () => {
   const [searchParams] = useSearchParams();
   const [selectedNewsId, setSelectedNewsId] = useState<string>("");
@@ -260,19 +307,46 @@ const PhotoCard = () => {
           const logoImg = new window.Image();
           logoImg.crossOrigin = "anonymous";
           logoImg.onload = () => {
-            // Calculate logo size - adaptive based on card dimensions
-            const logoSize = Math.max(80, Math.min(200 * scale, width * 0.2));
-            const logoX = (width - logoSize) / 2; // Center horizontally (top middle)
-            const logoY = Math.max(20 * scale, 15); // Top position with padding
+            // Keep aspect ratio (avoid square distortion) and remove white background.
+            const maxLogoW = Math.max(220 * scale, width * 0.32);
+            const maxLogoH = Math.max(72 * scale, height * 0.075);
+            const ratio = (logoImg.naturalWidth || logoImg.width) / (logoImg.naturalHeight || logoImg.height);
+            let logoW = maxLogoW;
+            let logoH = logoW / ratio;
+            if (logoH > maxLogoH) {
+              logoH = maxLogoH;
+              logoW = logoH * ratio;
+            }
+
+            const logoX = (width - logoW) / 2;
+            const logoY = Math.max(18 * scale, 12);
 
             // Draw logo with high quality
             ctx.save();
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.globalAlpha = 1;
-            
-            // Draw logo directly at top center
-            ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+
+            // Subtle glass backdrop to improve readability on bright photos
+            const pad = Math.max(10 * scale, 8);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.beginPath();
+            ctx.roundRect(
+              logoX - pad,
+              logoY - pad,
+              logoW + pad * 2,
+              logoH + pad * 2,
+              Math.max(10, 14 * scale)
+            );
+            ctx.fill();
+
+            // Cutout draw
+            const cutout = createLogoCutoutCanvas(logoImg);
+            ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+            ctx.shadowBlur = Math.max(10, 14 * scale);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = Math.max(4, 6 * scale);
+            ctx.drawImage(cutout, logoX, logoY, logoW, logoH);
             ctx.restore();
 
             drawHeadline();
@@ -502,19 +576,45 @@ const PhotoCard = () => {
           const logoImg = new window.Image();
           logoImg.crossOrigin = "anonymous";
           logoImg.onload = () => {
-            // Calculate logo size - adaptive based on card dimensions
-            const logoSize = Math.max(80, Math.min(200 * scale, width * 0.2));
-            const logoX = (width - logoSize) / 2; // Center horizontally (top middle)
-            const logoY = Math.max(20 * scale, 15); // Top position with padding
+            // Keep aspect ratio (avoid square distortion) and remove white background.
+            const maxLogoW = Math.max(220 * scale, width * 0.32);
+            const maxLogoH = Math.max(72 * scale, height * 0.075);
+            const ratio = (logoImg.naturalWidth || logoImg.width) / (logoImg.naturalHeight || logoImg.height);
+            let logoW = maxLogoW;
+            let logoH = logoW / ratio;
+            if (logoH > maxLogoH) {
+              logoH = maxLogoH;
+              logoW = logoH * ratio;
+            }
+
+            const logoX = (width - logoW) / 2;
+            const logoY = Math.max(18 * scale, 12);
 
             // Draw logo with high quality
             ctx.save();
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.globalAlpha = 1;
-            
-            // Draw logo directly at top center
-            ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+
+            // Subtle glass backdrop to improve readability on solid background
+            const pad = Math.max(10 * scale, 8);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.beginPath();
+            ctx.roundRect(
+              logoX - pad,
+              logoY - pad,
+              logoW + pad * 2,
+              logoH + pad * 2,
+              Math.max(10, 14 * scale)
+            );
+            ctx.fill();
+
+            const cutout = createLogoCutoutCanvas(logoImg);
+            ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+            ctx.shadowBlur = Math.max(10, 14 * scale);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = Math.max(4, 6 * scale);
+            ctx.drawImage(cutout, logoX, logoY, logoW, logoH);
             ctx.restore();
 
             drawHeadlineError();

@@ -17,6 +17,8 @@ dist-ssr
 **/.env
 **/.env.local
 **/.next
+.firebase
+**/.firebase
 admin/out
 *.zip
 backend/uploads/*
