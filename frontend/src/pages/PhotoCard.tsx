@@ -208,7 +208,6 @@ const PhotoCard = () => {
     updatePreview: boolean = true
   ) => {
     if (!selectedNews || !canvasRef.current) return null;
-
     setIsGenerating(true);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -237,6 +236,285 @@ const PhotoCard = () => {
     const scale = width / 1080;
     canvas.width = width;
     canvas.height = height;
+
+    // New default layout: press-style card like provided examples.
+    const usePressLayout = true;
+    if (usePressLayout) {
+      return new Promise<string | null>((resolve) => {
+        const finalize = (url: string) => {
+          if (updatePreview) {
+            setGeneratedImage(url);
+          }
+          setIsGenerating(false);
+          resolve(url);
+        };
+
+        const bgGreen = "#0F7A3A";
+        const borderRed = "#DC2626";
+
+        const outerMargin = 40 * scale;
+        const outerX = outerMargin;
+        const outerY = outerMargin;
+        const outerW = width - outerMargin * 2;
+        const outerH = height - outerMargin * 2;
+
+        const innerPadding = 10 * scale;
+        const innerX = outerX + innerPadding;
+        const innerY = outerY + innerPadding;
+        const innerW = outerW - innerPadding * 2;
+        const innerH = outerH - innerPadding * 2;
+
+        // Determine main image source (uploaded first, then news image)
+        let newsImageSrc = "";
+        if (selectedNews) {
+          if ("imageUrl" in selectedNews && (selectedNews as NewsArticle).imageUrl) {
+            newsImageSrc = (selectedNews as NewsArticle).imageUrl;
+          } else if ("image" in selectedNews && typeof (selectedNews as { image?: string }).image === "string") {
+            newsImageSrc = (selectedNews as { image: string }).image;
+          }
+        }
+        const mainImageSrc = uploadedImagePreview || newsImageSrc || "";
+
+        let logoReady = !includeLogo;
+        let photoReady = !mainImageSrc;
+        let logoImgEl: HTMLImageElement | null = null;
+        let photoImgEl: HTMLImageElement | null = null;
+        let rendered = false;
+
+        const drawBaseAndRender = () => {
+          if (rendered || !logoReady || !photoReady) return;
+          rendered = true;
+
+          // Base background
+          ctx.clearRect(0, 0, width, height);
+          ctx.fillStyle = bgGreen;
+          ctx.fillRect(0, 0, width, height);
+
+          // Outer red border
+          ctx.fillStyle = borderRed;
+          (ctx as CtxWithRoundRect).roundRect
+            ? (ctx as CtxWithRoundRect).roundRect(outerX, outerY, outerW, outerH, 18 * scale)
+            : ctx.fillRect(outerX, outerY, outerW, outerH);
+          ctx.fill();
+
+          // Inner green area
+          ctx.fillStyle = bgGreen;
+          (ctx as CtxWithRoundRect).roundRect
+            ? (ctx as CtxWithRoundRect).roundRect(innerX, innerY, innerW, innerH, 14 * scale)
+            : ctx.fillRect(innerX, innerY, innerW, innerH);
+          ctx.fill();
+
+          // Header area: white strip with logo + tagline (like reference)
+          const headerRatio = 0.23;
+          const headerH = innerH * headerRatio;
+          const headerTop = innerY;
+          const headerBottom = innerY + headerH;
+
+          ctx.fillStyle = "#ffffff";
+          (ctx as CtxWithRoundRect).roundRect
+            ? (ctx as CtxWithRoundRect).roundRect(
+                innerX,
+                headerTop,
+                innerW,
+                headerH,
+                { tl: 14 * scale, tr: 14 * scale, br: 0, bl: 0 } as unknown as number
+              )
+            : ctx.fillRect(innerX, headerTop, innerW, headerH);
+          ctx.fill();
+
+          const headerCenterX = innerX + innerW / 2;
+
+          // Draw logo centered inside header
+          if (includeLogo && logoImgEl) {
+            const maxLogoH = headerH * 0.55;
+            const ratio =
+              (logoImgEl.naturalWidth || logoImgEl.width) /
+              (logoImgEl.naturalHeight || logoImgEl.height || 1);
+            let logoH = maxLogoH;
+            let logoW = logoH * ratio;
+            const maxLogoW = innerW * 0.6;
+            if (logoW > maxLogoW) {
+              logoW = maxLogoW;
+              logoH = logoW / ratio;
+            }
+            const logoX = headerCenterX - logoW / 2;
+            const logoY = headerTop + (headerH * 0.5 - logoH * 0.6);
+
+            const cutoutCanvas = createLogoCutoutCanvas(logoImgEl, {
+              tolerance: 245,
+              soften: 18,
+            });
+            ctx.save();
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
+            ctx.shadowBlur = 8 * scale;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 3 * scale;
+            ctx.drawImage(cutoutCanvas, logoX, logoY, logoW, logoH);
+            ctx.restore();
+          }
+
+          // Tagline near bottom edge of header
+          const taglineText = taglineBn || "সত্যের পথে অবিচল";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#0F7A3A";
+          const taglineFontSize = Math.min(34 * scale, headerH * 0.32);
+          ctx.font = `600 ${taglineFontSize}px 'Hind Siliguri', sans-serif`;
+          ctx.fillText(
+            taglineText,
+            headerCenterX,
+            headerBottom - taglineFontSize * 0.3
+          );
+
+          // Available area below header split between photo and headline
+          let cursorY = headerBottom + 24 * scale;
+          const bottomPadding = 24 * scale;
+          const contentBottom = innerY + innerH - bottomPadding;
+          const availableH = contentBottom - cursorY;
+          const photoAreaH = availableH * 0.55;
+          const textAreaTop = cursorY + photoAreaH + 12 * scale;
+
+          if (photoImgEl) {
+            const photoMaxW = innerW - 64 * scale;
+            const photoMaxH = photoAreaH;
+            const ratio =
+              (photoImgEl.naturalWidth || photoImgEl.width) /
+              (photoImgEl.naturalHeight || photoImgEl.height || 1);
+            let photoW = photoMaxW;
+            let photoH = photoW / ratio;
+            if (photoH > photoMaxH) {
+              photoH = photoMaxH;
+              photoW = photoH * ratio;
+            }
+            const photoX = innerX + (innerW - photoW) / 2;
+            const photoY = cursorY + (photoAreaH - photoH) / 2;
+
+            ctx.save();
+            ctx.beginPath();
+            (ctx as CtxWithRoundRect).roundRect
+              ? (ctx as CtxWithRoundRect).roundRect(
+                  photoX,
+                  photoY,
+                  photoW,
+                  photoH,
+                  18 * scale
+                )
+              : ctx.rect(photoX, photoY, photoW, photoH);
+            ctx.clip();
+            ctx.drawImage(photoImgEl, photoX, photoY, photoW, photoH);
+            ctx.restore();
+
+            // Thin red border around photo
+            ctx.strokeStyle = borderRed;
+            ctx.lineWidth = 6 * scale;
+            (ctx as CtxWithRoundRect).roundRect
+              ? (ctx as CtxWithRoundRect).roundRect(
+                  photoX,
+                  photoY,
+                  photoW,
+                  photoH,
+                  18 * scale
+                )
+              : ctx.rect(photoX, photoY, photoW, photoH);
+            ctx.stroke();
+          }
+
+          // Bottom text block (headline etc)
+          const title = selectedNews?.title || "";
+          const dateLine = selectedNews && "createdAt" in selectedNews
+            ? ""
+            : "";
+
+          const mainTextY = textAreaTop + 10 * scale;
+          const lineHeight = 40 * scale;
+
+          ctx.textAlign = "center";
+
+          // Headline at bottom in white
+          const baseFontSize = Math.min(38 * scale, availableH * 0.11);
+          ctx.font = `600 ${baseFontSize}px 'Hind Siliguri', sans-serif`;
+          ctx.fillStyle = "#ffffff";
+          const titleLines: string[] = [];
+          const words = title.split(" ");
+          let line = "";
+          const maxWidth = innerW - 60 * scale;
+          words.forEach((w) => {
+            const test = line + w + " ";
+            if (ctx.measureText(test).width > maxWidth && line) {
+              titleLines.push(line.trim());
+              line = w + " ";
+            } else {
+              line = test;
+            }
+          });
+          if (line.trim()) titleLines.push(line.trim());
+
+          let currentY = mainTextY;
+          titleLines.forEach((t) => {
+            ctx.fillText(t, innerX + innerW / 2, currentY);
+            currentY += lineHeight;
+          });
+
+          // Footer: website + "Details in comment"
+          const footerY = contentBottom - 6 * scale;
+
+          // Website on left
+          const websiteText = "sylhetynews.com";
+          ctx.textAlign = "left";
+          ctx.font = `600 ${24 * scale}px 'Inter', sans-serif`;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(websiteText, innerX + 24 * scale, footerY);
+
+          // Details text on right
+          const detailsText = "Details in comment";
+          ctx.textAlign = "right";
+          ctx.font = `600 ${24 * scale}px 'Hind Siliguri', sans-serif`;
+          ctx.fillStyle = "#FACC15";
+          ctx.fillText(detailsText, innerX + innerW - 24 * scale, footerY);
+
+          const url = canvas.toDataURL("image/png");
+          finalize(url);
+        };
+
+        // Load logo image
+        if (includeLogo) {
+          const logoImg = new window.Image();
+          logoImg.crossOrigin = "anonymous";
+          logoImg.onload = () => {
+            logoImgEl = logoImg;
+            logoReady = true;
+            drawBaseAndRender();
+          };
+          logoImg.onerror = () => {
+            logoReady = true;
+            drawBaseAndRender();
+          };
+          logoImg.src = logoMain;
+        }
+
+        // Load main photo (optional)
+        if (mainImageSrc) {
+          const mainImg = new window.Image();
+          mainImg.crossOrigin = "anonymous";
+          mainImg.onload = () => {
+            photoImgEl = mainImg;
+            photoReady = true;
+            drawBaseAndRender();
+          };
+          mainImg.onerror = () => {
+            photoReady = true;
+            drawBaseAndRender();
+          };
+          mainImg.src = mainImageSrc;
+        }
+
+        // If no logo or image, render immediately
+        if (logoReady && photoReady) {
+          drawBaseAndRender();
+        }
+      });
+    }
 
     // Background
     ctx.fillStyle = "#ffffff";

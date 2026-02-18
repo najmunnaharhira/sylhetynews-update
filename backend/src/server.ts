@@ -36,6 +36,22 @@ app.use('/api/team', teamRoutes);
 app.use('/api/opinions', opinionRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Root helpers so hosted URL doesn't show "Cannot GET /"
+app.get('/', (_req, res) => {
+  res.json({
+    status: 'Backend API is running',
+    health: '/api/health',
+    docs: {
+      news: '/api/news',
+      categories: '/api/categories',
+      team: '/api/team',
+      opinions: '/api/opinions',
+      upload: '/api/upload/image',
+      adminLogin: '/api/admin/login',
+    },
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });

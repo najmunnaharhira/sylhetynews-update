@@ -6,7 +6,6 @@ import FacebookEmbed from "@/components/news/FacebookEmbed";
 import { getNewsByCategory, newsData, type NewsItem } from "@/data/newsData";
 import { newsService } from "@/services/dataService";
 import { NewsArticle } from "@/types/news";
-import { firebaseReady } from "@/config/firebase";
 import { toDisplayItem } from "@/utils/newsDisplay";
 import { Share2, ThumbsUp, Star } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -65,31 +64,24 @@ const CategoryPage = () => {
 
   useEffect(() => {
     const loadNews = async () => {
-      if (firebaseReady) {
-        try {
-          let news: NewsArticle[] = [];
-          if (resolvedCategory) {
-            news = await newsService.getNewsByCategory(resolvedCategory);
-          } else {
-            news = await newsService.getAllNews();
-          }
-          if (news && news.length > 0) {
-            setAllNews(news);
-          } else {
-            // Fallback to static data if no news from Firebase
-            setAllNews(
-              resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData
-            );
-          }
-        } catch (error) {
-          console.error("Failed to load news from Firebase:", error);
-          // Silently fallback to static data
+      try {
+        let news: NewsArticle[] = [];
+        if (resolvedCategory) {
+          news = await newsService.getNewsByCategory(resolvedCategory);
+        } else {
+          news = await newsService.getAllNews();
+        }
+        if (news && news.length > 0) {
+          setAllNews(news);
+        } else {
+          // Fallback to static data if no dynamic news
           setAllNews(
             resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData
           );
         }
-      } else {
-        // Silently use static data if Firebase not ready
+      } catch (error) {
+        console.error("Failed to load news:", error);
+        // Silently fallback to static data
         setAllNews(
           resolvedCategory ? getNewsByCategory(resolvedCategory) : newsData
         );
