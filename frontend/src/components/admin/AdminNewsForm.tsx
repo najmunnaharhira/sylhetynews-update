@@ -123,9 +123,9 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         content: data.content,
         summary: data.summary,
         category: data.category,
-        district: data.district,
-        author: data.author,
-        imageUrl,
+        district: data.district || undefined,
+        author: data.author || undefined,
+        imageUrl: imageUrl || undefined,
         featured: data.featured,
         tags: data.tags
           .split(",")
@@ -278,7 +278,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
           >
             <option value="">Select a category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
+              <option key={cat.id} value={cat.name}>
                 {cat.name}
               </option>
             ))}
@@ -301,7 +301,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
           >
             <option value="">Select a district</option>
             {sylhetDistricts.map((district) => (
-              <option key={district.id} value={district.id}>
+              <option key={district.id} value={district.nameEn}>
                 {district.nameBn}
               </option>
             ))}
