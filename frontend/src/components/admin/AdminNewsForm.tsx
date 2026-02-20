@@ -60,7 +60,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
           author: "",
           featured: false,
           tags: "",
-          published: false,
+          published: true,
         },
   });
 
