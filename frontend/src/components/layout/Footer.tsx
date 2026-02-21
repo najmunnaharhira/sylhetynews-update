@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-import { Facebook, Mail, Phone, MapPin, Youtube } from "lucide-react";
 import chillekothaLogo from "@/assets/photo of portart Development.jpeg";
+import { Facebook, Mail, MapPin, Phone, Youtube } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -136,13 +136,21 @@ const Footer = () => {
         <div className="border-t border-white/10 mt-8 pt-6 text-center font-bengali text-sm text-white/60">
           <p>© {new Date().getFullYear()} সিলেটি নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
           <p className="mt-2 inline-flex items-center justify-center gap-2">
-            <span>Portal Development: Chillekotha</span>
-            <img
-              src={chillekothaLogo}
-              alt="Chillekotha logo"
-              className="h-6 w-6 rounded-sm object-contain bg-white/90 p-0.5"
-              loading="lazy"
-            />
+            <a
+              href="https://chilekotha.top"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-2"
+              title="Visit Chillekotha"
+            >
+              <span>Portal Development: Chillekotha</span>
+              <img
+                src={chillekothaLogo}
+                alt="Chillekotha logo"
+                className="h-6 w-6 rounded-sm object-contain bg-white/90 p-0.5 hover:shadow-lg transition-shadow"
+                loading="lazy"
+              />
+            </a>
           </p>
         </div>
       </div>
