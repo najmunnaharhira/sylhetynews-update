@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Card } from '../ui/card';
-import { Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
-import { newsService, api } from '../../services/dataService';
-import { NewsArticle } from '../../types/news';
-import AdminNewsForm from './AdminNewsForm';
+import AdminNewsForm from "./AdminNewsForm";
+import { Edit2, Eye, EyeOff, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { api, newsService } from "../../services/dataService";
+import { NewsArticle } from "../../types/news";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
-export default function AdminNewsList() {
+interface AdminNewsListProps {
+  refreshKey?: number;
+}
+
+export default function AdminNewsList({ refreshKey }: AdminNewsListProps) {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -15,7 +19,7 @@ export default function AdminNewsList() {
 
   useEffect(() => {
     loadNews();
-  }, []);
+  }, [refreshKey]);
 
   const loadNews = async () => {
     try {

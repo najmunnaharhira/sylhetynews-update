@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useAdminAuth } from '../contexts/AdminAuthContext';
-import { api } from '../services/dataService';
-import { isBackendConfigured } from '../config/api';
-import { Button } from '../components/ui/button';
+import AdminCategoryManager from "../components/admin/AdminCategoryManager";
+import AdminNewsForm from "../components/admin/AdminNewsForm";
+import AdminNewsList from "../components/admin/AdminNewsList";
+import AdminTeamManager from "../components/admin/AdminTeamManager";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import { isBackendConfigured } from "../config/api";
+import { useAdminAuth } from "../contexts/AdminAuthContext";
+import { useAuth } from "../contexts/AuthContext";
+import { api } from "../services/dataService";
+
 import { 
   LogOut, 
   Plus, 
@@ -15,10 +20,6 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import AdminNewsForm from '../components/admin/AdminNewsForm';
-import AdminNewsList from '../components/admin/AdminNewsList';
-import AdminCategoryManager from '../components/admin/AdminCategoryManager';
-import AdminTeamManager from '../components/admin/AdminTeamManager';
 
 type AdminTab = 'news' | 'categories' | 'team' | 'settings';
 
@@ -44,6 +45,7 @@ export default function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState<AdminTab>('news');
   const [showForm, setShowForm] = useState(false);
+  const [newsRefreshKey, setNewsRefreshKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -187,11 +189,16 @@ export default function AdminDashboard() {
                   <h2 className="text-lg font-bold text-news-headline font-bengali mb-4">
                     নতুন সংবাদ যোগ করুন
                   </h2>
-                  <AdminNewsForm onSuccess={() => setShowForm(false)} />
+                  <AdminNewsForm
+                    onSuccess={() => {
+                      setShowForm(false);
+                      setNewsRefreshKey((k) => k + 1);
+                    }}
+                  />
                 </div>
               )}
               <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
-                <AdminNewsList />
+                <AdminNewsList refreshKey={newsRefreshKey} />
               </div>
             </div>
           )}
