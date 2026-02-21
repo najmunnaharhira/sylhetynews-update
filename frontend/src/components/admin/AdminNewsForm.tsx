@@ -1,18 +1,19 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Card } from "../ui/card";
 import { AlertCircle, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { firebaseInitError, firebaseReady } from "../../config/firebase";
+import { NewsArticle, NewsCategory } from "../../types/news";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
+import { Input } from "../ui/input";
+import { sylhetDistricts } from "@/data/districts";
+
 import {
   newsService,
   imageService,
   categoryService,
   api,
 } from "../../services/dataService";
-import { NewsArticle, NewsCategory } from "../../types/news";
-import { firebaseInitError, firebaseReady } from "../../config/firebase";
-import { sylhetDistricts } from "@/data/districts";
 
 interface AdminNewsFormProps {
   news?: NewsArticle;
@@ -69,7 +70,11 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
   const [imagePreview, setImagePreview] = useState<string>(
     news?.imageUrl || ""
   );
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>(
+    news?.imageUrl || ""
+  );
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -102,6 +107,27 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
     }
   };
 
+  const handleUploadImage = async () => {
+    if (!image) {
+      setError("Please select an image first");
+      return;
+    }
+    try {
+      setError("");
+      setUploading(true);
+      const url = await imageService.uploadImage(image, "news");
+      setUploadedImageUrl(url);
+      setSuccess("Image uploaded successfully!");
+      setImage(null);
+      // Keep preview but mark as uploaded
+      setTimeout(() => setSuccess(""), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const onSubmit = async (data: NewsFormData) => {
     try {
       setError("");
@@ -111,11 +137,10 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         throw new Error(firebaseInitError || "Firebase is not configured.");
       }
 
-      let imageUrl = imagePreview;
-
-      // Upload image if new one selected
-      if (image) {
-        imageUrl = await imageService.uploadImage(image, "news");
+      // Use the uploaded image URL, or upload if still pending
+      let finalImageUrl = uploadedImageUrl;
+      if (image && !uploadedImageUrl) {
+        finalImageUrl = await imageService.uploadImage(image, "news");
       }
 
       const articleData = {
@@ -125,7 +150,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         category: data.category,
         district: data.district || undefined,
         author: data.author || undefined,
-        imageUrl: imageUrl || undefined,
+        imageUrl: finalImageUrl || undefined,
         featured: data.featured,
         tags: data.tags
           .split(",")
@@ -175,44 +200,75 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Featured Image
           </label>
-          <div className="flex gap-4">
+          <div className="space-y-3">
             {imagePreview && (
-              <div className="relative w-48 h-32 bg-gray-100 rounded-lg overflow-hidden">
+              <div className="relative w-48 h-32 bg-gray-100 rounded-lg overflow-hidden border-2 border-indigo-200">
                 <img
                   src={imagePreview}
                   alt="Preview"
                   className="w-full h-full object-cover"
                 />
-                {image && (
-                  <button
-                    type="button"
-                    aria-label="Remove selected image"
-                    title="Remove selected image"
-                    onClick={() => {
-                      setImage(null);
-                      setImagePreview(news?.imageUrl || "");
-                    }}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                  >
-                    <X size={16} />
-                  </button>
+                {uploadedImageUrl && (
+                  <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">✓ Uploaded</span>
+                  </div>
                 )}
+                <button
+                  type="button"
+                  aria-label="Remove selected image"
+                  title="Remove selected image"
+                  onClick={() => {
+                    setImage(null);
+                    setImagePreview(news?.imageUrl || "");
+                    setUploadedImageUrl(news?.imageUrl || "");
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded hover:bg-red-600 transition-colors"
+                >
+                  <X size={16} />
+                </button>
               </div>
             )}
-            <label className="flex-1">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors">
-                <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                <p className="text-sm text-gray-600">
-                  {image ? "Click to change image" : "Click or drag image here"}
-                </p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+              <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+              <p className="text-sm text-gray-600 mb-3">
+                {image ? "Click to change image" : "Click to select image"}
+              </p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="image-input"
+              />
+              <label htmlFor="image-input" className="cursor-pointer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("image-input")?.click();
+                  }}
+                >
+                  {image ? "Change Image" : "Select Image"}
+                </Button>
+              </label>
+            </div>
+            {image && !uploadedImageUrl && (
+              <Button
+                type="button"
+                onClick={handleUploadImage}
+                disabled={uploading || !image}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
+                {uploading ? "Uploading to Firebase..." : "Upload Image to Firebase"}
+              </Button>
+            )}
+            {uploadedImageUrl && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-800 text-sm font-medium">✓ Image ready for article</p>
               </div>
-            </label>
+            )}
           </div>
         </div>
 
@@ -361,7 +417,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         <div className="flex gap-3 pt-4">
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploading}
             className="flex-1 bg-indigo-600 hover:bg-indigo-700"
           >
             {loading ? "Saving..." : news ? "Update Article" : "Create Article"}
@@ -371,6 +427,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
             variant="outline"
             onClick={() => onSuccess?.()}
             className="flex-1"
+            disabled={loading || uploading}
           >
             Cancel
           </Button>
