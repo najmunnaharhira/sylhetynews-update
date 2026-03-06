@@ -4,6 +4,7 @@ import path from "path";
 
 export default defineConfig({
   base: "/",
+  envDir: "..",
   server: {
     port: 3001,
     host: true,

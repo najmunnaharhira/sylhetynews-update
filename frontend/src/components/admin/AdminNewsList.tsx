@@ -16,6 +16,7 @@ export default function AdminNewsList({ refreshKey }: AdminNewsListProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsArticle | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string>('');
 
   useEffect(() => {
     loadNews();
@@ -40,9 +41,35 @@ export default function AdminNewsList({ refreshKey }: AdminNewsListProps) {
       try {
         await newsService.deleteNews(id);
         setNews(news.filter((n) => n.id !== id));
+        setActionMessage('News deleted successfully.');
       } catch (err) {
         console.error('Error deleting news:', err);
+        setActionMessage(err instanceof Error ? err.message : 'Delete failed');
       }
+    }
+  };
+
+  const handleDeleteDemo = async () => {
+    if (!confirm('Delete all demo/test/sample news?')) return;
+    try {
+      const deletedCount = await newsService.deleteDemoNews();
+      setActionMessage(`Deleted ${deletedCount} demo news item(s).`);
+      await loadNews();
+    } catch (err) {
+      console.error('Error deleting demo news:', err);
+      setActionMessage(err instanceof Error ? err.message : 'Delete failed');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!confirm('Are you sure you want to delete ALL news? This cannot be undone.')) return;
+    try {
+      const deletedCount = await newsService.deleteAllNews();
+      setActionMessage(`Deleted ${deletedCount} news item(s).`);
+      await loadNews();
+    } catch (err) {
+      console.error('Error deleting all news:', err);
+      setActionMessage(err instanceof Error ? err.message : 'Delete failed');
     }
   };
 
@@ -88,6 +115,18 @@ export default function AdminNewsList({ refreshKey }: AdminNewsListProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap gap-2 justify-between items-center">
+        <h3 className="font-semibold text-news-headline">Manage All News</h3>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleDeleteDemo}>Delete Demo News</Button>
+          <Button variant="destructive" onClick={handleDeleteAll}>Delete All News</Button>
+        </div>
+      </div>
+
+      {actionMessage && (
+        <div className="p-3 rounded border bg-muted text-sm text-news-headline">{actionMessage}</div>
+      )}
+
       {news.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-600">No articles yet. Create your first one!</p>

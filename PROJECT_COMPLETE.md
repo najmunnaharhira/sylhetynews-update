@@ -37,7 +37,7 @@ All features have been implemented, tested, and are ready for deployment.
 ### Backend Features
 - ✅ Express.js API server
 - ✅ File upload endpoints
-- ✅ MongoDB integration
+- ✅ MySQL integration
 - ✅ Authentication middleware
 - ✅ CORS configuration
 
@@ -124,7 +124,11 @@ VITE_FRONTEND_URL=https://yourdomain.com
 PORT=5000
 NODE_ENV=production
 FRONTEND_URL=https://yourdomain.com
-MONGODB_URI=mongodb+srv://...
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=sylhetynews
+DB_USER=root
+DB_PASSWORD=your_password
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=YourSecurePassword123!
 ```

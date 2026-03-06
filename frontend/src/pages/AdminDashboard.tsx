@@ -1,4 +1,5 @@
 import AdminCategoryManager from "../components/admin/AdminCategoryManager";
+import AdminBusinessSettings from "../components/admin/AdminBusinessSettings";
 import AdminNewsForm from "../components/admin/AdminNewsForm";
 import AdminNewsList from "../components/admin/AdminNewsList";
 import AdminTeamManager from "../components/admin/AdminTeamManager";
@@ -217,12 +218,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'settings' && (
             <div className="bg-card border border-news-border rounded-lg p-4 lg:p-6">
-              <h2 className="text-lg font-bold text-news-headline font-bengali mb-4">
-                সেটিংস
-              </h2>
-              <p className="text-news-subtext font-bengali">
-                সেটিংস পেজ শীঘ্রই আসছে...
-              </p>
+              <AdminBusinessSettings />
             </div>
           )}
         </main>

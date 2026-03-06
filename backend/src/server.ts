@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { connectDB } from './config/database.js';
 import adminRoutes from './routes/admin.js';
 import newsRoutes from './routes/news.js';
@@ -10,7 +11,7 @@ import authRoutes from './routes/auth.js';
 import opinionRoutes from './routes/opinions.js';
 import uploadRoutes from './routes/upload.js';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;

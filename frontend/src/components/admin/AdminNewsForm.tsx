@@ -143,6 +143,10 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
         finalImageUrl = await imageService.uploadImage(image, "news");
       }
 
+      if (!news?.id && !finalImageUrl) {
+        throw new Error("Image upload is mandatory. Please upload a news image first.");
+      }
+
       const articleData = {
         title: data.title,
         content: data.content,
@@ -268,6 +272,9 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-green-800 text-sm font-medium">✓ Image ready for article</p>
               </div>
+            )}
+            {!news?.id && !uploadedImageUrl && (
+              <p className="text-xs text-red-600">Image is mandatory for new articles.</p>
             )}
           </div>
         </div>

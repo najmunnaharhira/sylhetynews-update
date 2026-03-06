@@ -82,13 +82,13 @@ This document gives an honest assessment of the current structure for **going li
 - Deploy **frontend only** (Vite build → `dist/`).
 - Use Firebase for auth, Firestore, storage.
 - Admin = frontend’s `/admin`.
-- No backend or MongoDB needed.
+- No backend or MySQL needed.
 - **Good for:** Fast go-live, minimal ops.
 
 **Path B – Full stack**
 
 - Deploy **frontend** (static) + **backend** (Node on a VPS/Railway/Render).
-- Backend uses MongoDB; frontend uses `VITE_API_URL` for API.
+- Backend uses MySQL; frontend uses `VITE_API_URL` for API.
 - Admin can stay inside frontend or run as separate Next.js app.
 - **Good for:** When you need Express API, opinions, or custom backend features.
 
@@ -110,7 +110,7 @@ This document gives an honest assessment of the current structure for **going li
 - [ ] One documented deploy path (e.g. “we deploy frontend + backend” or “frontend only”).
 - [ ] Backend entry point is clearly one file (e.g. `server.ts`); the other removed or deprecated.
 - [ ] CORS and `FRONTEND_URL` set for production domain.
-- [ ] Firebase (and optional MongoDB) production projects and security rules reviewed.
+- [ ] Firebase (and optional MySQL) production projects and security rules reviewed.
 
 ---
 

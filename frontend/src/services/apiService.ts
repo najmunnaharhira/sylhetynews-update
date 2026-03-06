@@ -146,6 +146,24 @@ export const newsService = {
     await handleRes(res, () => ({}));
   },
 
+  async deleteAllNews(): Promise<number> {
+    const res = await fetch(`${getBase()}/api/news/admin/all/delete`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    const data = await handleRes(res, (d) => d as { deletedCount?: number });
+    return Number(data.deletedCount ?? 0);
+  },
+
+  async deleteDemoNews(): Promise<number> {
+    const res = await fetch(`${getBase()}/api/news/admin/demo/delete`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    const data = await handleRes(res, (d) => d as { deletedCount?: number });
+    return Number(data.deletedCount ?? 0);
+  },
+
   async togglePublish(id: string, published: boolean): Promise<void> {
     const res = await fetch(`${getBase()}/api/news/admin/${id}/publish`, {
       method: 'PATCH',
@@ -247,5 +265,47 @@ export const imageService = {
     const url = data.url ?? '';
     if (url.startsWith('http')) return url;
     return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  },
+};
+
+export interface BusinessSettings {
+  siteName: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactAddress: string;
+  adRatePer1000Views: number;
+}
+
+export interface RevenueSummary {
+  totalNews: number;
+  publishedNews: number;
+  unpublishedNews: number;
+  totalViews: number;
+  adRatePer1000Views: number;
+  estimatedRevenue: number;
+}
+
+export const adminService = {
+  async getBusinessSettings(): Promise<BusinessSettings> {
+    const res = await fetch(`${getBase()}/api/admin/business-settings`, {
+      headers: getAuthHeaders(),
+    });
+    return handleRes(res, (d) => d as BusinessSettings);
+  },
+
+  async updateBusinessSettings(payload: BusinessSettings): Promise<void> {
+    const res = await fetch(`${getBase()}/api/admin/business-settings`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    await handleRes(res, () => ({}));
+  },
+
+  async getRevenueSummary(): Promise<RevenueSummary> {
+    const res = await fetch(`${getBase()}/api/admin/revenue-summary`, {
+      headers: getAuthHeaders(),
+    });
+    return handleRes(res, (d) => d as RevenueSummary);
   },
 };

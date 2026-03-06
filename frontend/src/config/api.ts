@@ -16,7 +16,9 @@ export function getApiBaseUrl(): string {
 }
 
 export function isBackendConfigured(): boolean {
-  return getEnvApiUrl().length > 0;
+  const provider = (import.meta.env.VITE_DATA_PROVIDER || "").toLowerCase();
+  if (provider === "firebase") return false;
+  return true;
 }
 
 export function getAdminToken(): string | null {

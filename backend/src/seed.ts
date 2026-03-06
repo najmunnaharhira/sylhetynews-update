@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
-import { connectDB } from './config/database.js';
-import { News } from './models/News.js';
+import { ResultSetHeader } from 'mysql2';
+import { connectDB, query } from './config/database.js';
 
 dotenv.config();
 
@@ -39,8 +39,27 @@ const seedNews = [
 const run = async () => {
   try {
     await connectDB();
-    await News.deleteMany({});
-    await News.insertMany(seedNews);
+    await query<ResultSetHeader>('DELETE FROM news');
+
+    for (const item of seedNews) {
+      await query<ResultSetHeader>(
+        `INSERT INTO news (title, content, summary, category, district, author, image_url, published, featured, tags)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          item.title,
+          item.content,
+          '',
+          item.category,
+          '',
+          item.author,
+          item.imageUrl,
+          item.published,
+          false,
+          JSON.stringify([]),
+        ]
+      );
+    }
+
     console.log('Seed data inserted successfully.');
   } catch (error) {
     console.error('Seeding failed:', error);
