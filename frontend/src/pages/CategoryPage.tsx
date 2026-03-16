@@ -58,7 +58,7 @@ const CategoryPage = () => {
     : "সকল সংবাদ";
   const sectionLabel = resolvedCategory ? `${categoryTitle} সংবাদ` : "সব সংবাদ";
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 1;
+  const pageSize = 6;
   const [allNews, setAllNews] = useState<(NewsArticle | NewsItem)[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -179,11 +179,8 @@ const CategoryPage = () => {
     localStorage.setItem(likedKey, JSON.stringify(likedIds));
   }, [opinions, likedIds, resolvedCategory]);
 
-  const totalPages = Math.max(1, Math.ceil(displayNews.length / pageSize));
-  const pagedNews = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return displayNews.slice(start, start + pageSize);
-  }, [displayNews, currentPage]);
+  const totalPages = Math.max(1, Math.ceil(categoryNews.length / pageSize));
+  const paginatedNews = categoryNews.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleOpinionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
