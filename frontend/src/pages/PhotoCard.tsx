@@ -88,28 +88,6 @@ const PhotoCard = () => {
   const [overlayStrength, setOverlayStrength] = useState(0.9);
   const [fontBold, setFontBold] = useState(true);
   const [fontItalic, setFontItalic] = useState(false);
-  const [templates, setTemplates] = useState<PhotoCardTemplate[]>([]);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [firebaseNews, setFirebaseNews] = useState<NewsArticle[]>([]);
-
-  // Load news from Firebase
-  useEffect(() => {
-    const loadNews = async () => {
-      if (firebaseReady) {
-        try {
-          const news = await newsService.getAllNews();
-          if (news && news.length > 0) {
-            setFirebaseNews(news);
-          }
-        } catch (error) {
-          console.error("Failed to load news from Firebase:", error);
-          // Silently fallback to static data
-        }
-      }
-    };
-    loadNews();
-  }, []);
 
   // Auto-select news from URL parameter
   useEffect(() => {
@@ -119,9 +97,8 @@ const PhotoCard = () => {
     }
   }, [searchParams]);
 
-  // Use Firebase news if available, otherwise fallback to static data
-  const availableNews = firebaseNews.length > 0 ? firebaseNews : newsData;
-  const selectedNews = availableNews.find((n) => n.id === selectedNewsId);
+  // Use only local newsData
+  const selectedNews = newsData.find((n) => n.id === selectedNewsId);
 
   const dimensionOptions = [
     { label: "200 x 200 (Small Square)", value: "200x200" },
@@ -161,23 +138,6 @@ const PhotoCard = () => {
       setSelectedNewsId(param);
     }
   }, [searchParams, selectedNewsId]);
-
-  useEffect(() => {
-    const loadTemplates = async () => {
-      if (firebaseReady) {
-        try {
-          const templateList = await photocardTemplateService.getTemplates();
-          if (templateList && templateList.length > 0) {
-            setTemplates(templateList);
-          }
-        } catch (error) {
-          console.error("Failed to load templates from Firebase:", error);
-          // Silently continue without templates
-        }
-      }
-    };
-    loadTemplates();
-  }, []);
 
   const handleDownloadTemplate = (template: PhotoCardTemplate) => {
     const link = document.createElement("a");

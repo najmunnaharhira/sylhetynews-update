@@ -1,4 +1,3 @@
-import chillekothaLogo from "@/assets/photo of portart Development.jpeg";
 import { Facebook, Mail, MapPin, Phone, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -133,25 +132,19 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-8 pt-6 text-center font-bengali text-sm text-white/60">
+        <div className="border-t border-white/10 mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-center font-bengali text-sm text-white/60">
           <p>© {new Date().getFullYear()} সিলেটি নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
-          <p className="mt-2 inline-flex items-center justify-center gap-2">
-            <a
-              href="https://chilekotha.top"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-2"
-              title="Visit Chillekotha"
-            >
-              <span>Portal Development: Chillekotha</span>
-              <img
-                src={chillekothaLogo}
-                alt="Chillekotha logo"
-                className="h-6 w-6 rounded-sm object-contain bg-white/90 p-0.5 hover:shadow-lg transition-shadow"
-                loading="lazy"
-              />
-            </a>
-          </p>
+          <a
+            href="https://chilekotha.xyz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 shadow-lg hover:scale-105 transition-transform border border-yellow-300"
+            style={{ boxShadow: '0 2px 16px 0 rgba(250,204,21,0.18)' }}
+          >
+            <img src={require('@/assets/chilekotha-logo.svg').default} alt="Chilekotha Logo" className="w-7 h-7 rounded bg-white p-1 shadow" />
+            <span className="font-bold text-base text-slate-900 tracking-wide">Tech Partner:</span>
+            <span className="font-extrabold text-base text-yellow-900 tracking-wider">Chilekotha</span>
+          </a>
         </div>
       </div>
     </footer>

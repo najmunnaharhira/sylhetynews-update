@@ -36,3 +36,9 @@ backend/
   config/
     db.js
 ```
+
+# Database
+
+This backend uses MySQL (not Firebase or MongoDB). Ensure your MySQL server is running and the database `sylhetynews` exists with the required tables (see phpMyAdmin screenshot for structure).
+
+All data, authentication, and file operations are handled via REST API endpoints.

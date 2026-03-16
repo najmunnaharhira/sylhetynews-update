@@ -36,6 +36,33 @@ const seedNews = [
   },
 ];
 
+// Add all standard Bangladeshi news categories if not present
+const categories = [
+  { name: 'জাতীয়', slug: 'national', icon: '' },
+  { name: 'আন্তর্জাতিক', slug: 'international', icon: '' },
+  { name: 'রাজনীতি', slug: 'politics', icon: '' },
+  { name: 'অর্থনীতি', slug: 'economy', icon: '' },
+  { name: 'খেলাধুলা', slug: 'sports', icon: '' },
+  { name: 'বিনোদন', slug: 'entertainment', icon: '' },
+  { name: 'শিক্ষা', slug: 'education', icon: '' },
+  { name: 'স্বাস্থ্য', slug: 'health', icon: '' },
+  { name: 'বিজ্ঞান ও প্রযুক্তি', slug: 'technology', icon: '' },
+  { name: 'মতামত', slug: 'opinion', icon: '' },
+  { name: 'লাইফস্টাইল', slug: 'lifestyle', icon: '' },
+  { name: 'ধর্ম', slug: 'religion', icon: '' },
+  { name: 'জেলা', slug: 'districts', icon: '' },
+  { name: 'অন্যান্য', slug: 'others', icon: '' },
+];
+
+await query<ResultSetHeader>('DELETE FROM categories');
+for (const cat of categories) {
+  await query<ResultSetHeader>(
+    `INSERT INTO categories (name, slug, icon) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE name = VALUES(name), icon = VALUES(icon)`,
+    [cat.name, cat.slug, cat.icon]
+  );
+}
+
 const run = async () => {
   try {
     await connectDB();

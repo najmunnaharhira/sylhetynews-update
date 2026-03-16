@@ -1,0 +1,9 @@
+Delete the following files and all Firebase-related code:
+- admin/src/lib/firebase.ts
+- frontend/src/config/firebase.ts
+- frontend/src/services/firebaseService.ts
+- .firebaserc
+- All Firebase config and documentation files
+- Remove Firebase dependencies from all package.json files
+- Remove all Firebase usage from admin/src/pages/Login.tsx, admin/src/pages/Dashboard.tsx, and any other files
+- Refactor all data/auth/storage logic to use backend REST API only
