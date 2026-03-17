@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Download, Image as ImageIcon, Upload, X, Sparkles } from "lucide-react";
 import logoMain from "/logo-main.jpeg";
-import { photocardTemplateService, newsService } from "@/services/dataService";
-import { firebaseReady } from "@/config/firebase";
+import { newsService } from "@/services/dataService";
 import { NewsArticle } from "@/types/news";
 import { PhotoCardTemplate } from "@/types/photocard";
 
@@ -252,16 +251,20 @@ const PhotoCard = () => {
 
           // Outer red border
           ctx.fillStyle = borderRed;
-          (ctx as CtxWithRoundRect).roundRect
-            ? (ctx as CtxWithRoundRect).roundRect(outerX, outerY, outerW, outerH, 18 * scale)
-            : ctx.fillRect(outerX, outerY, outerW, outerH);
+          if ((ctx as CtxWithRoundRect).roundRect) {
+            (ctx as CtxWithRoundRect).roundRect!(outerX, outerY, outerW, outerH, 18 * scale);
+          } else {
+            ctx.fillRect(outerX, outerY, outerW, outerH);
+          }
           ctx.fill();
 
           // Inner green area
           ctx.fillStyle = bgGreen;
-          (ctx as CtxWithRoundRect).roundRect
-            ? (ctx as CtxWithRoundRect).roundRect(innerX, innerY, innerW, innerH, 14 * scale)
-            : ctx.fillRect(innerX, innerY, innerW, innerH);
+          if ((ctx as CtxWithRoundRect).roundRect) {
+            (ctx as CtxWithRoundRect).roundRect!(innerX, innerY, innerW, innerH, 14 * scale);
+          } else {
+            ctx.fillRect(innerX, innerY, innerW, innerH);
+          }
           ctx.fill();
 
           // Header area: white strip with logo + tagline (like reference)
@@ -271,15 +274,17 @@ const PhotoCard = () => {
           const headerBottom = innerY + headerH;
 
           ctx.fillStyle = "#ffffff";
-          (ctx as CtxWithRoundRect).roundRect
-            ? (ctx as CtxWithRoundRect).roundRect(
-                innerX,
-                headerTop,
-                innerW,
-                headerH,
-                { tl: 14 * scale, tr: 14 * scale, br: 0, bl: 0 } as unknown as number
-              )
-            : ctx.fillRect(innerX, headerTop, innerW, headerH);
+          if ((ctx as CtxWithRoundRect).roundRect) {
+            (ctx as CtxWithRoundRect).roundRect!(
+              innerX,
+              headerTop,
+              innerW,
+              headerH,
+              { tl: 14 * scale, tr: 14 * scale, br: 0, bl: 0 } as unknown as number
+            );
+          } else {
+            ctx.fillRect(innerX, headerTop, innerW, headerH);
+          }
           ctx.fill();
 
           const headerCenterX = innerX + innerW / 2;
@@ -328,7 +333,7 @@ const PhotoCard = () => {
           );
 
           // Available area below header split between photo and headline
-          let cursorY = headerBottom + 24 * scale;
+          const cursorY = headerBottom + 24 * scale;
           const bottomPadding = 24 * scale;
           const contentBottom = innerY + innerH - bottomPadding;
           const availableH = contentBottom - cursorY;
@@ -352,15 +357,11 @@ const PhotoCard = () => {
 
             ctx.save();
             ctx.beginPath();
-            (ctx as CtxWithRoundRect).roundRect
-              ? (ctx as CtxWithRoundRect).roundRect(
-                  photoX,
-                  photoY,
-                  photoW,
-                  photoH,
-                  18 * scale
-                )
-              : ctx.rect(photoX, photoY, photoW, photoH);
+            if ((ctx as CtxWithRoundRect).roundRect) {
+              (ctx as CtxWithRoundRect).roundRect!(photoX, photoY, photoW, photoH, 18 * scale);
+            } else {
+              ctx.rect(photoX, photoY, photoW, photoH);
+            }
             ctx.clip();
             ctx.drawImage(photoImgEl, photoX, photoY, photoW, photoH);
             ctx.restore();
@@ -368,15 +369,11 @@ const PhotoCard = () => {
             // Thin red border around photo
             ctx.strokeStyle = borderRed;
             ctx.lineWidth = 6 * scale;
-            (ctx as CtxWithRoundRect).roundRect
-              ? (ctx as CtxWithRoundRect).roundRect(
-                  photoX,
-                  photoY,
-                  photoW,
-                  photoH,
-                  18 * scale
-                )
-              : ctx.rect(photoX, photoY, photoW, photoH);
+            if ((ctx as CtxWithRoundRect).roundRect) {
+              (ctx as CtxWithRoundRect).roundRect!(photoX, photoY, photoW, photoH, 18 * scale);
+            } else {
+              ctx.rect(photoX, photoY, photoW, photoH);
+            }
             ctx.stroke();
           }
 

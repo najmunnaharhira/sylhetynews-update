@@ -93,14 +93,15 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-2 sm:px-4 py-6">
         <div className="mb-6">
-          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap border border-news-border rounded-sm bg-card px-3 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap border border-news-border rounded-sm bg-card px-1 sm:px-3 py-2">
             {categoryNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className="px-3 py-1 text-xs font-bengali text-news-subtext rounded-full border border-transparent hover:border-primary hover:text-primary transition-colors"
+                className="px-2 sm:px-3 py-1 text-xs font-bengali text-news-subtext rounded-full border border-transparent hover:border-primary hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                tabIndex={0}
               >
                 {item.name}
               </Link>
@@ -116,7 +117,9 @@ const Index = () => {
 
           {/* Top Stories - 25% */}
           <div className="lg:col-span-3">
-            <TopStories news={latestNews} />
+            <div className="sm:sticky sm:top-20">
+              <TopStories news={latestNews} />
+            </div>
           </div>
 
           {/* Sylhet Special - 25% */}

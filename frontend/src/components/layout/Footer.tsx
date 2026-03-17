@@ -141,7 +141,7 @@ const Footer = () => {
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 shadow-lg hover:scale-105 transition-transform border border-yellow-300"
             style={{ boxShadow: '0 2px 16px 0 rgba(250,204,21,0.18)' }}
           >
-            <img src={require('@/assets/chilekotha-logo.svg').default} alt="Chilekotha Logo" className="w-7 h-7 rounded bg-white p-1 shadow" />
+            <img src={"/src/assets/chilekotha-logo.jpg"} alt="Chilekotha Logo" className="w-7 h-7 rounded bg-white p-1 shadow" />
             <span className="font-bold text-base text-slate-900 tracking-wide">Tech Partner:</span>
             <span className="font-extrabold text-base text-yellow-900 tracking-wider">Chilekotha</span>
           </a>

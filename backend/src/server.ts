@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { connectDB } from './config/database.js';
+import { connectDB, isDbConnected, getDbInitError } from './config/database.js';
 import adminRoutes from './routes/admin.js';
 import newsRoutes from './routes/news.js';
 import categoryRoutes from './routes/categories.js';
@@ -25,8 +25,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
-// Connect to Database
-connectDB();
+// Connect to Database (non-fatal if unavailable)
+await connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -55,7 +55,13 @@ app.get('/', (_req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running' });
+  res.json({
+    status: 'Server is running',
+    db: {
+      connected: isDbConnected(),
+      error: getDbInitError(),
+    },
+  });
 });
 
 // Error handling middleware

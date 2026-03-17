@@ -4,7 +4,6 @@ import { Input } from "../ui/input";
 import { AlertCircle, Trash2, Save } from "lucide-react";
 import { teamService, api } from "../../services/dataService";
 import { TeamMember } from "../../types/team";
-import { firebaseInitError, firebaseReady } from "../../config/firebase";
 
 const AdminTeamManager = () => {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -14,10 +13,6 @@ const AdminTeamManager = () => {
   const [error, setError] = useState("");
 
   const loadMembers = async () => {
-    if (!api.isConfigured() && !firebaseReady) {
-      setError(firebaseInitError || "Firebase is not configured.");
-      return;
-    }
     const list = await teamService.getTeamMembers();
     setMembers(list);
   };

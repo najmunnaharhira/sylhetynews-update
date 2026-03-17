@@ -24,5 +24,8 @@
     "nextjs"
   ],
   "author": "",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@vitejs/plugin-react-oxc": "^0.4.3"
+  }
 }

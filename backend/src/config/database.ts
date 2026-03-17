@@ -2,12 +2,19 @@ import mysql, { Pool } from 'mysql2/promise';
 import type { QueryResult } from 'mysql2';
 
 let pool: Pool | null = null;
+let lastConnectionError: string | null = null;
+let connected = false;
 
 const requiredEnv = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER'] as const;
 
+export const isDbConnected = (): boolean => connected && !!pool;
+
+export const getDbInitError = (): string | null => lastConnectionError;
+
 export const getDB = (): Pool => {
   if (!pool) {
-    throw new Error('Database is not connected. Call connectDB() first.');
+    const suffix = lastConnectionError ? ` (${lastConnectionError})` : '';
+    throw new Error(`Database is not connected${suffix}`);
   }
   return pool;
 };
@@ -93,6 +100,8 @@ const initializeSchema = async (): Promise<void> => {
 
 export const connectDB = async (): Promise<void> => {
   try {
+    lastConnectionError = null;
+    connected = false;
     for (const key of requiredEnv) {
       if (!process.env[key]) {
         throw new Error(`${key} is not set`);
@@ -112,9 +121,15 @@ export const connectDB = async (): Promise<void> => {
 
     await getDB().query('SELECT 1');
     await initializeSchema();
+    connected = true;
     console.log('MySQL connected successfully');
   } catch (error) {
+    pool = null;
+    connected = false;
+    lastConnectionError = error instanceof Error ? error.message : String(error);
     console.error('MySQL connection failed:', error);
-    process.exit(1);
+    console.warn(
+      'Continuing without database. DB-backed endpoints will return 500 until MySQL is available.'
+    );
   }
 };
