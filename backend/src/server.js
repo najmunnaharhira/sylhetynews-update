@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import passwordRoutes from "./routes/passwordRoutes.js";
+import adminUsersRoutes from "./routes/adminUsers.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 dotenv.config();
@@ -18,6 +20,9 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/password", passwordRoutes);
+app.use("/api/admin", adminUsersRoutes);
+app.use("/api/admin-users", adminUsersRoutes);
 
 app.use(errorHandler);
 

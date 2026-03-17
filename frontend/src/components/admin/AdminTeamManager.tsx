@@ -5,6 +5,7 @@ import { AlertCircle, Trash2, Save } from "lucide-react";
 import { teamService, api } from "../../services/dataService";
 import { TeamMember } from "../../types/team";
 
+
 const AdminTeamManager = () => {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [name, setName] = useState("");
@@ -13,6 +14,10 @@ const AdminTeamManager = () => {
   const [error, setError] = useState("");
 
   const loadMembers = async () => {
+    if (!api.isConfigured()) {
+      setError("API is not configured.");
+      return;
+    }
     const list = await teamService.getTeamMembers();
     setMembers(list);
   };

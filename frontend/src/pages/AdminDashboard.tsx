@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { isBackendConfigured } from "../config/api";
 import { useAdminAuth } from "../contexts/AdminAuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/dataService";
 
 import { 
@@ -33,19 +34,15 @@ const sidebarItems = [
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const firebaseAuth = useAuth();
   const adminApiAuth = useAdminAuth();
   const useApiAuth = isBackendConfigured();
 
-  const user = adminApiAuth.user;
-  const userData = adminApiAuth.user
-    ? { displayName: adminApiAuth.user.email, role: "admin" as const }
-    : null;
-  const isAdmin = adminApiAuth.isAuthenticated;
-  const loading = adminApiAuth.loading;
-  const logout = () => {
-    adminApiAuth.logout();
-    navigate("/admin/login");
-  };
+  const user = useApiAuth ? adminApiAuth.user : firebaseAuth.user;
+  const userData = useApiAuth ? (adminApiAuth.user ? { displayName: adminApiAuth.user.email, role: 'admin' as const } : null) : firebaseAuth.userData;
+  const isAdmin = useApiAuth ? adminApiAuth.isAuthenticated : firebaseAuth.isAdmin;
+  const loading = useApiAuth ? adminApiAuth.loading : firebaseAuth.loading;
+  const logout = useApiAuth ? () => { adminApiAuth.logout(); navigate('/admin/login'); } : firebaseAuth.logout;
 
   const [activeTab, setActiveTab] = useState<AdminTab>('news');
   const [showForm, setShowForm] = useState(false);
@@ -67,7 +64,13 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = async () => {
-    logout();
+    if (useApiAuth) {
+      adminApiAuth.logout();
+      navigate('/admin/login');
+    } else {
+      await logout();
+      navigate('/admin/login');
+    }
   };
 
   return (

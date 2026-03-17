@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
@@ -22,12 +23,19 @@ interface RevenueRow extends RowDataPacket {
   totalViews: number;
 }
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body as { email?: string; password?: string };
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
+router.post(
+  '/login',
+  [
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('password').isString().notEmpty().withMessage('Password is required'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: errors.array()[0].msg });
+    }
+    const { email, password } = req.body as { email?: string; password?: string };
 
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;

@@ -10,6 +10,7 @@ import teamRoutes from './routes/team.js';
 import authRoutes from './routes/auth.js';
 import opinionRoutes from './routes/opinions.js';
 import uploadRoutes from './routes/upload.js';
+import passwordRoutes from './routes/passwordRoutes.js';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
@@ -36,6 +37,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/opinions', opinionRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/password', passwordRoutes);
 
 // Root helpers so hosted URL doesn't show "Cannot GET /"
 app.get('/', (_req, res) => {
@@ -72,6 +74,10 @@ app.use((err: unknown, req: express.Request, res: express.Response, _next: expre
   res.status(500).json({ error: message });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+export default app;
