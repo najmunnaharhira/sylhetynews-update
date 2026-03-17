@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import opinionRoutes from './routes/opinions.js';
 import uploadRoutes from './routes/upload.js';
 import passwordRoutes from './routes/passwordRoutes.js';
+import setupSwagger from './swagger.js';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
@@ -38,6 +39,9 @@ app.use('/api/team', teamRoutes);
 app.use('/api/opinions', opinionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/password', passwordRoutes);
+
+// Swagger/OpenAPI docs
+setupSwagger(app);
 
 // Root helpers so hosted URL doesn't show "Cannot GET /"
 app.get('/', (_req, res) => {

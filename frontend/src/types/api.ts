@@ -1,42 +1,44 @@
-// API response types for frontend
+// Centralized API response types for frontend
 import { NewsArticle, NewsCategory, User } from "./news";
 import { TeamMember } from "./team";
 
-export interface ApiListResponse<T> {
-  [key: string]: T[];
-}
-
-export interface ApiItemResponse<T> {
-  [key: string]: T;
-}
-
-export interface ApiIdResponse {
-  id: string;
-}
-
-export interface ApiSuccessResponse {
+/**
+ * Generic API response wrapper
+ */
+export interface ApiResponse<T = any> {
   success: boolean;
+  message?: string;
+  data?: T;
+  error?: string;
 }
 
-export interface ApiErrorResponse {
-  error: string;
-}
+// News API
+export type NewsListResponse = ApiResponse<NewsArticle[]>;
+export type NewsDetailResponse = ApiResponse<NewsArticle>;
 
-// Specific API responses
-export type NewsListResponse = ApiListResponse<NewsArticle>; // { news: NewsArticle[] }
-export type NewsItemResponse = ApiItemResponse<NewsArticle>; // { news: NewsArticle }
-export type CategoryListResponse = ApiListResponse<NewsCategory>; // { categories: NewsCategory[] }
-export type CategoryItemResponse = ApiItemResponse<NewsCategory>; // { category: NewsCategory }
-export type TeamListResponse = ApiListResponse<TeamMember>; // { team: TeamMember[] }
-export type TeamItemResponse = ApiItemResponse<TeamMember>; // { member: TeamMember }
-export type UserListResponse = ApiListResponse<User>; // { users: User[] }
-export type UserItemResponse = ApiItemResponse<User>; // { user: User }
+// Category API
+export type CategoryListResponse = ApiResponse<NewsCategory[]>;
+export type CategoryDetailResponse = ApiResponse<NewsCategory>;
 
-export interface AuthResponse {
+// Team API
+export type TeamListResponse = ApiResponse<TeamMember[]>;
+export type TeamDetailResponse = ApiResponse<TeamMember>;
+
+// User API
+export type UserListResponse = ApiResponse<User[]>;
+export type UserDetailResponse = ApiResponse<User>;
+
+// Auth API
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  role: string;
   token: string;
-  user: User;
 }
+export type AuthResponse = ApiResponse<AuthUser>;
 
+// Upload API
 export interface UploadImageResponse {
   success: boolean;
   url: string;
