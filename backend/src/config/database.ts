@@ -96,6 +96,32 @@ const initializeSchema = async (): Promise<void> => {
     VALUES (1)
     ON DUPLICATE KEY UPDATE id = id;
   `);
+
+  await getDB().query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      role VARCHAR(50) NOT NULL DEFAULT 'user',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;
+  `);
+
+  // Ensure default admin exists (robust TypeScript/MySQL handling)
+  const [adminRows]: any = await getDB().query(
+    `SELECT * FROM users WHERE email = 'admin@gmail.com'`
+  );
+  if (!adminRows || adminRows.length === 0) {
+    const bcrypt = require('bcryptjs');
+    const passwordHash = await bcrypt.hash('Admin@123', 10);
+    await getDB().query(
+      `INSERT INTO users (name, email, password_hash, role) VALUES ('Admin', 'admin@gmail.com', ?, 'admin')`,
+      [passwordHash]
+    );
+    console.log('Default admin user created: admin@gmail.com / Admin@123');
+  }
 };
 
 export const connectDB = async (): Promise<void> => {

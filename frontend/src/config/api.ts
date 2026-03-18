@@ -17,7 +17,7 @@ export function getApiBaseUrl(): string {
 
 export function isBackendConfigured(): boolean {
   const provider = (import.meta.env.VITE_DATA_PROVIDER || "").toLowerCase();
-  if (provider === "firebase") return false;
+  // Firebase provider removed
   return true;
 }
 

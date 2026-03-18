@@ -31,5 +31,11 @@
     "jest": "^30.3.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react-swc": "^4.3.0",
+    "lovable-tagger": "^1.1.13",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

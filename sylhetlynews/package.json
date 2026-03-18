@@ -1,0 +1,35 @@
+{
+  "name": "sylhetlynews",
+  "private": true,
+  "description": "Sylhetly News - Frontend, Backend, Admin",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:admin": "npm run dev --prefix admin",
+    "build": "npm run build --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:backend": "echo Backend has no build step",
+    "build:admin": "npm run build --prefix admin",
+    "start:backend": "npm start --prefix backend",
+    "start:admin": "npm start --prefix admin",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend && npm install --prefix admin"
+  },
+  "keywords": [
+    "sylhetlynews",
+    "news",
+    "react",
+    "vite",
+    "express",
+    "nextjs"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@vitejs/plugin-react-oxc": "^0.4.3",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6"
+  }
+}

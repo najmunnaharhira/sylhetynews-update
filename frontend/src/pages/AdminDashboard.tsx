@@ -8,7 +8,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { isBackendConfigured } from "../config/api";
 import { useAdminAuth } from "../contexts/AdminAuthContext";
-import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/dataService";
 
 import { 
@@ -34,7 +33,7 @@ const sidebarItems = [
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const firebaseAuth = useAuth();
+
   const adminApiAuth = useAdminAuth();
   const useApiAuth = isBackendConfigured();
 

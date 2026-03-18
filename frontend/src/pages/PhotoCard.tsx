@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Download, Image as ImageIcon, Upload, X, Sparkles } from "lucide-react";
 import logoMain from "/logo-main.jpeg";
-import { photocardTemplateService, newsService } from "@/services/dataService";
+import { newsService } from "@/services/dataService";
 
 import { NewsArticle } from "@/types/news";
 import { PhotoCardTemplate } from "@/types/photocard";
@@ -88,9 +88,7 @@ const PhotoCard = () => {
   const [overlayStrength, setOverlayStrength] = useState(0.9);
   const [fontBold, setFontBold] = useState(true);
   const [fontItalic, setFontItalic] = useState(false);
-  const [templates, setTemplates] = useState<PhotoCardTemplate[]>([]);
-  const [showTemplates, setShowTemplates] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  // Template logic removed (Firebase-based)
   const [firebaseNews, setFirebaseNews] = useState<NewsArticle[]>([]);
 
   // Load news from Firebase
@@ -160,79 +158,21 @@ const PhotoCard = () => {
     }
   }, [searchParams, selectedNewsId]);
 
-  useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        const templateList = await photocardTemplateService.getTemplates();
-        if (templateList && templateList.length > 0) {
-          setTemplates(templateList);
-        }
-      } catch (error) {
-        console.error("Failed to load templates:", error);
-        // Silently continue without templates
-      }
-    };
-    loadTemplates();
-  }, []);
-
-  const handleDownloadTemplate = (template: PhotoCardTemplate) => {
-    const link = document.createElement("a");
-    link.download = `${template.name || 'photocard'}.png`;
-    link.href = template.imageUrl;
-    link.target = "_blank";
-    link.click();
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadedImage(file);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImagePreview(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const clearUploadedImage = () => {
-    setUploadedImage(null);
-    setUploadedImagePreview(null);
-  };
-
-  const generatePhotoCard = async (
-    includeLogo: boolean = true,
-    updatePreview: boolean = true
-  ) => {
-    if (!selectedNews || !canvasRef.current) return null;
-    setIsGenerating(true);
+  const generatePhotoCard = async (updatePreview = true, includeLogo = true): Promise<string | null> => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    if (!canvas) return null;
 
-    if (!ctx) return null;
-
-    // Polyfill for roundRect if not available
-    type CtxWithRoundRect = CanvasRenderingContext2D & { roundRect?(x: number, y: number, w: number, h: number, r: number): void };
-    if (!(ctx as CtxWithRoundRect).roundRect) {
-      (ctx as CtxWithRoundRect).roundRect = function (x: number, y: number, w: number, h: number, r: number) {
-        if (w < 2 * r) r = w / 2;
-        if (h < 2 * r) r = h / 2;
-        this.beginPath();
-        this.moveTo(x + r, y);
-        this.arcTo(x + w, y, x + w, y + h, r);
-        this.arcTo(x + w, y + h, x, y + h, r);
-        this.arcTo(x, y + h, x, y, r);
-        this.arcTo(x, y, x + w, y, r);
-        this.closePath();
-        return this;
-      };
-    }
+    if (updatePreview) setIsGenerating(true);
 
     const width = cardWidth;
     const height = cardHeight;
-    const scale = width / 1080;
     canvas.width = width;
     canvas.height = height;
 
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    const scale = width / 1080;
     // New default layout: press-style card like provided examples.
     const usePressLayout = true;
     if (usePressLayout) {
@@ -1108,75 +1048,27 @@ const PhotoCard = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="section-title text-2xl">ফটোকার্ড জেনারেটর</h1>
-          <Button
-            onClick={() => setShowTemplates(!showTemplates)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Sparkles className="w-4 h-4" />
-            {showTemplates ? "কাস্টম তৈরি করুন" : "রেডিমেড টেমপ্লেট"}
-          </Button>
         </div>
 
-        {/* Template Gallery */}
-        {showTemplates && templates.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-bengali font-semibold mb-4 text-news-headline">
-              রেডিমেড ফটোকার্ড টেমপ্লেট
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {templates.map((template) => (
-                <div
-                  key={template.id}
-                  className="bg-card border border-news-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
-                  onClick={() => handleDownloadTemplate(template)}
-                >
-                  <div className="relative aspect-square overflow-hidden">
-                    <img
-                      src={template.previewUrl || template.imageUrl}
-                      alt={template.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <Download className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-bengali text-sm font-semibold text-news-headline truncate">
-                      {template.name}
-                    </h3>
-                    {template.description && (
-                      <p className="text-xs text-news-subtext mt-1 line-clamp-2">
-                        {template.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!showTemplates && (
-          <>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Controls */}
-              <div className="space-y-6">
-                <div className="bg-card border border-news-border rounded-sm p-6">
-                  <h2 className="font-bengali font-semibold text-lg mb-4">
-                    সংবাদ নির্বাচন করুন
-                  </h2>
-
-                  <div className="space-y-4">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-bengali text-news-subtext">
-                          ট্যাগলাইন (বাংলা)
-                        </label>
-                        <input
-                          type="text"
-                          value={taglineBn}
+        {/* Template Gallery removed (Firebase-based) */}
+        {/* Only custom generator UI remains */}
+        {/* Main generator UI: */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Controls */}
+          <div className="space-y-6">
+            <div className="bg-card border border-news-border rounded-sm p-6">
+              <h2 className="font-bengali font-semibold text-lg mb-4">
+                কাস্টম সেটিংস
+              </h2>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-bengali text-news-subtext">
+                      ট্যাগলাইন (বাংলা)
+                    </label>
+                    <input
+                      type="text"
+                      value={taglineBn}
                           onChange={(e) => setTaglineBn(e.target.value)}
                           className="mt-1 w-full rounded-md border border-news-border px-3 py-2 text-sm"
                           placeholder="সত্যের পথে অবিচল"
@@ -1509,11 +1401,18 @@ const PhotoCard = () => {
                 <canvas ref={canvasRef} className="hidden" />
               </div>
             </div>
-          </>
-        )}
       </div>
     </Layout>
   );
 };
 
 export default PhotoCard;
+
+// Add this handler to allow image upload for photocard
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setUploadedImage(file);
+    setUploadedImagePreview(URL.createObjectURL(file));
+  }
+};

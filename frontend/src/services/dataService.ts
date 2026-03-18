@@ -16,4 +16,4 @@ export const imageService = apiImage;
 export const adminService = apiAdmin;
 
 export { api };
-export { photocardTemplateService } from './firebaseService';
+
