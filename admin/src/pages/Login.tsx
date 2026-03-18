@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { apiFetch } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../components/Input";
 import { Button } from "../components/Button";
@@ -10,6 +11,7 @@ import { validateEmail, validateRequired } from "../utils/validation";
 import { useAuth } from "../contexts/AuthContext";
 
 
+export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
