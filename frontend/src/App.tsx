@@ -19,41 +19,37 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AdminAuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/sylhet" element={<CategoryPage />} />
-            <Route path="/national" element={<CategoryPage />} />
-            <Route path="/politics" element={<CategoryPage />} />
-            <Route path="/mofoshol" element={<CategoryPage />} />
-            <Route path="/international" element={<CategoryPage />} />
-            <Route path="/economy" element={<CategoryPage />} />
-            <Route path="/entertainment" element={<CategoryPage />} />
-            <Route path="/expat" element={<CategoryPage />} />
-            <Route path="/sports" element={<CategoryPage />} />
-            <Route path="/lifestyle" element={<CategoryPage />} />
-            <Route path="/technology" element={<CategoryPage />} />
-            <Route path="/law" element={<CategoryPage />} />
-            <Route path="/opinion" element={<CategoryPage />} />
-            <Route path="/others" element={<CategoryPage />} />
-            <Route path="/news/:id" element={<NewsDetail />} />
-            <Route path="/photocard" element={<PhotoCard />} />
-            <Route path="/districts" element={<Districts />} />
-            <Route path="/district/:district" element={<DistrictPage />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AdminAuthProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/sylhet" element={<CategoryPage />} />
+          <Route path="/national" element={<CategoryPage />} />
+          <Route path="/politics" element={<CategoryPage />} />
+          <Route path="/mofoshol" element={<CategoryPage />} />
+          <Route path="/international" element={<CategoryPage />} />
+          <Route path="/economy" element={<CategoryPage />} />
+          <Route path="/entertainment" element={<CategoryPage />} />
+          <Route path="/expat" element={<CategoryPage />} />
+          <Route path="/sports" element={<CategoryPage />} />
+          <Route path="/lifestyle" element={<CategoryPage />} />
+          <Route path="/technology" element={<CategoryPage />} />
+          <Route path="/law" element={<CategoryPage />} />
+          <Route path="/opinion" element={<CategoryPage />} />
+          <Route path="/others" element={<CategoryPage />} />
+          <Route path="/news/:id" element={<NewsDetail />} />
+          <Route path="/photocard" element={<PhotoCard />} />
+          <Route path="/districts" element={<Districts />} />
+          <Route path="/district/:district" element={<DistrictPage />} />
+          <Route path="/team" element={<Team />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
   </QueryClientProvider>
 );
 

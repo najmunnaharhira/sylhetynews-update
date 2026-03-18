@@ -4,7 +4,6 @@
  */
 
 import { api, newsService, categoryService, teamService, imageService } from './apiService';
-import { adminService } from './apiService';
 
-export { api, newsService, categoryService, teamService, imageService, adminService };
+export { api, newsService, categoryService, teamService, imageService };
 

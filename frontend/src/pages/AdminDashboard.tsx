@@ -1,3 +1,6 @@
+// Removed: AdminDashboard page moved to admin folder
+// This file is no longer used in the frontend.
+// All admin functionalities are now handled in the admin panel.
 import AdminCategoryManager from "../components/admin/AdminCategoryManager";
 import AdminBusinessSettings from "../components/admin/AdminBusinessSettings";
 import AdminNewsForm from "../components/admin/AdminNewsForm";
@@ -35,13 +38,12 @@ export default function AdminDashboard() {
   const location = useLocation();
 
   const adminApiAuth = useAdminAuth();
-  const useApiAuth = isBackendConfigured();
-
-  const user = useApiAuth ? adminApiAuth.user : firebaseAuth.user;
-  const userData = useApiAuth ? (adminApiAuth.user ? { displayName: adminApiAuth.user.email, role: 'admin' as const } : null) : firebaseAuth.userData;
-  const isAdmin = useApiAuth ? adminApiAuth.isAuthenticated : firebaseAuth.isAdmin;
-  const loading = useApiAuth ? adminApiAuth.loading : firebaseAuth.loading;
-  const logout = useApiAuth ? () => { adminApiAuth.logout(); navigate('/admin/login'); } : firebaseAuth.logout;
+  // Only use backend authentication (MySQL)
+  const user = adminApiAuth.user;
+  const userData = adminApiAuth.user ? { displayName: adminApiAuth.user.email, role: 'admin' as const } : null;
+  const isAdmin = adminApiAuth.isAuthenticated;
+  const loading = adminApiAuth.loading;
+  const logout = () => { adminApiAuth.logout(); navigate('/admin/login'); };
 
   const [activeTab, setActiveTab] = useState<AdminTab>('news');
   const [showForm, setShowForm] = useState(false);
@@ -225,3 +227,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+// Removed: AdminDashboard page moved to admin folder

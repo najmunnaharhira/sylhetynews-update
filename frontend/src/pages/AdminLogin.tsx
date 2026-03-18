@@ -1,3 +1,6 @@
+// Removed: AdminLogin page moved to admin folder
+// This file is no longer used in the frontend.
+// All admin login functionalities are now handled in the admin panel.
 import { useState, useEffect, useRef } from "react";
 import { useFormState } from "../components/ui/useFormState";
 import { useNavigate } from "react-router-dom";
@@ -31,9 +34,7 @@ export default function AdminLogin() {
   const isAdmin = adminApiAuth.isAuthenticated;
   const authLoading = adminApiAuth.loading;
 
-  useEffect(() => {
-    // Firebase logic removed
-  }, [useApiAuth, firebaseAuth.user, firebaseAuth.isAdmin, firebaseAuth.loading, navigate]);
+  // Removed all firebaseAuth dependencies. Only backend authentication is used.
 
   useEffect(() => {
     if (adminApiAuth.isAuthenticated && !authLoading) {
@@ -192,3 +193,4 @@ export default function AdminLogin() {
     </div>
   );
 }
+// Removed: AdminLogin page moved to admin folder

@@ -114,7 +114,7 @@ const initializeSchema = async (): Promise<void> => {
     `SELECT * FROM users WHERE email = 'admin@gmail.com'`
   );
   if (!adminRows || adminRows.length === 0) {
-    const bcrypt = require('bcryptjs');
+      const bcrypt = (await import('bcryptjs')).default;
     const passwordHash = await bcrypt.hash('Admin@123', 10);
     await getDB().query(
       `INSERT INTO users (name, email, password_hash, role) VALUES ('Admin', 'admin@gmail.com', ?, 'admin')`,
