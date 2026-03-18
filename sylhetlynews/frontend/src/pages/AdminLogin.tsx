@@ -1,4 +1,3 @@
-import { useState, useEffect, useRef } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -18,7 +17,7 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
-    setError("");
+    event.preventDefault();
     setError("");
     setLoading(true);
     try {
@@ -29,8 +28,7 @@ export default function AdminLogin() {
     } finally {
       setLoading(false);
     }
-      setError("Email and password are required");
-      return;
+  };
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <Card className="w-full max-w-md bg-white shadow-lg border border-gray-100">

@@ -88,26 +88,21 @@ const PhotoCard = () => {
   const [overlayStrength, setOverlayStrength] = useState(0.9);
   const [fontBold, setFontBold] = useState(true);
   const [fontItalic, setFontItalic] = useState(false);
-  // Template logic removed (Firebase-based)
-  const [firebaseNews, setFirebaseNews] = useState<NewsArticle[]>([]);
-
-  // Load news from Firebase
+  // Load news from backend API
+  const [news, setNews] = useState<NewsArticle[]>([]);
   useEffect(() => {
     const loadNews = async () => {
       try {
-        const news = await newsService.getAllNews();
-        if (news && news.length > 0) {
-          setFirebaseNews(news);
-        }
+        const newsList = await newsService.getAllNews();
+        setNews(newsList);
       } catch (error) {
         console.error("Failed to load news:", error);
-        // Silently fallback to static data
+        setNews(newsData); // fallback to static data
       }
     };
     loadNews();
   }, []);
 
-  // Auto-select news from URL parameter
   useEffect(() => {
     const newsId = searchParams.get('newsId') || searchParams.get('id');
     if (newsId) {
@@ -115,8 +110,7 @@ const PhotoCard = () => {
     }
   }, [searchParams]);
 
-  // Use Firebase news if available, otherwise fallback to static data
-  const availableNews = firebaseNews.length > 0 ? firebaseNews : newsData;
+  const availableNews = news.length > 0 ? news : newsData;
   const selectedNews = availableNews.find((n) => n.id === selectedNewsId);
 
   const dimensionOptions = [

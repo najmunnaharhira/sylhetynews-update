@@ -265,7 +265,7 @@ export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
                 disabled={uploading || !image}
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
-                {uploading ? "Uploading to Firebase..." : "Upload Image to Firebase"}
+                {uploading ? "Uploading..." : "Upload Image"}
               </Button>
             )}
             {uploadedImageUrl && (
