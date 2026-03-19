@@ -133,14 +133,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Check for token, redirect if not present
-    const token = localStorage.getItem("token");
+    // Use admin_jwt_token (consistent with AuthContext) for authentication check
+    const token = localStorage.getItem("admin_jwt_token");
     if (!token) {
       navigate("/login");
       return;
     }
     setError("");
     loadNews();
-    // TODO: loadCategories, loadTeamMembers, loadPhotocardTemplates (backend)
+    // Load categories, team members and photocard templates on mount
+    loadCategories();
+    loadTeamMembers();
+    loadPhotocardTemplates();
   }, [navigate]);
 
   const handleLogout = async () => {
