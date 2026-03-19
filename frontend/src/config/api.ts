@@ -19,3 +19,7 @@ export function isBackendConfigured(): boolean {
   // Firebase provider removed
   return true;
 }
+
+export function getAdminToken(): string | null {
+  return localStorage.getItem("admin_jwt_token");
+}

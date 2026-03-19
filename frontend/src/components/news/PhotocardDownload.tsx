@@ -1,15 +1,24 @@
-import React from "react";
-
 interface PhotocardDownloadProps {
   imageUrl: string;
   title: string;
+  label?: string;
 }
 
-const PhotocardDownload: React.FC<PhotocardDownloadProps> = ({ imageUrl, title }) => (
-  <a href={imageUrl} download target="_blank" rel="noopener noreferrer">
-    <button style={{ margin: 8, padding: 8, background: '#eee', border: '1px solid #ccc', borderRadius: 4 }}>
-      Download Photocard: {title}
-    </button>
+const toFileName = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "photocard";
+
+const PhotocardDownload = ({ imageUrl, title, label }: PhotocardDownloadProps) => (
+  <a
+    href={imageUrl}
+    download={`${toFileName(title)}.jpg`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5"
+  >
+    {label ?? "Download Photocard"}
   </a>
 );
 

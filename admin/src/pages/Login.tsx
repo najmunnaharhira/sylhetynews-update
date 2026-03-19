@@ -35,7 +35,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const data = await apiFetch<{ token: string }>("/auth/login", {
+      const data = await apiFetch<{ token: string }>("/admin/login", {
         method: "POST",
         body: JSON.stringify({ email: email.trim(), password }),
       });

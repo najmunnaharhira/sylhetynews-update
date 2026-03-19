@@ -27,7 +27,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Decode token to get user info (assume JWT)
       try {
         const payload = JSON.parse(atob(storedToken.split(".")[1]));
-        setUser({ id: payload.sub, email: payload.email, role: payload.role || "admin" });
+        setUser({
+          id: payload.sub || payload.email || "admin",
+          email: payload.email || "admin@gmail.com",
+          role: payload.role || "admin",
+        });
       } catch {
         setUser(null);
       }
@@ -39,7 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(newToken);
     try {
       const payload = JSON.parse(atob(newToken.split(".")[1]));
-      setUser({ id: payload.sub, email: payload.email, role: payload.role || "admin" });
+      setUser({
+        id: payload.sub || payload.email || "admin",
+        email: payload.email || "admin@gmail.com",
+        role: payload.role || "admin",
+      });
     } catch {
       setUser(null);
     }

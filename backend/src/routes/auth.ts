@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -12,14 +12,18 @@ router.post(
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isString().notEmpty().withMessage('Password is required'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: errors.array()[0].msg });
     }
-    const { email, password } = req.body;
+    const { email, password } = req.body as { email?: string; password?: string };
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     try {
-      const user = await findUserByEmail(email);
+      const user = await findUserByEmail(email.trim().toLowerCase());
       if (!user) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }

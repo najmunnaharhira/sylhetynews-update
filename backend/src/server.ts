@@ -9,6 +9,7 @@ import categoryRoutes from './routes/categories.js';
 import teamRoutes from './routes/team.js';
 import authRoutes from './routes/auth.js';
 import opinionRoutes from './routes/opinions.js';
+import photocardTemplateRoutes from './routes/photocardTemplates.js';
 import uploadRoutes from './routes/upload.js';
 import passwordRoutes from './routes/passwordRoutes.js';
 import setupSwagger from './swagger.js';
@@ -28,7 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Connect to Database (non-fatal if unavailable)
-await connectDB();
+void connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -37,6 +38,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/opinions', opinionRoutes);
+app.use('/api/photocard-templates', photocardTemplateRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/password', passwordRoutes);
 

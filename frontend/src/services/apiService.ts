@@ -4,6 +4,7 @@
  */
 
 import type { NewsArticle, NewsCategory } from '../types/news';
+import type { PhotoCardTemplate } from '../types/photocard';
 import type { TeamMember } from '../types/team';
 import {
   getApiBaseUrl,
@@ -59,6 +60,25 @@ function toTeamMember(raw: Record<string, unknown>): TeamMember {
     role: String(raw.role),
     order: Number(raw.order) || 0,
     introduction: raw.introduction != null ? String(raw.introduction) : undefined,
+  };
+}
+
+function toPhotoCardTemplate(raw: Record<string, unknown>): PhotoCardTemplate {
+  return {
+    id: String(raw.id ?? raw._id),
+    name: String(raw.name ?? 'Template'),
+    description: raw.description != null ? String(raw.description) : '',
+    imageUrl: String(raw.imageUrl ?? raw.image_url ?? ''),
+    previewUrl:
+      raw.previewUrl != null
+        ? String(raw.previewUrl)
+        : raw.preview_url != null
+          ? String(raw.preview_url)
+          : undefined,
+    category: raw.category != null ? String(raw.category) : undefined,
+    isActive: Boolean(raw.isActive ?? raw.is_active ?? true),
+    createdAt: raw.createdAt ? new Date(raw.createdAt as string) : undefined,
+    updatedAt: raw.updatedAt ? new Date(raw.updatedAt as string) : undefined,
   };
 }
 
@@ -245,6 +265,16 @@ export const teamService = {
       headers: getAuthHeaders(),
     });
     await handleRes(res, () => ({}));
+  },
+};
+
+export const photocardService = {
+  async getTemplates(): Promise<PhotoCardTemplate[]> {
+    const res = await fetch(`${getBase()}/api/photocard-templates`);
+    const data = await handleRes(res, (d) => d as { templates?: unknown[] });
+    return (data.templates || []).map((template) =>
+      toPhotoCardTemplate(template as Record<string, unknown>)
+    );
   },
 };
 

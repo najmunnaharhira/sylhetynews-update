@@ -54,18 +54,19 @@ const categories = [
   { name: 'অন্যান্য', slug: 'others', icon: '' },
 ];
 
-await query<ResultSetHeader>('DELETE FROM categories');
-for (const cat of categories) {
-  await query<ResultSetHeader>(
-    `INSERT INTO categories (name, slug, icon) VALUES (?, ?, ?)
-     ON DUPLICATE KEY UPDATE name = VALUES(name), icon = VALUES(icon)`,
-    [cat.name, cat.slug, cat.icon]
-  );
-}
-
 const run = async () => {
   try {
     await connectDB();
+    await query<ResultSetHeader>('DELETE FROM categories');
+
+    for (const cat of categories) {
+      await query<ResultSetHeader>(
+        `INSERT INTO categories (name, slug, icon) VALUES (?, ?, ?)
+         ON DUPLICATE KEY UPDATE name = VALUES(name), icon = VALUES(icon)`,
+        [cat.name, cat.slug, cat.icon]
+      );
+    }
+
     await query<ResultSetHeader>('DELETE FROM news');
 
     for (const item of seedNews) {
@@ -90,10 +91,10 @@ const run = async () => {
     console.log('Seed data inserted successfully.');
   } catch (error) {
     console.error('Seeding failed:', error);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
-    process.exit(0);
+    process.exit();
   }
 };
 
-run();
+void run();

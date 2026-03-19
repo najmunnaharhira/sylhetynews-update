@@ -8,7 +8,7 @@ import {
   createTeamMember, updateTeamMember, deleteTeamMember,
   createPhotoCardTemplate, updatePhotoCardTemplate, deletePhotoCardTemplate
 } from "../services/entities";
-import { apiFetch } from "../lib/api";
+import { apiFetch, uploadImage } from "../lib/api";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import { Spinner } from "../components/Spinner";
@@ -37,6 +37,8 @@ const getDriveDirectLink = (url: string) => {
   if (!match) return "";
   return `https://drive.google.com/uc?export=view&id=${match[1]}`;
 };
+
+const FALLBACK_NEWS_IMAGE = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -161,22 +163,20 @@ export default function Dashboard() {
     }
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/news", {
+      await apiFetch("/news/admin", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           title: title.trim(),
           summary: summary.trim(),
           content: content.trim(),
           category: category.trim(),
-          imageUrl: imageUrl.trim(),
+          imageUrl: imageUrl.trim() || FALLBACK_NEWS_IMAGE,
+          author: user?.email || "admin@gmail.com",
+          published: true,
+          featured: false,
+          tags: [],
         }),
       });
-      if (!res.ok) throw new Error("Failed to create news");
       setTitle("");
       setSummary("");
       setContent("");
@@ -193,12 +193,9 @@ export default function Dashboard() {
 
   const handleDeleteNews = async (id: string) => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/news/${id}`, {
+      await apiFetch(`/news/admin/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to delete news");
       await loadNews();
     } catch {
       setError("Failed to delete news.");
@@ -254,7 +251,6 @@ export default function Dashboard() {
     window.open("https://drive.google.com/", "_blank");
   };
 
-  // Stub for image upload: Replace with actual backend upload endpoint if available
   const handleUploadImage = async () => {
     if (!imageFile) {
       setError("Please choose an image to upload.");
@@ -263,13 +259,11 @@ export default function Dashboard() {
     setError("");
     setUploading(true);
     try {
-      // TODO: Implement actual backend upload and get URL
-      setTimeout(() => {
-        setImageUrl("/uploads/" + imageFile.name);
-        setUploading(false);
-      }, 1000);
+      const uploadedUrl = await uploadImage(imageFile);
+      setImageUrl(uploadedUrl);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload image.");
+    } finally {
       setUploading(false);
     }
   };
@@ -354,36 +348,30 @@ export default function Dashboard() {
     }
   };
 
-  // Stub for template image upload: Replace with actual backend upload endpoint if available
   const handleUploadTemplateImage = async () => {
     if (!templateFile) return;
     setError("");
     setUploading(true);
     try {
-      // TODO: Implement actual backend upload and get URL
-      setTimeout(() => {
-        setTemplateImageUrl("/uploads/" + templateFile.name);
-        setUploading(false);
-      }, 1000);
+      const uploadedUrl = await uploadImage(templateFile);
+      setTemplateImageUrl(uploadedUrl);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload template image.");
+    } finally {
       setUploading(false);
     }
   };
 
-  // Stub for template preview upload: Replace with actual backend upload endpoint if available
   const handleUploadTemplatePreview = async () => {
     if (!templatePreviewFile) return;
     setError("");
     setUploading(true);
     try {
-      // TODO: Implement actual backend upload and get URL
-      setTimeout(() => {
-        setTemplatePreviewUrl("/uploads/" + templatePreviewFile.name);
-        setUploading(false);
-      }, 1000);
+      const uploadedUrl = await uploadImage(templatePreviewFile);
+      setTemplatePreviewUrl(uploadedUrl);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload preview.");
+    } finally {
       setUploading(false);
     }
   };
@@ -482,8 +470,13 @@ export default function Dashboard() {
   };
 
   const handleToggleTemplateActive = async (id: string, current: boolean) => {
-    // TODO: Implement backend API call to toggle template active status
-    setError("Toggle active/inactive not yet implemented.");
+    setError("");
+    try {
+      await updatePhotoCardTemplate(id, { isActive: !current });
+      await loadPhotocardTemplates();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to update template status.");
+    }
   };
 
 

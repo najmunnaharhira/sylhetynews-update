@@ -1,54 +1,56 @@
-import { NewsItem, CategoryItem, TeamMember, PhotoCardTemplate } from '../types/entities';
-import api from '../lib/api';
+import { NewsItem, CategoryItem, TeamMember, PhotoCardTemplate } from "../types/entities";
+import { apiFetch } from "../lib/api";
 
 export const fetchNews = async (): Promise<NewsItem[]> => {
-  const res = await api.get('/news');
-  return res.data;
+  const response = await apiFetch<{ news: NewsItem[] }>("/news/admin/all");
+  return response.news ?? [];
 };
 
 export const fetchCategories = async (): Promise<CategoryItem[]> => {
-  const res = await api.get('/categories');
-  return res.data;
+  const response = await apiFetch<{ categories: CategoryItem[] }>("/categories");
+  return response.categories ?? [];
 };
 
 export const fetchTeam = async (): Promise<TeamMember[]> => {
-  const res = await api.get('/team');
-  return res.data;
+  const response = await apiFetch<{ team: TeamMember[] }>("/team");
+  return response.team ?? [];
 };
 
 export const fetchPhotoCardTemplates = async (): Promise<PhotoCardTemplate[]> => {
-  const res = await api.get('/photocard-templates');
-  return res.data;
+  const response = await apiFetch<{ templates: PhotoCardTemplate[] }>("/photocard-templates");
+  return response.templates ?? [];
 };
 
-// Team CRUD
-export const createTeamMember = async (member: Omit<TeamMember, "id">) => {
-  const res = await api.post("/team", member);
-  return res.data;
-};
+export const createTeamMember = async (member: Omit<TeamMember, "id">) =>
+  apiFetch<{ id: string }>("/team", {
+    method: "POST",
+    body: JSON.stringify(member),
+  });
 
-export const updateTeamMember = async (id: string, member: Partial<TeamMember>) => {
-  const res = await api.put(`/team/${id}`, member);
-  return res.data;
-};
+export const updateTeamMember = async (id: string, member: Partial<TeamMember>) =>
+  apiFetch<{ id: string }>(`/team/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(member),
+  });
 
-export const deleteTeamMember = async (id: string) => {
-  const res = await api.delete(`/team/${id}`);
-  return res.data;
-};
+export const deleteTeamMember = async (id: string) =>
+  apiFetch<{ message: string }>(`/team/${id}`, {
+    method: "DELETE",
+  });
 
-// PhotoCardTemplate CRUD
-export const createPhotoCardTemplate = async (tpl: Omit<PhotoCardTemplate, "id">) => {
-  const res = await api.post("/photocard-templates", tpl);
-  return res.data;
-};
+export const createPhotoCardTemplate = async (template: Omit<PhotoCardTemplate, "id">) =>
+  apiFetch<{ id: string }>("/photocard-templates", {
+    method: "POST",
+    body: JSON.stringify(template),
+  });
 
-export const updatePhotoCardTemplate = async (id: string, tpl: Partial<PhotoCardTemplate>) => {
-  const res = await api.put(`/photocard-templates/${id}`, tpl);
-  return res.data;
-};
+export const updatePhotoCardTemplate = async (id: string, template: Partial<PhotoCardTemplate>) =>
+  apiFetch<{ id: string }>(`/photocard-templates/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(template),
+  });
 
-export const deletePhotoCardTemplate = async (id: string) => {
-  const res = await api.delete(`/photocard-templates/${id}`);
-  return res.data;
-};
+export const deletePhotoCardTemplate = async (id: string) =>
+  apiFetch<{ message: string }>(`/photocard-templates/${id}`, {
+    method: "DELETE",
+  });

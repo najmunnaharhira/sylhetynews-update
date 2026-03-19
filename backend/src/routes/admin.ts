@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Response, Router } from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -30,54 +30,59 @@ router.post(
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isString().notEmpty().withMessage('Password is required'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: errors.array()[0].msg });
     }
     const { email, password } = req.body as { email?: string; password?: string };
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+    const normalizedEmail = email.trim().toLowerCase();
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
-  if (!adminEmail || (!adminPassword && !adminPasswordHash)) {
-    return res.status(500).json({ error: 'Admin credentials not configured' });
+    if (!adminEmail || (!adminPassword && !adminPasswordHash)) {
+      return res.status(500).json({ error: 'Admin credentials not configured' });
+    }
+
+    if (normalizedEmail !== adminEmail.toLowerCase()) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    let passwordMatches = false;
+    if (adminPasswordHash) {
+      passwordMatches = await bcrypt.compare(password, adminPasswordHash);
+    } else if (adminPassword) {
+      passwordMatches = password === adminPassword;
+    }
+
+    if (!passwordMatches) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'JWT secret not configured' });
+    }
+
+    const token = jwt.sign(
+      { email: adminEmail, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      token,
+      user: {
+        email: adminEmail,
+        role: 'admin',
+      },
+    });
   }
-
-  if (email.toLowerCase() !== adminEmail.toLowerCase()) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  let passwordMatches = false;
-  if (adminPasswordHash) {
-    passwordMatches = await bcrypt.compare(password, adminPasswordHash);
-  } else if (adminPassword) {
-    passwordMatches = password === adminPassword;
-  }
-
-  if (!passwordMatches) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  if (!process.env.JWT_SECRET) {
-    return res.status(500).json({ error: 'JWT secret not configured' });
-  }
-
-  const token = jwt.sign(
-    { email: adminEmail, role: 'admin' },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  return res.json({
-    token,
-    user: {
-      email: adminEmail,
-      role: 'admin',
-    },
-  });
-});
+);
 
 router.get('/status', requireAdmin, (req, res) => {
   res.json({ status: 'admin ok', user: req.adminUser });
