@@ -46,13 +46,26 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
+const getPublicBaseUrl = (req: Request) => {
+  const configuredBase = (process.env.API_PUBLIC_URL || '').trim().replace(/\/$/, '');
+  if (configuredBase) {
+    return configuredBase;
+  }
+
+  const forwardedProto = req.header('x-forwarded-proto');
+  const protocol = forwardedProto ? forwardedProto.split(',')[0].trim() : req.protocol;
+  const host = req.get('host');
+
+  return host ? `${protocol}://${host}` : '';
+};
+
 // Upload single image
 router.post('/image', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const base = (process.env.API_PUBLIC_URL || '').replace(/\/$/, '');
+  const base = getPublicBaseUrl(req);
   const fileUrl = base ? `${base}/uploads/${req.file.filename}` : `/uploads/${req.file.filename}`;
   res.json({
     success: true,
@@ -68,8 +81,9 @@ router.post('/images', upload.array('images', 10), (req, res) => {
   }
 
   const files = (Array.isArray(req.files) ? req.files : []) as Express.Multer.File[];
+  const base = getPublicBaseUrl(req);
   const urls = files.map(file => ({
-    url: `/uploads/${file.filename}`,
+    url: base ? `${base}/uploads/${file.filename}` : `/uploads/${file.filename}`,
     filename: file.filename
   }));
 

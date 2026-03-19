@@ -16,6 +16,20 @@ function getBase(): string {
   return getApiBaseUrl();
 }
 
+function resolveAssetUrl(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    return raw;
+  }
+
+  const base = getBase().replace(/\/$/, "");
+  return raw.startsWith("/") ? `${base}${raw}` : `${base}/${raw}`;
+}
+
 function getAuthHeaders(): HeadersInit {
   const token = getAdminToken();
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -33,7 +47,7 @@ function toNewsArticle(raw: Record<string, unknown>): NewsArticle {
     summary: String(raw.summary ?? ''),
     category: String(raw.category),
     district: raw.district != null ? String(raw.district) : undefined,
-    imageUrl: String(raw.imageUrl),
+    imageUrl: resolveAssetUrl(raw.imageUrl),
     author: String(raw.author),
     createdAt: raw.createdAt ? new Date(raw.createdAt as string) : new Date(),
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt as string) : new Date(),
@@ -68,12 +82,12 @@ function toPhotoCardTemplate(raw: Record<string, unknown>): PhotoCardTemplate {
     id: String(raw.id ?? raw._id),
     name: String(raw.name ?? 'Template'),
     description: raw.description != null ? String(raw.description) : '',
-    imageUrl: String(raw.imageUrl ?? raw.image_url ?? ''),
+    imageUrl: resolveAssetUrl(raw.imageUrl ?? raw.image_url ?? ''),
     previewUrl:
       raw.previewUrl != null
-        ? String(raw.previewUrl)
+        ? resolveAssetUrl(raw.previewUrl)
         : raw.preview_url != null
-          ? String(raw.preview_url)
+          ? resolveAssetUrl(raw.preview_url)
           : undefined,
     category: raw.category != null ? String(raw.category) : undefined,
     isActive: Boolean(raw.isActive ?? raw.is_active ?? true),

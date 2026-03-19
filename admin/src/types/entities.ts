@@ -4,9 +4,15 @@ export interface NewsItem {
   summary: string;
   content: string;
   category: string;
+  district?: string;
+  author?: string;
   imageUrl?: string;
   published?: boolean;
+  featured?: boolean;
+  tags?: string[];
+  views?: number;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CategoryItem {

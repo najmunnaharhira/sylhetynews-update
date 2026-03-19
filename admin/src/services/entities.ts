@@ -1,9 +1,20 @@
 import { NewsItem, CategoryItem, TeamMember, PhotoCardTemplate } from "../types/entities";
-import { apiFetch } from "../lib/api";
+import { apiFetch, resolveApiAssetUrl } from "../lib/api";
+
+const normalizeNewsItem = (item: NewsItem): NewsItem => ({
+  ...item,
+  imageUrl: resolveApiAssetUrl(item.imageUrl) || item.imageUrl,
+});
+
+const normalizeTemplate = (template: PhotoCardTemplate): PhotoCardTemplate => ({
+  ...template,
+  imageUrl: resolveApiAssetUrl(template.imageUrl) || template.imageUrl,
+  previewUrl: resolveApiAssetUrl(template.previewUrl) || template.previewUrl,
+});
 
 export const fetchNews = async (): Promise<NewsItem[]> => {
   const response = await apiFetch<{ news: NewsItem[] }>("/news/admin/all");
-  return response.news ?? [];
+  return (response.news ?? []).map(normalizeNewsItem);
 };
 
 export const fetchCategories = async (): Promise<CategoryItem[]> => {
@@ -18,8 +29,31 @@ export const fetchTeam = async (): Promise<TeamMember[]> => {
 
 export const fetchPhotoCardTemplates = async (): Promise<PhotoCardTemplate[]> => {
   const response = await apiFetch<{ templates: PhotoCardTemplate[] }>("/photocard-templates");
-  return response.templates ?? [];
+  return (response.templates ?? []).map(normalizeTemplate);
 };
+
+export const createNewsItem = async (news: Omit<NewsItem, "id" | "createdAt" | "updatedAt">) =>
+  apiFetch<{ id: string }>("/news/admin", {
+    method: "POST",
+    body: JSON.stringify(news),
+  });
+
+export const updateNewsItem = async (id: string, news: Partial<NewsItem>) =>
+  apiFetch<{ id: string }>(`/news/admin/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(news),
+  });
+
+export const deleteNewsItem = async (id: string) =>
+  apiFetch<{ message: string }>(`/news/admin/${id}`, {
+    method: "DELETE",
+  });
+
+export const toggleNewsPublish = async (id: string, published: boolean) =>
+  apiFetch<{ published: boolean }>(`/news/admin/${id}/publish`, {
+    method: "PATCH",
+    body: JSON.stringify({ published }),
+  });
 
 export const createTeamMember = async (member: Omit<TeamMember, "id">) =>
   apiFetch<{ id: string }>("/team", {

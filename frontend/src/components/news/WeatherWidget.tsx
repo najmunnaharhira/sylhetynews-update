@@ -1,57 +1,54 @@
-import { Cloud, Droplets, Wind, Thermometer } from "lucide-react";
+import { Cloud, Droplets, Thermometer, Wind } from "lucide-react";
 
 const WeatherWidget = () => {
-  // Static weather data for Sylhet
-  // In production, this would fetch from a weather API
   const weatherData = {
-    temp: "২৮",
-    condition: "আংশিক মেঘলা",
-    humidity: "৭৫",
-    wind: "১২",
-    location: "সিলেট",
+    temp: "28",
+    condition: "Partly Cloudy",
+    humidity: "75",
+    wind: "12",
+    location: "Sylhet",
   };
 
   return (
-    <div className="bg-card border border-news-border rounded-md overflow-hidden">
-      <div className="bg-news-slate px-4 py-3">
-        <h3 className="text-white font-bengali font-bold text-base flex items-center gap-2">
-          <Cloud className="w-4 h-4" />
-          আবহাওয়া
+    <div className="portal-soft-panel overflow-hidden">
+      <div className="bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_100%)] px-5 py-4 text-white">
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
+          Weather Desk
+        </p>
+        <h3 className="mt-1 flex items-center gap-2 text-lg font-bold">
+          <Cloud className="h-5 w-5" />
+          Sylhet Forecast
         </h3>
       </div>
-      <div className="p-4">
-        <div className="text-center mb-4">
-          <p className="text-news-subtext font-bengali text-sm mb-1">
+
+      <div className="p-5">
+        <div className="rounded-[24px] bg-[linear-gradient(135deg,rgba(29,78,216,0.08),rgba(148,163,184,0.05))] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-news-subtext">
             {weatherData.location}
           </p>
-          <div className="flex items-center justify-center gap-2">
-            <Thermometer className="w-8 h-8 text-primary" />
-            <span className="text-4xl font-bold text-news-headline font-bengali">
+          <div className="mt-3 flex items-end gap-3">
+            <Thermometer className="h-9 w-9 text-primary" />
+            <span className="font-display text-5xl font-extrabold tracking-[-0.05em] text-news-headline">
               {weatherData.temp}°
             </span>
           </div>
-          <p className="text-news-headline font-bengali font-medium mt-1">
-            {weatherData.condition}
-          </p>
+          <p className="mt-2 text-sm font-medium text-news-headline">{weatherData.condition}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-news-border">
-          <div className="flex items-center gap-2">
-            <Droplets className="w-4 h-4 text-blue-500" />
-            <div>
-              <p className="text-xs text-news-subtext font-bengali">আর্দ্রতা</p>
-              <p className="text-sm font-semibold text-news-headline font-bengali">
-                {weatherData.humidity}%
-              </p>
-            </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-[22px] border border-news-border/70 bg-white/90 p-4">
+            <Droplets className="h-4 w-4 text-sky-500" />
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+              Humidity
+            </p>
+            <p className="mt-2 text-lg font-bold text-news-headline">{weatherData.humidity}%</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Wind className="w-4 h-4 text-teal-500" />
-            <div>
-              <p className="text-xs text-news-subtext font-bengali">বাতাস</p>
-              <p className="text-sm font-semibold text-news-headline font-bengali">
-                {weatherData.wind} কি.মি./ঘ
-              </p>
-            </div>
+          <div className="rounded-[22px] border border-news-border/70 bg-white/90 p-4">
+            <Wind className="h-4 w-4 text-teal-500" />
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+              Wind
+            </p>
+            <p className="mt-2 text-lg font-bold text-news-headline">{weatherData.wind} km/h</p>
           </div>
         </div>
       </div>

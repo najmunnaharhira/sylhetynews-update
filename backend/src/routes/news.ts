@@ -101,7 +101,10 @@ router.get('/:id(\\d+)', async (req: Request, res: Response) => {
     if (!Number.isInteger(newsId)) {
       return res.status(400).json({ error: 'Invalid news id' });
     }
-    const rows = await query<NewsRow[]>(`SELECT * FROM news WHERE id = ? LIMIT 1`, [newsId]);
+    const rows = await query<NewsRow[]>(
+      `SELECT * FROM news WHERE id = ? AND published = 1 LIMIT 1`,
+      [newsId]
+    );
     if (!rows[0]) {
       return res.status(404).json({ error: 'News not found' });
     }
@@ -154,13 +157,13 @@ router.post('/admin', requireAdmin, async (req: Request, res: Response) => {
       `INSERT INTO news (title, content, summary, category, district, author, image_url, published, featured, tags)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        String(title),
-        String(content),
-        summary != null ? String(summary) : '',
-        String(category),
-        district != null ? String(district) : '',
-        String(author),
-        String(imageUrl),
+        String(title).trim(),
+        String(content).trim(),
+        summary != null ? String(summary).trim() : '',
+        String(category).trim(),
+        district != null ? String(district).trim() : '',
+        String(author).trim(),
+        String(imageUrl).trim(),
         Boolean(published),
         Boolean(featured),
         JSON.stringify(Array.isArray(tags) ? tags.map(String) : []),

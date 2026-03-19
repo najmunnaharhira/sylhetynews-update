@@ -11,12 +11,16 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <TopBar />
       <Logo />
       <Navigation />
       <BreakingNews />
-      <main className="flex-1">{children}</main>
+      <main className="relative flex-1 overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(185,28,28,0.09),transparent_58%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-32 h-64 bg-[radial-gradient(circle_at_right,rgba(15,23,42,0.08),transparent_55%)]" />
+        <div className="relative">{children}</div>
+      </main>
       <Footer />
     </div>
   );

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import { NewsItem } from "@/data/newsData";
 import NewsCard from "./NewsCard";
-import { ChevronRight } from "lucide-react";
 
 interface CategorySectionProps {
   title: string;
@@ -11,25 +11,23 @@ interface CategorySectionProps {
 
 const CategorySection = ({ title, news, categoryPath }: CategorySectionProps) => {
   return (
-    <section className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="section-title">{title}</h2>
-        <Link
-          to={categoryPath}
-          className="text-sm text-primary font-bengali flex items-center gap-1 hover:underline"
-        >
-          আরও দেখুন
-          <ChevronRight className="w-4 h-4" />
+    <section className="portal-panel px-5 py-6 md:px-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-display text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+            Coverage Desk
+          </p>
+          <h2 className="section-title mt-2">{title}</h2>
+        </div>
+        <Link to={categoryPath} className="section-link">
+          More Stories
+          <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {news.slice(0, 3).map((item) => (
-          <div
-            key={item.id}
-            className="transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <NewsCard news={item} />
-          </div>
+          <NewsCard key={item.id} news={item} />
         ))}
       </div>
     </section>

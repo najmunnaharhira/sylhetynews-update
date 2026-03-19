@@ -3,6 +3,7 @@ import { BrowserRouter, Link, Route, Routes, useLocation, useParams } from "reac
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ArrowRight, Images, MapPinned, Newspaper, Sparkles } from "lucide-react";
 import Layout from "./components/layout/Layout";
 import CategorySection from "./components/news/CategorySection";
 import LatestNewsSidebar from "./components/news/LatestNewsSidebar";
@@ -39,10 +40,75 @@ const featuredNews = getFeaturedNews();
 const latestNews = getLatestNews(5);
 
 function HomePage() {
+  const homepageStats = [
+    { label: "Front Page Stories", value: newsData.length, icon: Newspaper },
+    { label: "Featured Report", value: 1, icon: Sparkles },
+    { label: "District Coverage", value: sylhetDistricts.length, icon: MapPinned },
+  ];
+
   return (
     <Layout>
       <section className="container mx-auto px-4 py-6">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div className="portal-panel relative overflow-hidden px-6 py-7 lg:px-8 lg:py-8">
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_center,rgba(185,28,28,0.12),transparent_56%)]" />
+          <div className="pointer-events-none absolute -left-24 top-0 h-64 w-64 rounded-full bg-orange-400/10 blur-3xl" />
+          <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,1fr)] xl:items-end">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+                <Sparkles className="h-4 w-4" />
+                Sylhety News Frontline
+              </span>
+              <h1 className="font-display mt-5 max-w-4xl text-4xl font-extrabold tracking-[-0.04em] text-news-headline md:text-5xl xl:text-6xl">
+                A sharper, more visual Sylhet news homepage with stronger editorial focus.
+              </h1>
+              <p className="mt-4 max-w-3xl text-base leading-8 text-news-subtext md:text-lg">
+                Follow breaking updates, feature stories, district reporting, and share-ready photocard content from one cleaner public experience.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  to={`/news/${featuredNews.id}`}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_35px_rgba(185,28,28,0.24)] transition-all hover:-translate-y-0.5"
+                >
+                  Read Lead Story
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/photocard"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-5 py-3 text-sm font-semibold text-news-headline shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:text-primary"
+                >
+                  <Images className="h-4 w-4 text-primary" />
+                  Open Photocard Studio
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+              {homepageStats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={stat.label}
+                    className="rounded-[26px] border border-white/80 bg-white/90 p-5 shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-[0.22em] text-news-subtext">
+                        {stat.label}
+                      </span>
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/8 text-primary">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                    </div>
+                    <p className="font-display mt-6 text-4xl font-extrabold tracking-[-0.04em] text-news-headline">
+                      {stat.value}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
           <LeadNews news={featuredNews} />
           <div className="grid gap-6">
             <TopStories news={latestNews} />
@@ -80,15 +146,18 @@ function CategoryPage() {
   return (
     <Layout>
       <section className="container mx-auto px-4 py-8">
-        <div className="mb-6 border-b border-news-border pb-4">
-          <h1 className="text-3xl font-bold text-news-headline">{category?.title ?? "Category"}</h1>
-          <p className="mt-2 text-news-subtext">
+        <div className="portal-panel mb-6 px-6 py-6">
+          <p className="font-display text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+            News Section
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-news-headline">{category?.title ?? "Category"}</h1>
+          <p className="mt-3 text-news-subtext">
             Latest stories from the {category?.title?.toLowerCase() ?? "selected"} desk.
           </p>
         </div>
 
         {articles.length === 0 ? (
-          <p className="rounded-md border border-news-border bg-card p-6 text-news-subtext">
+          <p className="portal-soft-panel p-6 text-news-subtext">
             No stories are available in this category yet.
           </p>
         ) : (
@@ -117,13 +186,15 @@ function NewsDetailPage() {
     <Layout>
       <article className="container mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-          <div className="rounded-md border border-news-border bg-card">
-            <img src={article.image} alt={article.title} className="h-[320px] w-full object-cover" />
-            <div className="space-y-5 p-6">
-              <span className="inline-flex rounded bg-primary px-3 py-1 text-sm font-semibold text-primary-foreground">
+          <div className="portal-panel overflow-hidden">
+            <img src={article.image} alt={article.title} className="h-[320px] w-full object-cover md:h-[420px]" />
+            <div className="space-y-5 p-6 md:p-8">
+              <span className="inline-flex rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(185,28,28,0.18)]">
                 {article.categoryBn}
               </span>
-              <h1 className="text-3xl font-bold leading-tight text-news-headline">{article.title}</h1>
+              <h1 className="font-display text-3xl font-extrabold leading-tight tracking-[-0.03em] text-news-headline md:text-4xl">
+                {article.title}
+              </h1>
               <div className="text-sm text-news-subtext">
                 {article.author} | {article.date}
               </div>
@@ -134,7 +205,7 @@ function NewsDetailPage() {
 
           <div className="grid gap-6">
             <LatestNewsSidebar news={latestNews} />
-            <section className="rounded-md border border-news-border bg-card p-4">
+            <section className="portal-soft-panel p-5">
               <h2 className="mb-4 text-xl font-semibold text-news-headline">Related Stories</h2>
               <div className="space-y-4">
                 {related.map((item) => (
@@ -157,7 +228,7 @@ function DistrictsPage() {
   return (
     <Layout>
       <section className="container mx-auto px-4 py-8">
-        <div className="mb-6 border-b border-news-border pb-4">
+        <div className="portal-panel mb-6 px-6 py-6">
           <h1 className="text-3xl font-bold text-news-headline">District Coverage</h1>
           <p className="mt-2 text-news-subtext">Browse stories from every district in the Sylhet division.</p>
         </div>
@@ -169,7 +240,7 @@ function DistrictsPage() {
               <Link
                 key={district.id}
                 to={`/district/${district.id}`}
-                className="rounded-md border border-news-border bg-card p-5 transition-transform hover:-translate-y-1 hover:shadow-lg"
+                className="news-card p-5"
               >
                 <h2 className="text-xl font-semibold text-news-headline">{district.nameEn}</h2>
                 <p className="mt-1 text-news-subtext">{district.nameBn}</p>
@@ -191,13 +262,13 @@ function DistrictPage() {
   return (
     <Layout>
       <section className="container mx-auto px-4 py-8">
-        <div className="mb-6 border-b border-news-border pb-4">
+        <div className="portal-panel mb-6 px-6 py-6">
           <h1 className="text-3xl font-bold text-news-headline">{districtInfo?.nameEn ?? "District"}</h1>
           <p className="mt-2 text-news-subtext">{districtInfo?.nameBn ?? "Latest district coverage"}.</p>
         </div>
 
         {articles.length === 0 ? (
-          <p className="rounded-md border border-news-border bg-card p-6 text-news-subtext">
+          <p className="portal-soft-panel p-6 text-news-subtext">
             No district stories are available yet.
           </p>
         ) : (
@@ -222,14 +293,14 @@ function TeamPage() {
   return (
     <Layout>
       <section className="container mx-auto px-4 py-8">
-        <div className="mb-6 border-b border-news-border pb-4">
+        <div className="portal-panel mb-6 px-6 py-6">
           <h1 className="text-3xl font-bold text-news-headline">Editorial Team</h1>
           <p className="mt-2 text-news-subtext">The people behind Sylhety News coverage and publishing.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {team.map((member) => (
-            <div key={member.name} className="rounded-md border border-news-border bg-card p-6">
+            <div key={member.name} className="news-card p-6">
               <h2 className="text-xl font-semibold text-news-headline">{member.name}</h2>
               <p className="mt-2 text-primary">{member.role}</p>
               <p className="mt-4 text-news-subtext">{member.summary}</p>
@@ -245,14 +316,18 @@ function NotFoundPage() {
   return (
     <Layout>
       <section className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-4xl font-bold text-news-headline">Page Not Found</h1>
-        <p className="mt-4 text-news-subtext">The page you requested does not exist in this build.</p>
-        <Link
-          to="/"
-          className="mt-6 inline-flex rounded bg-primary px-5 py-3 font-semibold text-primary-foreground"
-        >
-          Back To Homepage
-        </Link>
+        <div className="portal-panel mx-auto max-w-2xl px-8 py-10">
+          <h1 className="font-display text-4xl font-extrabold tracking-[-0.04em] text-news-headline">
+            Page Not Found
+          </h1>
+          <p className="mt-4 text-news-subtext">The page you requested does not exist in this build.</p>
+          <Link
+            to="/"
+            className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground shadow-[0_16px_32px_rgba(185,28,28,0.22)]"
+          >
+            Back To Homepage
+          </Link>
+        </div>
       </section>
     </Layout>
   );

@@ -28,6 +28,18 @@ const getStoredAdminToken = () => {
   return localStorage.getItem(LOCAL_TOKEN_KEY) || sessionStorage.getItem(SESSION_TOKEN_KEY);
 };
 
+export function resolveApiAssetUrl(value?: string | null): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return value.startsWith("/") ? `${API_ORIGIN}${value}` : `${API_ORIGIN}/${value}`;
+}
+
 export async function checkBackendHealth(): Promise<{
   online: boolean;
   dbConnected: boolean | null;
@@ -115,7 +127,7 @@ export async function uploadImage(file: File): Promise<string> {
     body: form,
   });
 
-  return response.url;
+  return resolveApiAssetUrl(response.url) || response.url;
 }
 
 // Example usage:
