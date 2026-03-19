@@ -17,11 +17,9 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={clsx(
-        "px-4 py-2 rounded font-semibold transition",
-        variant === "primary" && "bg-blue-600 text-white hover:bg-blue-700",
-        variant === "secondary" && "bg-gray-200 text-gray-800 hover:bg-gray-300",
-        variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
-        loading && "opacity-60 cursor-not-allowed",
+        "admin-button",
+        `admin-button-${variant}`,
+        loading && "is-loading",
         className
       )}
       disabled={disabled || loading}

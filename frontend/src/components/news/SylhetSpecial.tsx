@@ -8,39 +8,47 @@ interface SylhetSpecialProps {
 
 const SylhetSpecial = ({ news }: SylhetSpecialProps) => {
   return (
-    <div className="bg-card border border-news-border rounded-md overflow-hidden h-full flex flex-col">
+    <div className="flex h-full flex-col overflow-hidden rounded-md border border-news-border bg-card">
       <div className="bg-primary px-4 py-3">
-        <h2 className="text-white font-bengali font-bold text-base">
+        <h2 className="text-base font-bold text-white">
           সিলেট বিশেষ
         </h2>
       </div>
-      <Link to={`/news/${news.id}`} className="flex-1 group">
+      <Link to={`/news/${news.id}`} className="group flex-1">
         <div className="relative overflow-hidden">
           <img
             src={news.image}
             alt={news.title}
-            className="w-full h-44 object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-3 left-3 right-3">
-            <span className="inline-block px-2 py-0.5 bg-primary text-primary-foreground text-xs font-bengali rounded mb-2">
+            <span className="mb-2 inline-block rounded bg-primary px-2 py-0.5 text-xs text-primary-foreground">
               {news.categoryBn}
             </span>
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bengali font-bold text-sm text-news-headline leading-snug group-hover:text-primary transition-colors line-clamp-3 mb-2">
+          <h3 className="mb-2 line-clamp-3 text-sm font-bold leading-snug text-news-headline transition-colors group-hover:text-primary">
             {news.title}
           </h3>
-          <p className="text-news-subtext text-xs line-clamp-2 mb-2 font-bengali">
+          <p className="mb-2 line-clamp-2 text-xs text-news-subtext">
             {news.excerpt}
           </p>
-          <span className="text-xs text-news-subtext flex items-center gap-1 font-bengali">
-            <Calendar className="w-3 h-3" />
+          <span className="flex items-center gap-1 text-xs text-news-subtext">
+            <Calendar className="h-3 w-3" />
             {news.date}
           </span>
         </div>
       </Link>
+      <div className="border-t border-news-border px-4 py-4">
+        <Link
+          to={`/news/${news.id}`}
+          className="inline-flex rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          Details About News
+        </Link>
+      </div>
     </div>
   );
 };

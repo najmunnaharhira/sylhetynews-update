@@ -41,7 +41,7 @@ const getDriveDirectLink = (url: string) => {
 const FALLBACK_NEWS_IMAGE = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80";
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
   const navigate = useNavigate();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -81,9 +81,19 @@ export default function Dashboard() {
     () => categories.map((item) => ({ value: item.slug, label: item.name })),
     [categories]
   );
-
-
-  const [authReady, setAuthReady] = useState(true); // Always ready, backend-driven
+  const activeTemplateCount = useMemo(
+    () => photocardTemplates.filter((template) => template.isActive).length,
+    [photocardTemplates]
+  );
+  const dashboardStats = useMemo(
+    () => [
+      { label: "News Items", value: news.length, tone: "primary" },
+      { label: "Categories", value: categories.length, tone: "neutral" },
+      { label: "Team Members", value: teamMembers.length, tone: "neutral" },
+      { label: "Active Templates", value: activeTemplateCount, tone: "accent" },
+    ],
+    [activeTemplateCount, categories.length, news.length, teamMembers.length]
+  );
 
   // Backend-driven: Load news and categories from API
   const loadNews = async () => {
@@ -134,9 +144,6 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Check for token, redirect if not present
-    // Use admin_jwt_token (consistent with AuthContext) for authentication check
-    const token = localStorage.getItem("admin_jwt_token");
     if (!token) {
       navigate("/login");
       return;
@@ -147,7 +154,7 @@ export default function Dashboard() {
     loadCategories();
     loadTeamMembers();
     loadPhotocardTemplates();
-  }, [navigate]);
+  }, [navigate, token]);
 
   const handleLogout = async () => {
     logout();
@@ -500,6 +507,24 @@ export default function Dashboard() {
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         {error && <div className="dashboard-alert">{error}</div>}
 
+        <section className="dashboard-hero">
+          <div>
+            <p className="dashboard-kicker">Workspace Overview</p>
+            <h2 className="dashboard-hero-title">Welcome back{user?.email ? `, ${user.email}` : ""}</h2>
+            <p className="dashboard-hero-copy">
+              Publish news, refresh categories, manage team profiles, and control the public photocard defaults from one dashboard.
+            </p>
+          </div>
+          <div className="dashboard-stat-grid">
+            {dashboardStats.map((stat) => (
+              <div key={stat.label} className={`dashboard-stat-card ${stat.tone}`}>
+                <span className="dashboard-stat-label">{stat.label}</span>
+                <strong className="dashboard-stat-value">{stat.value}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="dashboard-card">
           <div className="dashboard-card-title">
             <div>
@@ -547,7 +572,7 @@ export default function Dashboard() {
           </div>
           <div className="dashboard-list">
             {loadingNews ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Spinner /> <span>Loading news...</span></div>
+              <div className="dashboard-loading"><Spinner /> <span>Loading news...</span></div>
             ) : news.length === 0 ? (
               <p className="dashboard-empty">No news yet.</p>
             ) : (
@@ -578,7 +603,7 @@ export default function Dashboard() {
           </div>
           <div className="dashboard-list compact">
             {loadingCategories ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Spinner /> <span>Loading categories...</span></div>
+              <div className="dashboard-loading"><Spinner /> <span>Loading categories...</span></div>
             ) : categories.length === 0 ? (
               <p className="dashboard-empty">No categories yet.</p>
             ) : (
@@ -630,11 +655,11 @@ export default function Dashboard() {
                   <div>
                     <p className="dashboard-list-title">{m.name}</p>
                     <p className="dashboard-list-subtitle">{m.role}</p>
-                    {m.introduction && <p className="dashboard-list-description" style={{ marginTop: "8px", fontSize: "14px", color: "#666" }}>{m.introduction}</p>}
-                    <p className="dashboard-list-subtitle" style={{ fontSize: "12px", marginTop: "4px" }}>Order: {m.order}</p>
+                    {m.introduction && <p className="dashboard-list-description">{m.introduction}</p>}
+                    <p className="dashboard-list-meta">Order: {m.order}</p>
                   </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button onClick={() => handleEditTeamMember(m)} className="dashboard-button secondary" style={{ padding: "6px 12px", fontSize: "14px" }}>Edit</button>
+                  <div className="dashboard-actions">
+                    <button onClick={() => handleEditTeamMember(m)} className="dashboard-button secondary small">Edit</button>
                     <button onClick={() => handleDeleteTeamMember(m.id)} className="dashboard-delete">Delete</button>
                   </div>
                 </div>
@@ -686,23 +711,23 @@ export default function Dashboard() {
           </div>
           <div className="dashboard-list">
             {uploading ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Spinner /> <span>Loading templates...</span></div>
+              <div className="dashboard-loading"><Spinner /> <span>Loading templates...</span></div>
             ) : photocardTemplates.length === 0 ? (
               <p className="dashboard-empty">No templates yet.</p>
             ) : (
               photocardTemplates.map((t) => (
                 <div key={t.id} className="dashboard-list-item">
-                  <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
-                    {t.previewUrl && <img src={t.previewUrl} alt={t.name} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }} />}
+                  <div className="dashboard-template-main">
+                    {t.previewUrl && <img src={t.previewUrl} alt={t.name} className="dashboard-template-preview" />}
                     <div>
                       <p className="dashboard-list-title">{t.name}</p>
                       {t.description && <p className="dashboard-list-subtitle">{t.description}</p>}
-                      <p className="dashboard-list-subtitle" style={{ fontSize: "12px", marginTop: "4px" }}>{t.category && `Category: ${t.category} • `}Status: {t.isActive ? "Active" : "Inactive"}</p>
+                      <p className="dashboard-list-meta">{t.category && `Category: ${t.category} • `}Status: {t.isActive ? "Active" : "Inactive"}</p>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button onClick={() => handleToggleTemplateActive(t.id, t.isActive)} className="dashboard-button secondary" style={{ padding: "6px 12px", fontSize: "14px" }}>{t.isActive ? "Deactivate" : "Activate"}</button>
-                    <button onClick={() => handleEditPhotocardTemplate(t)} className="dashboard-button secondary" style={{ padding: "6px 12px", fontSize: "14px" }}>Edit</button>
+                  <div className="dashboard-actions">
+                    <button onClick={() => handleToggleTemplateActive(t.id, t.isActive)} className="dashboard-button secondary small">{t.isActive ? "Deactivate" : "Activate"}</button>
+                    <button onClick={() => handleEditPhotocardTemplate(t)} className="dashboard-button secondary small">Edit</button>
                     <button onClick={() => handleDeletePhotocardTemplate(t.id)} className="dashboard-delete">Delete</button>
                   </div>
                 </div>

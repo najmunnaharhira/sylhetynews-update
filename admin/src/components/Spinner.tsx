@@ -2,13 +2,14 @@ import React from "react";
 
 export const Spinner: React.FC = () => (
   <svg
-    className="animate-spin h-5 w-5 text-blue-600"
+    className="admin-spinner"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
+    aria-hidden="true"
   >
     <circle
-      className="opacity-25"
+      className="admin-spinner-track"
       cx="12"
       cy="12"
       r="10"
@@ -16,7 +17,7 @@ export const Spinner: React.FC = () => (
       strokeWidth="4"
     ></circle>
     <path
-      className="opacity-75"
+      className="admin-spinner-fill"
       fill="currentColor"
       d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
     ></path>
