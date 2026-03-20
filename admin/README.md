@@ -45,3 +45,14 @@ When continuing this project in Lovable, use a prompt close to this:
 Lovable works best when this admin app is treated as the frontend source of truth. Keep the backend deployed separately and point `VITE_API_URL` at that backend.
 
 Lovable’s current GitHub flow is export/sync from Lovable to GitHub rather than importing an existing GitHub repository into Lovable, so use this folder as the source to recreate or paste into a Lovable project if needed.
+
+## Vercel
+
+For Vercel, import this repository as a monorepo project and set the Root Directory to `admin`.
+
+This folder includes `vercel.json` with:
+
+- Vite framework selection
+- `npm run build`
+- `dist` output directory
+- SPA rewrite to `index.html` so `/login` and `/dashboard` load correctly
