@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { query } from '../config/database.js';
+import { requireDatabase } from '../middleware/requireDatabase.js';
 
 const router = Router();
+
+router.use(requireDatabase);
 
 interface OpinionRow extends RowDataPacket {
   id: number;

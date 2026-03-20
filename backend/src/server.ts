@@ -2,7 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import { connectDB, isDbConnected, getDbInitError } from './config/database.js';
+import {
+  connectDB,
+  getDatabaseUnavailablePayload,
+  getDbInitError,
+  isDatabaseUnavailableError,
+  isDbConnected,
+} from './config/database.js';
 import adminRoutes from './routes/admin.js';
 import newsRoutes from './routes/news.js';
 import categoryRoutes from './routes/categories.js';
@@ -18,10 +24,44 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const DEV_ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+];
+
+const parseOrigin = (value: string | undefined): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
+const allowedOrigins = new Set(
+  [
+    ...DEV_ALLOWED_ORIGINS,
+    parseOrigin(process.env.FRONTEND_URL),
+    parseOrigin(process.env.ADMIN_URL),
+  ].filter((origin): origin is string => Boolean(origin))
+);
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -74,6 +114,9 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if (isDatabaseUnavailableError(err)) {
+    return res.status(503).json(getDatabaseUnavailablePayload());
+  }
   const message = err instanceof Error ? err.message : 'Internal server error';
   const stack = err instanceof Error ? err.stack : undefined;
   if (stack) console.error(stack);

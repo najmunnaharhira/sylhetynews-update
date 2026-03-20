@@ -2,8 +2,11 @@ import { Router, Request, Response } from 'express';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { query } from '../config/database.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import { requireDatabase } from '../middleware/requireDatabase.js';
 
 const router = Router();
+
+router.use(requireDatabase);
 
 interface NewsRow extends RowDataPacket {
   id: number;

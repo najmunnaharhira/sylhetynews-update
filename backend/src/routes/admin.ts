@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { query } from '../config/database.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import { requireDatabase } from '../middleware/requireDatabase.js';
 
 const router = Router();
 
@@ -88,7 +89,7 @@ router.get('/status', requireAdmin, (req, res) => {
   res.json({ status: 'admin ok', user: req.adminUser });
 });
 
-router.get('/business-settings', requireAdmin, async (_req, res) => {
+router.get('/business-settings', requireAdmin, requireDatabase, async (_req, res) => {
   try {
     const rows = await query<SettingsRow[]>(
       `SELECT site_name, contact_email, contact_phone, contact_address, ad_rate_per_1000_views
@@ -113,7 +114,7 @@ router.get('/business-settings', requireAdmin, async (_req, res) => {
   }
 });
 
-router.put('/business-settings', requireAdmin, async (req, res) => {
+router.put('/business-settings', requireAdmin, requireDatabase, async (req, res) => {
   try {
     const { siteName, contactEmail, contactPhone, contactAddress, adRatePer1000Views } = req.body as {
       siteName?: string;
@@ -147,7 +148,7 @@ router.put('/business-settings', requireAdmin, async (req, res) => {
   }
 });
 
-router.get('/revenue-summary', requireAdmin, async (_req, res) => {
+router.get('/revenue-summary', requireAdmin, requireDatabase, async (_req, res) => {
   try {
     const statsRows = await query<RevenueRow[]>(
       `SELECT

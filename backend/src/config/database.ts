@@ -4,17 +4,44 @@ import type { QueryResult } from 'mysql2';
 let pool: Pool | null = null;
 let lastConnectionError: string | null = null;
 let connected = false;
+let connectPromise: Promise<void> | null = null;
+let lastConnectAttemptAt = 0;
 
 const requiredEnv = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER'] as const;
+const RECONNECT_RETRY_MS = 5000;
+const DATABASE_UNAVAILABLE_CODE = 'DB_UNAVAILABLE';
 
 export const isDbConnected = (): boolean => connected && !!pool;
 
 export const getDbInitError = (): string | null => lastConnectionError;
 
+export class DatabaseUnavailableError extends Error {
+  code = DATABASE_UNAVAILABLE_CODE;
+  details: string | null;
+
+  constructor(details: string | null = lastConnectionError) {
+    const suffix = details ? ` (${details})` : '';
+    super(`Database is not connected${suffix}`);
+    this.name = 'DatabaseUnavailableError';
+    this.details = details;
+  }
+}
+
+export const isDatabaseUnavailableError = (error: unknown): error is DatabaseUnavailableError =>
+  error instanceof DatabaseUnavailableError;
+
+export const getDatabaseUnavailablePayload = (
+  message = 'Database is temporarily unavailable'
+): { error: string; code: string; details?: string } => {
+  const details = getDbInitError();
+  return details
+    ? { error: message, code: DATABASE_UNAVAILABLE_CODE, details }
+    : { error: message, code: DATABASE_UNAVAILABLE_CODE };
+};
+
 export const getDB = (): Pool => {
   if (!pool) {
-    const suffix = lastConnectionError ? ` (${lastConnectionError})` : '';
-    throw new Error(`Database is not connected${suffix}`);
+    throw new DatabaseUnavailableError(lastConnectionError);
   }
   return pool;
 };
@@ -139,37 +166,67 @@ const initializeSchema = async (): Promise<void> => {
 };
 
 export const connectDB = async (): Promise<void> => {
-  try {
-    lastConnectionError = null;
-    connected = false;
-    for (const key of requiredEnv) {
-      if (!process.env[key]) {
-        throw new Error(`${key} is not set`);
-      }
-    }
-
-    pool = mysql.createPool({
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
-
-    await getDB().query('SELECT 1');
-    await initializeSchema();
-    connected = true;
-    console.log('MySQL connected successfully');
-  } catch (error) {
-    pool = null;
-    connected = false;
-    lastConnectionError = error instanceof Error ? error.message : String(error);
-    console.error('MySQL connection failed:', error);
-    console.warn(
-      'Continuing without database. DB-backed endpoints will return 500 until MySQL is available.'
-    );
+  if (connected && pool) {
+    return;
   }
+
+  if (connectPromise) {
+    await connectPromise;
+    return;
+  }
+
+  if (
+    lastConnectionError &&
+    Date.now() - lastConnectAttemptAt < RECONNECT_RETRY_MS
+  ) {
+    return;
+  }
+
+  lastConnectAttemptAt = Date.now();
+
+  connectPromise = (async () => {
+    let nextPool: Pool | null = null;
+
+    try {
+      lastConnectionError = null;
+      connected = false;
+      for (const key of requiredEnv) {
+        if (!process.env[key]) {
+          throw new Error(`${key} is not set`);
+        }
+      }
+
+      nextPool = mysql.createPool({
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT),
+        database: process.env.DB_NAME,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      });
+
+      pool = nextPool;
+      await nextPool.query('SELECT 1');
+      await initializeSchema();
+      connected = true;
+      console.log('MySQL connected successfully');
+    } catch (error) {
+      pool = null;
+      connected = false;
+      lastConnectionError = error instanceof Error ? error.message : String(error);
+      if (nextPool) {
+        await nextPool.end().catch(() => undefined);
+      }
+      console.error('MySQL connection failed:', error);
+      console.warn(
+        'Continuing without database. DB-backed endpoints will return 503 and retry the connection on future requests.'
+      );
+    }
+  })().finally(() => {
+    connectPromise = null;
+  });
+
+  await connectPromise;
 };

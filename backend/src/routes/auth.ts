@@ -3,8 +3,11 @@ import { body, validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { findUserByEmail } from '../models/User.js';
+import { requireDatabase } from '../middleware/requireDatabase.js';
 
 const router = Router();
+
+router.use(requireDatabase);
 
 router.post(
   '/login',

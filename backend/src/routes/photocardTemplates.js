@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { query } from "../config/database.js";
 import { requireAdmin } from "../middleware/adminAuth.js";
+import { requireDatabase } from "../middleware/requireDatabase.js";
 
 const router = Router();
+
+router.use(requireDatabase);
 
 const serializeTemplate = (row) => ({
   id: String(row.id),
