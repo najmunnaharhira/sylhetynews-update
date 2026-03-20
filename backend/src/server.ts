@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import fs from 'fs';
 import path from 'path';
 import { connectDB, isDbConnected, getDbInitError } from './config/database.js';
 import adminRoutes from './routes/admin.js';
@@ -15,39 +14,14 @@ import uploadRoutes from './routes/upload.js';
 import passwordRoutes from './routes/passwordRoutes.js';
 import setupSwagger from './swagger.js';
 
-const envCandidates = [
-  path.resolve(process.cwd(), '.env'),
-  path.resolve(process.cwd(), 'backend/.env'),
-];
-const envPath = envCandidates.find((candidate) => fs.existsSync(candidate));
-const dotenvResult = dotenv.config(envPath ? { path: envPath } : undefined);
-const envFromFile = dotenvResult.parsed ?? {};
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const app = express();
-const PORT = envFromFile.PORT || process.env.PORT || 5000;
-const allowedOrigins = new Set(
-  [
-    envFromFile.FRONTEND_URL || process.env.FRONTEND_URL,
-    envFromFile.ADMIN_URL || process.env.ADMIN_URL,
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:5174',
-    'http://127.0.0.1:5174',
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-  ].filter(Boolean)
-);
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.has(origin)) {
-      callback(null, true);
-      return;
-    }
-    callback(new Error(`Origin ${origin} is not allowed by CORS`));
-  },
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
@@ -55,9 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Connect to Database (non-fatal if unavailable)
-if (process.env.NODE_ENV !== 'test') {
-  void connectDB();
-}
+void connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);

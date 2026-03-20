@@ -42,7 +42,7 @@ const getDriveDirectLink = (url: string) => {
 const FALLBACK_NEWS_IMAGE = "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80";
 
 export default function Dashboard() {
-  const { user, logout, token } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -90,6 +90,7 @@ export default function Dashboard() {
     () => categories.map((item) => ({ value: item.slug, label: item.name })),
     [categories]
   );
+<<<<<<< HEAD
   const activeTemplateCount = useMemo(
     () => photocardTemplates.filter((template) => template.isActive).length,
     [photocardTemplates]
@@ -140,6 +141,11 @@ export default function Dashboard() {
     setNewsImagePreview(imageUrl.trim());
     return undefined;
   }, [imageFile, imageUrl]);
+=======
+
+
+  const [authReady, setAuthReady] = useState(true); // Always ready, backend-driven
+>>>>>>> parent of d4c6ccf (Add password reset, user model, and templates)
 
   // Backend-driven: Load news and categories from API
   const loadNews = async () => {
@@ -190,6 +196,9 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Check for token, redirect if not present
+    // Use admin_jwt_token (consistent with AuthContext) for authentication check
+    const token = localStorage.getItem("admin_jwt_token");
     if (!token) {
       navigate("/login");
       return;
@@ -200,7 +209,7 @@ export default function Dashboard() {
     loadCategories();
     loadTeamMembers();
     loadPhotocardTemplates();
-  }, [navigate, token]);
+  }, [navigate]);
 
   const handleLogout = async () => {
     logout();
@@ -651,6 +660,7 @@ export default function Dashboard() {
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         {error && <div className="dashboard-alert">{error}</div>}
 
+<<<<<<< HEAD
         <section className="dashboard-hero">
           <div>
             <p className="dashboard-kicker">Workspace Overview</p>
@@ -721,6 +731,9 @@ export default function Dashboard() {
         <div className="dashboard-layout-grid">
           <div className="dashboard-main-column">
         <section id="news-composer" className="dashboard-card">
+=======
+        <section className="dashboard-card">
+>>>>>>> parent of d4c6ccf (Add password reset, user model, and templates)
           <div className="dashboard-card-title">
             <div>
               <p className="dashboard-section-kicker">Content Desk</p>
@@ -852,7 +865,7 @@ export default function Dashboard() {
           </div>
           <div className="dashboard-list">
             {loadingNews ? (
-              <div className="dashboard-loading"><Spinner /> <span>Loading news...</span></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Spinner /> <span>Loading news...</span></div>
             ) : news.length === 0 ? (
               <p className="dashboard-empty">No news yet.</p>
             ) : (
@@ -926,7 +939,7 @@ export default function Dashboard() {
           </div>
           <div className="dashboard-list compact">
             {loadingCategories ? (
-              <div className="dashboard-loading"><Spinner /> <span>Loading categories...</span></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Spinner /> <span>Loading categories...</span></div>
             ) : categories.length === 0 ? (
               <p className="dashboard-empty">No categories yet.</p>
             ) : (
@@ -979,11 +992,11 @@ export default function Dashboard() {
                   <div>
                     <p className="dashboard-list-title">{m.name}</p>
                     <p className="dashboard-list-subtitle">{m.role}</p>
-                    {m.introduction && <p className="dashboard-list-description">{m.introduction}</p>}
-                    <p className="dashboard-list-meta">Order: {m.order}</p>
+                    {m.introduction && <p className="dashboard-list-description" style={{ marginTop: "8px", fontSize: "14px", color: "#666" }}>{m.introduction}</p>}
+                    <p className="dashboard-list-subtitle" style={{ fontSize: "12px", marginTop: "4px" }}>Order: {m.order}</p>
                   </div>
-                  <div className="dashboard-actions">
-                    <button onClick={() => handleEditTeamMember(m)} className="dashboard-button secondary small">Edit</button>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => handleEditTeamMember(m)} className="dashboard-button secondary" style={{ padding: "6px 12px", fontSize: "14px" }}>Edit</button>
                     <button onClick={() => handleDeleteTeamMember(m.id)} className="dashboard-delete">Delete</button>
                   </div>
                 </div>
@@ -1039,23 +1052,23 @@ export default function Dashboard() {
           </div>
           <div className="dashboard-list">
             {uploading ? (
-              <div className="dashboard-loading"><Spinner /> <span>Loading templates...</span></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Spinner /> <span>Loading templates...</span></div>
             ) : photocardTemplates.length === 0 ? (
               <p className="dashboard-empty">No templates yet.</p>
             ) : (
               photocardTemplates.map((t) => (
                 <div key={t.id} className="dashboard-list-item">
-                  <div className="dashboard-template-main">
-                    {t.previewUrl && <img src={t.previewUrl} alt={t.name} className="dashboard-template-preview" />}
+                  <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
+                    {t.previewUrl && <img src={t.previewUrl} alt={t.name} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8 }} />}
                     <div>
                       <p className="dashboard-list-title">{t.name}</p>
                       {t.description && <p className="dashboard-list-subtitle">{t.description}</p>}
-                      <p className="dashboard-list-meta">{t.category && `Category: ${t.category} • `}Status: {t.isActive ? "Active" : "Inactive"}</p>
+                      <p className="dashboard-list-subtitle" style={{ fontSize: "12px", marginTop: "4px" }}>{t.category && `Category: ${t.category} • `}Status: {t.isActive ? "Active" : "Inactive"}</p>
                     </div>
                   </div>
-                  <div className="dashboard-actions">
-                    <button onClick={() => handleToggleTemplateActive(t.id, t.isActive)} className="dashboard-button secondary small">{t.isActive ? "Deactivate" : "Activate"}</button>
-                    <button onClick={() => handleEditPhotocardTemplate(t)} className="dashboard-button secondary small">Edit</button>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => handleToggleTemplateActive(t.id, t.isActive)} className="dashboard-button secondary" style={{ padding: "6px 12px", fontSize: "14px" }}>{t.isActive ? "Deactivate" : "Activate"}</button>
+                    <button onClick={() => handleEditPhotocardTemplate(t)} className="dashboard-button secondary" style={{ padding: "6px 12px", fontSize: "14px" }}>Edit</button>
                     <button onClick={() => handleDeletePhotocardTemplate(t.id)} className="dashboard-delete">Delete</button>
                   </div>
                 </div>

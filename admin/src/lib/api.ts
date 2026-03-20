@@ -1,6 +1,7 @@
 // Unified API service for admin panel
 // All backend calls should go through here for maintainability
 
+<<<<<<< HEAD
 const LOCAL_TOKEN_KEY = "admin_jwt_token";
 const SESSION_TOKEN_KEY = "admin_jwt_token_session";
 
@@ -83,9 +84,12 @@ export async function checkBackendHealth(): Promise<{
     };
   }
 }
+=======
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+>>>>>>> parent of d4c6ccf (Add password reset, user model, and templates)
 
 export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getStoredAdminToken();
+  const token = localStorage.getItem("admin_jwt_token");
   const headers = new Headers(options.headers);
 
   if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
@@ -95,26 +99,15 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  } catch {
-    throw new Error(`Cannot reach backend API at ${API_BASE}. Start the backend server and try again.`);
-  }
-
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!res.ok) {
     let errorMsg = "API error";
     try {
       const data = await res.json();
       errorMsg = data.error || errorMsg;
-    } catch {
-      if (res.status === 404) {
-        errorMsg = `API route not found at ${API_BASE}${path}`;
-      }
-    }
+    } catch {}
     throw new Error(errorMsg);
   }
-
   return res.json();
 }
 

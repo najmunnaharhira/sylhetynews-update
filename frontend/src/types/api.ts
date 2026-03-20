@@ -1,44 +1,42 @@
-// Centralized API response types for frontend
+// API response types for frontend
 import { NewsArticle, NewsCategory, User } from "./news";
 import { TeamMember } from "./team";
 
-/**
- * Generic API response wrapper
- */
-export interface ApiResponse<T = any> {
-  success: boolean;
-  message?: string;
-  data?: T;
-  error?: string;
+export interface ApiListResponse<T> {
+  [key: string]: T[];
 }
 
-// News API
-export type NewsListResponse = ApiResponse<NewsArticle[]>;
-export type NewsDetailResponse = ApiResponse<NewsArticle>;
+export interface ApiItemResponse<T> {
+  [key: string]: T;
+}
 
-// Category API
-export type CategoryListResponse = ApiResponse<NewsCategory[]>;
-export type CategoryDetailResponse = ApiResponse<NewsCategory>;
-
-// Team API
-export type TeamListResponse = ApiResponse<TeamMember[]>;
-export type TeamDetailResponse = ApiResponse<TeamMember>;
-
-// User API
-export type UserListResponse = ApiResponse<User[]>;
-export type UserDetailResponse = ApiResponse<User>;
-
-// Auth API
-export interface AuthUser {
+export interface ApiIdResponse {
   id: string;
-  email: string;
-  name?: string;
-  role: string;
-  token: string;
 }
-export type AuthResponse = ApiResponse<AuthUser>;
 
-// Upload API
+export interface ApiSuccessResponse {
+  success: boolean;
+}
+
+export interface ApiErrorResponse {
+  error: string;
+}
+
+// Specific API responses
+export type NewsListResponse = ApiListResponse<NewsArticle>; // { news: NewsArticle[] }
+export type NewsItemResponse = ApiItemResponse<NewsArticle>; // { news: NewsArticle }
+export type CategoryListResponse = ApiListResponse<NewsCategory>; // { categories: NewsCategory[] }
+export type CategoryItemResponse = ApiItemResponse<NewsCategory>; // { category: NewsCategory }
+export type TeamListResponse = ApiListResponse<TeamMember>; // { team: TeamMember[] }
+export type TeamItemResponse = ApiItemResponse<TeamMember>; // { member: TeamMember }
+export type UserListResponse = ApiListResponse<User>; // { users: User[] }
+export type UserItemResponse = ApiItemResponse<User>; // { user: User }
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
 export interface UploadImageResponse {
   success: boolean;
   url: string;
