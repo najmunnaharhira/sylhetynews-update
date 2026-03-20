@@ -12,6 +12,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 
 export default function Login() {
+  const logoUrl = `${import.meta.env.BASE_URL}sylhety-logo.jpeg`;
   const navigate = useNavigate();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
@@ -57,7 +58,7 @@ export default function Login() {
         <div className="auth-header">
           {!logoError && (
             <img
-              src="/sylhety-logo.jpeg"
+              src={logoUrl}
               alt="Sylhety News"
               className="auth-logo"
               onError={() => setLogoError(true)}

@@ -1,12 +1,17 @@
 const SHELL_CACHE = "sylhety-admin-shell-v1";
 const ASSET_CACHE = "sylhety-admin-assets-v1";
+const SCOPE_URL = new URL(self.registration.scope);
+const BASE_PATH = SCOPE_URL.pathname.endsWith("/")
+  ? SCOPE_URL.pathname
+  : `${SCOPE_URL.pathname}/`;
+const buildScopedUrl = (path = "") => new URL(path, SCOPE_URL).toString();
 const APP_SHELL_URLS = [
-  "/",
-  "/index.html",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/sylhety-logo.jpeg",
+  buildScopedUrl(""),
+  buildScopedUrl("index.html"),
+  buildScopedUrl("manifest.webmanifest"),
+  buildScopedUrl("icon-192.png"),
+  buildScopedUrl("icon-512.png"),
+  buildScopedUrl("sylhety-logo.jpeg"),
 ];
 
 self.addEventListener("install", (event) => {
@@ -39,16 +44,24 @@ self.addEventListener("message", (event) => {
   }
 });
 
-const shouldHandleAsset = (url) =>
-  url.pathname.startsWith("/assets/") ||
-  url.pathname === "/manifest.webmanifest" ||
-  /\.(?:png|jpg|jpeg|webp|gif|svg|ico|woff2?|ttf)$/i.test(url.pathname);
+const getScopedPath = (url) => {
+  if (!url.pathname.startsWith(BASE_PATH)) {
+    return null;
+  }
 
-const isBypassedRoute = (url) =>
-  url.pathname.startsWith("/api/") ||
-  url.pathname.startsWith("/uploads/") ||
-  url.pathname.startsWith("/src/") ||
-  url.pathname.startsWith("/@vite/");
+  return url.pathname.slice(BASE_PATH.length).replace(/^\/+/, "");
+};
+
+const shouldHandleAsset = (scopedPath) =>
+  scopedPath.startsWith("assets/") ||
+  scopedPath === "manifest.webmanifest" ||
+  /\.(?:png|jpg|jpeg|webp|gif|svg|ico|woff2?|ttf)$/i.test(scopedPath);
+
+const isBypassedRoute = (scopedPath) =>
+  scopedPath.startsWith("api/") ||
+  scopedPath.startsWith("uploads/") ||
+  scopedPath.startsWith("src/") ||
+  scopedPath.startsWith("@vite/");
 
 const networkFirstPage = async (request) => {
   try {
@@ -56,14 +69,14 @@ const networkFirstPage = async (request) => {
 
     if (response?.ok) {
       const cache = await caches.open(SHELL_CACHE);
-      await cache.put("/index.html", response.clone());
+      await cache.put(buildScopedUrl("index.html"), response.clone());
     }
 
     return response;
   } catch {
     return (
       (await caches.match(request)) ||
-      (await caches.match("/index.html")) ||
+      (await caches.match(buildScopedUrl("index.html"))) ||
       new Response("Offline", { status: 503, statusText: "Offline" })
     );
   }
@@ -105,7 +118,8 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin || isBypassedRoute(url)) {
+  const scopedPath = getScopedPath(url);
+  if (url.origin !== SCOPE_URL.origin || scopedPath === null || isBypassedRoute(scopedPath)) {
     return;
   }
 
@@ -114,12 +128,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname.startsWith("/assets/")) {
+  if (scopedPath.startsWith("assets/")) {
     event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
-  if (shouldHandleAsset(url)) {
+  if (shouldHandleAsset(scopedPath)) {
     event.respondWith(cacheFirst(request));
   }
 });

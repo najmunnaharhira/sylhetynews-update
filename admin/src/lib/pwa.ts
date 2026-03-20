@@ -1,4 +1,7 @@
 export const ADMIN_PWA_STATUS_EVENT = "admin-pwa-status";
+const adminPwaFlag = import.meta.env.VITE_ENABLE_PWA;
+const adminPwaEnabled =
+  adminPwaFlag === "true" || (adminPwaFlag !== "false" && import.meta.env.PROD);
 
 type AdminPwaStatus = {
   offlineReady: boolean;
@@ -55,19 +58,25 @@ const syncAdminPwaStatus = (registration: ServiceWorkerRegistration) => {
 };
 
 export const getAdminPwaStatus = () => ({ ...adminPwaStatus });
+export const isAdminPwaEnabled = () => adminPwaEnabled;
 
 export const requestAdminPwaUpdate = () => {
   adminPwaRegistration?.waiting?.postMessage({ type: "SKIP_WAITING" });
 };
 
 export const registerAdminPwa = async () => {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+  if (
+    typeof window === "undefined" ||
+    !adminPwaEnabled ||
+    !("serviceWorker" in navigator)
+  ) {
     return;
   }
 
   try {
-    const registration = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
+    const baseUrl = import.meta.env.BASE_URL;
+    const registration = await navigator.serviceWorker.register(`${baseUrl}sw.js`, {
+      scope: baseUrl,
     });
     syncAdminPwaStatus(registration);
 

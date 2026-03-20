@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   ADMIN_PWA_STATUS_EVENT,
   getAdminPwaStatus,
+  isAdminPwaEnabled,
   requestAdminPwaUpdate,
 } from "../lib/pwa";
 
@@ -26,6 +27,7 @@ const isStandaloneDisplay = () => {
 };
 
 export default function PwaPrompt() {
+  const pwaEnabled = isAdminPwaEnabled();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [installing, setInstalling] = useState(false);
@@ -97,6 +99,10 @@ export default function PwaPrompt() {
     requestAdminPwaUpdate();
   };
 
+  if (!pwaEnabled) {
+    return null;
+  }
+
   const showUpdatePrompt = pwaStatus.updateReady;
   const showInstallPrompt =
     !installed && !showUpdatePrompt && !dismissed && (Boolean(deferredPrompt) || pwaStatus.offlineReady);
@@ -110,9 +116,9 @@ export default function PwaPrompt() {
     : "Install the admin panel";
   const description = showUpdatePrompt
     ? "Refresh into the latest app shell before you upload new stories, media, or categories."
-    : deferredPrompt
-      ? "Open Sylhety News Admin like an app for faster access. News drafts stay on this device if the tab closes unexpectedly."
-      : "This admin panel is install-ready. If your browser does not show the install button here, open the browser menu and choose Install app.";
+      : deferredPrompt
+        ? "Open Sylhety News Admin like an app for faster access. News drafts stay on this device if the tab closes unexpectedly."
+        : "This admin panel is install-ready. If your browser does not show the install button here, open the browser menu and choose Install app.";
 
   return (
     <aside className="pwa-banner" role="status" aria-live="polite">

@@ -8,7 +8,7 @@ import PwaPrompt from "./components/PwaPrompt";
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <PwaPrompt />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />

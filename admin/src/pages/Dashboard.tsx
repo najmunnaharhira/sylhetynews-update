@@ -124,6 +124,7 @@ const readStoredNewsDraft = (): NewsDraft | null => {
 };
 
 export default function Dashboard() {
+  const logoUrl = `${import.meta.env.BASE_URL}sylhety-logo.jpeg`;
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -912,7 +913,7 @@ export default function Dashboard() {
       <header className="dashboard-header">
         <div className="dashboard-shell">
           <div className="dashboard-brand">
-            <img src="/sylhety-logo.jpeg" alt="Sylhety News" className="dashboard-logo" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            <img src={logoUrl} alt="Sylhety News" className="dashboard-logo" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
             <div>
               <h1 className="dashboard-title">Admin Dashboard</h1>
               <p className="dashboard-subtitle">Manage news, media, and categories</p>
