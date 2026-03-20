@@ -25,6 +25,60 @@ function getAuthHeaders(): HeadersInit {
   return headers;
 }
 
+const ABSOLUTE_URL_PATTERN = /^(?:[a-z]+:)?\/\//i;
+const GOOGLE_DRIVE_ID_PATTERNS = [
+  /\/file\/d\/([a-zA-Z0-9_-]{10,})/i,
+  /\/d\/([a-zA-Z0-9_-]{10,})/i,
+  /[?&]id=([a-zA-Z0-9_-]{10,})/i,
+  /\/thumbnail\?id=([a-zA-Z0-9_-]{10,})/i,
+];
+
+function extractGoogleDriveFileId(value?: string | null): string {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return '';
+  }
+
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  for (const pattern of GOOGLE_DRIVE_ID_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  return '';
+}
+
+function normalizeMediaUrl(value?: string | null): string {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return '';
+  }
+
+  const driveFileId = extractGoogleDriveFileId(trimmed);
+  if (driveFileId) {
+    return `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w1600`;
+  }
+
+  if (
+    ABSOLUTE_URL_PATTERN.test(trimmed) ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith('/')) {
+    return `${getBase()}${trimmed}`;
+  }
+
+  return `${getBase()}/${trimmed.replace(/^\.?\//, '')}`;
+}
+
 function toNewsArticle(raw: Record<string, unknown>): NewsArticle {
   return {
     id: String(raw.id ?? raw._id),
@@ -33,7 +87,7 @@ function toNewsArticle(raw: Record<string, unknown>): NewsArticle {
     summary: String(raw.summary ?? ''),
     category: String(raw.category),
     district: raw.district != null ? String(raw.district) : undefined,
-    imageUrl: String(raw.imageUrl),
+    imageUrl: normalizeMediaUrl(String(raw.imageUrl ?? raw.image_url ?? '')),
     author: String(raw.author),
     createdAt: raw.createdAt ? new Date(raw.createdAt as string) : new Date(),
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt as string) : new Date(),
@@ -68,12 +122,12 @@ function toPhotoCardTemplate(raw: Record<string, unknown>): PhotoCardTemplate {
     id: String(raw.id ?? raw._id),
     name: String(raw.name ?? 'Template'),
     description: raw.description != null ? String(raw.description) : '',
-    imageUrl: String(raw.imageUrl ?? raw.image_url ?? ''),
+    imageUrl: normalizeMediaUrl(String(raw.imageUrl ?? raw.image_url ?? '')),
     previewUrl:
       raw.previewUrl != null
-        ? String(raw.previewUrl)
+        ? normalizeMediaUrl(String(raw.previewUrl))
         : raw.preview_url != null
-          ? String(raw.preview_url)
+          ? normalizeMediaUrl(String(raw.preview_url))
           : undefined,
     category: raw.category != null ? String(raw.category) : undefined,
     isActive: Boolean(raw.isActive ?? raw.is_active ?? true),

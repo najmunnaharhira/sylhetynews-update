@@ -3,11 +3,13 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PwaPrompt from "./components/PwaPrompt";
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <PwaPrompt />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />

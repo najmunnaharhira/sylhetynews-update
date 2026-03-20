@@ -15,6 +15,8 @@ import TopStories from "./components/news/TopStories";
 import WeatherWidget from "./components/news/WeatherWidget";
 import { sylhetDistricts } from "./data/districts";
 import { getFeaturedNews, getLatestNews, getNewsByCategory, newsData } from "./data/newsData";
+import { useFeaturedNews, useNews, useNewsByCategory, useSingleNews } from "./hooks/useNews";
+import { articleToDisplayItem } from "./utils/newsDisplay";
 
 const queryClient = new QueryClient();
 
@@ -39,13 +41,23 @@ const featuredNews = getFeaturedNews();
 const latestNews = getLatestNews(5);
 
 function HomePage() {
+  const { articles } = useNews();
+  const { articles: featuredArticles } = useFeaturedNews();
+  const dynamicItems = articles.map(articleToDisplayItem);
+  const sourceItems = dynamicItems.length > 0 ? dynamicItems : newsData;
+  const featuredItem =
+    featuredArticles[0] != null
+      ? articleToDisplayItem(featuredArticles[0])
+      : sourceItems.find((item) => item.featured) ?? featuredNews;
+  const latestItems = sourceItems.slice(0, 5);
+
   return (
     <Layout>
       <section className="container mx-auto px-4 py-6">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-          <LeadNews news={featuredNews} />
+          <LeadNews news={featuredItem} />
           <div className="grid gap-6">
-            <TopStories news={latestNews} />
+            <TopStories news={latestItems} />
             <WeatherWidget />
           </div>
         </div>
@@ -56,15 +68,17 @@ function HomePage() {
               <CategorySection
                 key={category.key}
                 title={category.title}
-                news={getNewsByCategory(category.key)}
+                news={sourceItems.filter((item) => item.category === category.key)}
                 categoryPath={category.path}
               />
             ))}
           </div>
 
           <div className="grid gap-6">
-            <LatestNewsSidebar news={latestNews} />
-            <SylhetSpecial news={getNewsByCategory("sylhet")[0] ?? featuredNews} />
+            <LatestNewsSidebar news={latestItems} />
+            <SylhetSpecial
+              news={sourceItems.find((item) => item.category === "sylhet") ?? featuredItem}
+            />
           </div>
         </div>
       </section>
@@ -75,7 +89,11 @@ function HomePage() {
 function CategoryPage() {
   const location = useLocation();
   const category = categoryRoutes.find((item) => item.path === location.pathname);
-  const articles = getNewsByCategory(category?.key ?? "");
+  const { articles: dynamicArticles } = useNewsByCategory(category?.key ?? "");
+  const articles =
+    dynamicArticles.length > 0
+      ? dynamicArticles.map(articleToDisplayItem)
+      : getNewsByCategory(category?.key ?? "");
 
   return (
     <Layout>
@@ -105,13 +123,21 @@ function CategoryPage() {
 
 function NewsDetailPage() {
   const { id } = useParams();
-  const article = newsData.find((item) => item.id === id);
+  const { article: dynamicArticle } = useSingleNews(id ?? "");
+  const { articles } = useNews();
+  const allItems =
+    articles.length > 0 ? articles.map(articleToDisplayItem) : newsData;
+  const article =
+    dynamicArticle != null
+      ? articleToDisplayItem(dynamicArticle)
+      : allItems.find((item) => item.id === id);
 
   if (!article) {
     return <NotFoundPage />;
   }
 
-  const related = newsData.filter((item) => item.id !== article.id).slice(0, 4);
+  const related = allItems.filter((item) => item.id !== article.id).slice(0, 4);
+  const sidebarItems = allItems.slice(0, 5);
 
   return (
     <Layout>
@@ -133,7 +159,7 @@ function NewsDetailPage() {
           </div>
 
           <div className="grid gap-6">
-            <LatestNewsSidebar news={latestNews} />
+            <LatestNewsSidebar news={sidebarItems} />
             <section className="rounded-md border border-news-border bg-card p-4">
               <h2 className="mb-4 text-xl font-semibold text-news-headline">Related Stories</h2>
               <div className="space-y-4">
@@ -154,6 +180,9 @@ function PhotoCardPage() {
 }
 
 function DistrictsPage() {
+  const { articles } = useNews();
+  const sourceItems = articles.length > 0 ? articles.map(articleToDisplayItem) : newsData;
+
   return (
     <Layout>
       <section className="container mx-auto px-4 py-8">
@@ -164,7 +193,7 @@ function DistrictsPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {sylhetDistricts.map((district) => {
-            const count = newsData.filter((article) => article.district === district.id).length;
+            const count = sourceItems.filter((article) => article.district === district.id).length;
             return (
               <Link
                 key={district.id}
@@ -185,8 +214,10 @@ function DistrictsPage() {
 
 function DistrictPage() {
   const { district } = useParams();
+  const { articles } = useNews();
   const districtInfo = sylhetDistricts.find((item) => item.id === district);
-  const articles = newsData.filter((item) => item.district === district);
+  const sourceItems = articles.length > 0 ? articles.map(articleToDisplayItem) : newsData;
+  const districtArticles = sourceItems.filter((item) => item.district === district);
 
   return (
     <Layout>
@@ -196,13 +227,13 @@ function DistrictPage() {
           <p className="mt-2 text-news-subtext">{districtInfo?.nameBn ?? "Latest district coverage"}.</p>
         </div>
 
-        {articles.length === 0 ? (
+        {districtArticles.length === 0 ? (
           <p className="rounded-md border border-news-border bg-card p-6 text-news-subtext">
             No district stories are available yet.
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {articles.map((article) => (
+            {districtArticles.map((article) => (
               <NewsCard key={article.id} news={article} />
             ))}
           </div>
