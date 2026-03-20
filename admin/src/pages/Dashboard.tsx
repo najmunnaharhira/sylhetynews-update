@@ -5,7 +5,6 @@ import {
 } from "../types/entities";
 import {
   fetchNews, fetchCategories, fetchTeam, fetchPhotoCardTemplates,
-  createNewsItem, updateNewsItem, deleteNewsItem, toggleNewsPublish,
   createTeamMember, updateTeamMember, deleteTeamMember,
   createPhotoCardTemplate, updatePhotoCardTemplate, deletePhotoCardTemplate
 } from "../services/entities";
@@ -57,17 +56,9 @@ export default function Dashboard() {
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
-  const [district, setDistrict] = useState("");
-  const [tagsInput, setTagsInput] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
-  const [isPublished, setIsPublished] = useState(true);
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [newsImagePreview, setNewsImagePreview] = useState("");
-  const [savingNews, setSavingNews] = useState(false);
-  const [uploadingNewsImage, setUploadingNewsImage] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [loadingCategoriesAction, setLoadingCategoriesAction] = useState(false);
 
@@ -90,62 +81,9 @@ export default function Dashboard() {
     () => categories.map((item) => ({ value: item.slug, label: item.name })),
     [categories]
   );
-<<<<<<< HEAD
-  const activeTemplateCount = useMemo(
-    () => photocardTemplates.filter((template) => template.isActive).length,
-    [photocardTemplates]
-  );
-  const publishedNewsCount = useMemo(
-    () => news.filter((item) => item.published).length,
-    [news]
-  );
-  const featuredNewsCount = useMemo(
-    () => news.filter((item) => item.featured).length,
-    [news]
-  );
-  const draftNewsCount = Math.max(0, news.length - publishedNewsCount);
-  const missingDefaultCategories = useMemo(
-    () =>
-      DEFAULT_CATEGORIES.filter(
-        (item) => !categories.some((categoryItem) => categoryItem.slug === item.slug)
-      ),
-    [categories]
-  );
-  const dashboardStats = useMemo(
-    () => [
-      { label: "News Items", value: news.length, tone: "primary" },
-      { label: "Categories", value: categories.length, tone: "neutral" },
-      { label: "Team Members", value: teamMembers.length, tone: "neutral" },
-      { label: "Active Templates", value: activeTemplateCount, tone: "accent" },
-    ],
-    [activeTemplateCount, categories.length, news.length, teamMembers.length]
-  );
-  const workspaceShortcuts = [
-    { href: "#news-composer", label: "News Composer" },
-    { href: "#news-library", label: "News Library" },
-    { href: "#category-desk", label: "Categories" },
-    { href: "#team-desk", label: "Team Desk" },
-    { href: "#template-library", label: "Photocard Templates" },
-  ];
-
-  useEffect(() => {
-    if (imageFile) {
-      const objectUrl = URL.createObjectURL(imageFile);
-      setNewsImagePreview(objectUrl);
-
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
-    }
-
-    setNewsImagePreview(imageUrl.trim());
-    return undefined;
-  }, [imageFile, imageUrl]);
-=======
 
 
   const [authReady, setAuthReady] = useState(true); // Always ready, backend-driven
->>>>>>> parent of d4c6ccf (Add password reset, user model, and templates)
 
   // Backend-driven: Load news and categories from API
   const loadNews = async () => {
@@ -216,38 +154,6 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  const resetNewsForm = () => {
-    setEditingNewsId(null);
-    setTitle("");
-    setSummary("");
-    setContent("");
-    setCategory("");
-    setDistrict("");
-    setTagsInput("");
-    setImageUrl("");
-    setImageFile(null);
-    setIsPublished(true);
-    setIsFeatured(false);
-    setNewsImagePreview("");
-  };
-
-  const parseTags = (value: string) =>
-    value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-  const resolveNewsImageUrl = async () => {
-    if (imageFile) {
-      const uploadedUrl = await uploadImage(imageFile);
-      setImageUrl(uploadedUrl);
-      setImageFile(null);
-      return uploadedUrl;
-    }
-
-    return imageUrl.trim() || FALLBACK_NEWS_IMAGE;
-  };
-
   const handleCreateNews = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -255,109 +161,44 @@ export default function Dashboard() {
       setError("Title, summary, content, and category are required.");
       return;
     }
-    setSavingNews(true);
+    setUploading(true);
     try {
-      const resolvedImageUrl = await resolveNewsImageUrl();
-      await createNewsItem({
-        title: title.trim(),
-        summary: summary.trim(),
-        content: content.trim(),
-        category: category.trim(),
-        district: district.trim(),
-        imageUrl: resolvedImageUrl,
-        author: user?.email || "admin@gmail.com",
-        published: isPublished,
-        featured: isFeatured,
-        tags: parseTags(tagsInput),
+      await apiFetch("/news/admin", {
+        method: "POST",
+        body: JSON.stringify({
+          title: title.trim(),
+          summary: summary.trim(),
+          content: content.trim(),
+          category: category.trim(),
+          imageUrl: imageUrl.trim() || FALLBACK_NEWS_IMAGE,
+          author: user?.email || "admin@gmail.com",
+          published: true,
+          featured: false,
+          tags: [],
+        }),
       });
-      resetNewsForm();
-      setToast({ message: "News published successfully.", type: "success" });
+      setTitle("");
+      setSummary("");
+      setContent("");
+      setCategory("");
+      setImageUrl("");
+      setImageFile(null);
       await loadNews();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create news.");
     } finally {
-      setSavingNews(false);
+      setUploading(false);
     }
-  };
-
-  const handleEditNews = (item: NewsItem) => {
-    setEditingNewsId(item.id);
-    setTitle(item.title);
-    setSummary(item.summary || "");
-    setContent(item.content || "");
-    setCategory(item.category || "");
-    setDistrict(item.district || "");
-    setTagsInput((item.tags || []).join(", "));
-    setImageUrl(item.imageUrl || "");
-    setImageFile(null);
-    setIsPublished(Boolean(item.published));
-    setIsFeatured(Boolean(item.featured));
-    setError("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleUpdateNews = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingNewsId) {
-      return;
-    }
-
-    setError("");
-    if (!title.trim() || !summary.trim() || !content.trim() || !category.trim()) {
-      setError("Title, summary, content, and category are required.");
-      return;
-    }
-
-    setSavingNews(true);
-    try {
-      const resolvedImageUrl = await resolveNewsImageUrl();
-      await updateNewsItem(editingNewsId, {
-        title: title.trim(),
-        summary: summary.trim(),
-        content: content.trim(),
-        category: category.trim(),
-        district: district.trim(),
-        imageUrl: resolvedImageUrl,
-        published: isPublished,
-        featured: isFeatured,
-        tags: parseTags(tagsInput),
-      });
-      resetNewsForm();
-      setToast({ message: "News updated successfully.", type: "success" });
-      await loadNews();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update news.");
-    } finally {
-      setSavingNews(false);
-    }
-  };
-
-  const handleCancelNewsEdit = () => {
-    resetNewsForm();
-    setError("");
   };
 
   const handleDeleteNews = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this news item?")) return;
     try {
-      await deleteNewsItem(id);
-      setToast({ message: "News deleted.", type: "success" });
+      await apiFetch(`/news/admin/${id}`, {
+        method: "DELETE",
+      });
       await loadNews();
     } catch {
       setError("Failed to delete news.");
-    }
-  };
-
-  const handleTogglePublish = async (id: string, current: boolean) => {
-    try {
-      await toggleNewsPublish(id, !current);
-      setToast({
-        message: current ? "News moved to draft." : "News published.",
-        type: "success",
-      });
-      await loadNews();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update publish status.");
     }
   };
 
@@ -407,6 +248,7 @@ export default function Dashboard() {
     }
     setError("");
     setImageUrl(converted);
+    window.open("https://drive.google.com/", "_blank");
   };
 
   const handleUploadImage = async () => {
@@ -415,16 +257,14 @@ export default function Dashboard() {
       return;
     }
     setError("");
-    setUploadingNewsImage(true);
+    setUploading(true);
     try {
       const uploadedUrl = await uploadImage(imageFile);
       setImageUrl(uploadedUrl);
-      setImageFile(null);
-      setToast({ message: "News image uploaded successfully.", type: "success" });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload image.");
     } finally {
-      setUploadingNewsImage(false);
+      setUploading(false);
     }
   };
 
@@ -660,204 +500,46 @@ export default function Dashboard() {
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         {error && <div className="dashboard-alert">{error}</div>}
 
-<<<<<<< HEAD
-        <section className="dashboard-hero">
-          <div>
-            <p className="dashboard-kicker">Workspace Overview</p>
-            <h2 className="dashboard-hero-title">Welcome back{user?.email ? `, ${user.email}` : ""}</h2>
-            <p className="dashboard-hero-copy">
-              Publish news, refresh categories, manage team profiles, and control the public photocard defaults from one dashboard.
-            </p>
-          </div>
-          <div className="dashboard-stat-grid">
-            {dashboardStats.map((stat) => (
-              <div key={stat.label} className={`dashboard-stat-card ${stat.tone}`}>
-                <span className="dashboard-stat-label">{stat.label}</span>
-                <strong className="dashboard-stat-value">{stat.value}</strong>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="dashboard-workspace-bar">
-          <div className="dashboard-workspace-card">
-            <p className="dashboard-panel-kicker">Quick Navigation</p>
-            <div className="dashboard-shortcuts">
-              {workspaceShortcuts.map((shortcut) => (
-                <a key={shortcut.href} href={shortcut.href} className="dashboard-shortcut">
-                  {shortcut.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="dashboard-workspace-card">
-            <p className="dashboard-panel-kicker">Editorial Snapshot</p>
-            <div className="dashboard-inline-stats">
-              <div className="dashboard-inline-stat">
-                <span>Published</span>
-                <strong>{publishedNewsCount}</strong>
-              </div>
-              <div className="dashboard-inline-stat">
-                <span>Drafts</span>
-                <strong>{draftNewsCount}</strong>
-              </div>
-              <div className="dashboard-inline-stat">
-                <span>Featured</span>
-                <strong>{featuredNewsCount}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-workspace-card">
-            <p className="dashboard-panel-kicker">Admin Session</p>
-            <div className="dashboard-meta-stack">
-              <div className="dashboard-meta-row">
-                <span>Signed in as</span>
-                <strong>{user?.email || "admin"}</strong>
-              </div>
-              <div className="dashboard-meta-row">
-                <span>Active templates</span>
-                <strong>{activeTemplateCount}</strong>
-              </div>
-              <div className="dashboard-meta-row">
-                <span>Missing default categories</span>
-                <strong>{missingDefaultCategories.length}</strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="dashboard-layout-grid">
-          <div className="dashboard-main-column">
-        <section id="news-composer" className="dashboard-card">
-=======
         <section className="dashboard-card">
->>>>>>> parent of d4c6ccf (Add password reset, user model, and templates)
           <div className="dashboard-card-title">
             <div>
-              <p className="dashboard-section-kicker">Content Desk</p>
-              <h2>{editingNewsId ? "Edit News" : "Create News"}</h2>
-              <p>
-                {editingNewsId
-                  ? "Update the story, image, publish state, and feature flags."
-                  : "Publish breaking updates and daily headlines with proper media support."}
-              </p>
+              <h2>Create News</h2>
+              <p>Publish breaking updates and daily headlines.</p>
             </div>
-            <span className={`dashboard-chip ${editingNewsId ? "muted" : ""}`}>
-              {editingNewsId ? "Editing" : isPublished ? "Ready to Publish" : "Draft Mode"}
-            </span>
+            <span className="dashboard-chip">Live</span>
           </div>
-          <form onSubmit={editingNewsId ? handleUpdateNews : handleCreateNews} className="dashboard-form">
+          <form onSubmit={handleCreateNews} className="dashboard-form">
             <div className="dashboard-grid">
               <input className="dashboard-input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
               <input className="dashboard-input" placeholder="Summary" value={summary} onChange={(e) => setSummary(e.target.value)} />
             </div>
-            <div className="dashboard-grid">
-              <select className="dashboard-input" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="News category">
-                <option value="">Select category</option>
-                {categoryOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              <input
-                className="dashboard-input"
-                placeholder="District or location (optional)"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-              />
-              <input
-                className="dashboard-input"
-                placeholder="Tags separated by commas"
-                value={tagsInput}
-                onChange={(e) => setTagsInput(e.target.value)}
-              />
-            </div>
-            <textarea
-              className="dashboard-textarea"
-              placeholder="Content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-            <div className="dashboard-toggle-row">
-              <label className="dashboard-toggle">
-                <input
-                  type="checkbox"
-                  checked={isPublished}
-                  onChange={(e) => setIsPublished(e.target.checked)}
-                />
-                <span>Publish now</span>
-              </label>
-              <label className="dashboard-toggle">
-                <input
-                  type="checkbox"
-                  checked={isFeatured}
-                  onChange={(e) => setIsFeatured(e.target.checked)}
-                />
-                <span>Mark as featured</span>
-              </label>
-            </div>
+            <textarea className="dashboard-textarea" placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} />
+            <select className="dashboard-input" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="News category">
+              <option value="">Select category</option>
+              {categoryOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
             <div className="dashboard-media">
               <div className="dashboard-media-field">
-                <input
-                  className="dashboard-input"
-                  placeholder="Image URL (optional)"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
+                <input className="dashboard-input" placeholder="Image URL (optional)" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
                 <div className="dashboard-links">
                   <button type="button" onClick={handleConvertDrive} className="dashboard-link drive">Convert Google Drive link</button>
                   <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="dashboard-link postimages">Get URL from Postimages</a>
                 </div>
-                <p className="dashboard-help-text">
-                  If you select an image file below, it will upload automatically when you publish or update the story.
-                </p>
               </div>
               <div className="dashboard-upload">
                 <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} className="dashboard-file" aria-label="Choose image" />
-                <button type="button" onClick={handleUploadImage} disabled={!imageFile || uploadingNewsImage} className="dashboard-button secondary">
-                  {uploadingNewsImage ? "Uploading..." : "Upload Media"}
-                </button>
+                <button type="button" onClick={handleUploadImage} disabled={uploading} className="dashboard-button secondary">{uploading ? "Uploading..." : "Upload Media"}</button>
               </div>
-              {newsImagePreview ? (
-                <div className="dashboard-news-preview">
-                  <img src={newsImagePreview} alt="News preview" className="dashboard-news-preview-image" />
-                  <div>
-                    <p className="dashboard-list-title">{imageFile ? imageFile.name : "Current article image"}</p>
-                    <p className="dashboard-list-subtitle">
-                      {imageFile ? "Selected file is ready for upload." : "Using the saved image URL."}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
             </div>
-            <div className="dashboard-row">
-              <button type="submit" disabled={savingNews || uploadingNewsImage} className="dashboard-button primary">
-                {savingNews
-                  ? editingNewsId
-                    ? "Updating..."
-                    : isPublished
-                      ? "Publishing..."
-                      : "Saving Draft..."
-                  : editingNewsId
-                    ? "Update News"
-                    : isPublished
-                      ? "Publish News"
-                      : "Save Draft"}
-              </button>
-              {editingNewsId ? (
-                <button type="button" onClick={handleCancelNewsEdit} className="dashboard-button secondary">
-                  Cancel
-                </button>
-              ) : null}
-            </div>
+            <button type="submit" disabled={uploading} className="dashboard-button primary">{uploading ? "Saving..." : "Publish"}</button>
           </form>
         </section>
 
-        <section id="news-library" className="dashboard-card">
+        <section className="dashboard-card">
           <div className="dashboard-card-title">
             <div>
-              <p className="dashboard-section-kicker">Publishing Queue</p>
               <h2>Latest News</h2>
               <p>Review recently published items.</p>
             </div>
@@ -870,69 +552,26 @@ export default function Dashboard() {
               <p className="dashboard-empty">No news yet.</p>
             ) : (
               news.map((item) => (
-                <div key={item.id} className="dashboard-list-item dashboard-news-item">
-                  <div className="dashboard-news-main">
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} className="dashboard-news-thumb" />
-                    ) : (
-                      <div className="dashboard-news-thumb dashboard-news-thumb-placeholder">No image</div>
-                    )}
-                    <div className="dashboard-news-copy">
-                      <div className="dashboard-news-badges">
-                        <span className={`dashboard-chip ${item.published ? "" : "muted"}`}>
-                          {item.published ? "Published" : "Draft"}
-                        </span>
-                        {item.featured ? <span className="dashboard-chip">Featured</span> : null}
-                      </div>
-                      <p className="dashboard-list-title">{item.title}</p>
-                      <p className="dashboard-list-subtitle">
-                        {item.category}
-                        {item.district ? ` • ${item.district}` : ""}
-                      </p>
-                      {item.summary ? (
-                        <p className="dashboard-list-description">{item.summary}</p>
-                      ) : null}
-                      <p className="dashboard-list-meta">
-                        {item.author || "Admin"} • {item.views ?? 0} views
-                      </p>
-                    </div>
+                <div key={item.id} className="dashboard-list-item">
+                  <div>
+                    <p className="dashboard-list-title">{item.title}</p>
+                    <p className="dashboard-list-subtitle">{item.category}</p>
                   </div>
-                  <div className="dashboard-actions">
-                    <button onClick={() => handleEditNews(item)} className="dashboard-button secondary small">Edit</button>
-                    <button
-                      onClick={() => handleTogglePublish(item.id, Boolean(item.published))}
-                      className="dashboard-button secondary small"
-                    >
-                      {item.published ? "Unpublish" : "Publish"}
-                    </button>
-                    <button onClick={() => handleDeleteNews(item.id)} className="dashboard-delete">Delete</button>
-                  </div>
+                  <button onClick={() => handleDeleteNews(item.id)} className="dashboard-delete">Delete</button>
                 </div>
               ))
             )}
           </div>
         </section>
-          </div>
 
-          <div className="dashboard-side-column">
-        <section id="category-desk" className="dashboard-card">
+        <section className="dashboard-card">
           <div className="dashboard-card-title">
             <div>
-              <p className="dashboard-section-kicker">Homepage Taxonomy</p>
               <h2>Categories</h2>
               <p>Manage homepage sections.</p>
             </div>
             <span className="dashboard-chip muted">{categories.length} total</span>
           </div>
-          {missingDefaultCategories.length > 0 ? (
-            <div className="dashboard-note-card">
-              <strong>Recommended defaults missing:</strong> {missingDefaultCategories.map((item) => item.name).join(", ")}
-            </div>
-          ) : (
-            <div className="dashboard-note-card success">
-              <strong>Category structure looks complete.</strong> All standard homepage sections are present.
-            </div>
-          )}
           <div className="dashboard-row">
             <input className="dashboard-input" placeholder="Category name" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} />
             <button type="button" onClick={handleCreateCategory} className="dashboard-button secondary">Add</button>
@@ -956,10 +595,9 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section id="team-desk" className="dashboard-card">
+        <section className="dashboard-card">
           <div className="dashboard-card-title">
             <div>
-              <p className="dashboard-section-kicker">Editorial Staff</p>
               <h2>Team Members</h2>
               <p>Manage team members and their introductions.</p>
             </div>
@@ -1005,17 +643,13 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section id="template-library" className="dashboard-card">
+        <section className="dashboard-card">
           <div className="dashboard-card-title">
             <div>
-              <p className="dashboard-section-kicker">Visual Toolkit</p>
               <h2>PhotoCard Templates</h2>
               <p>Manage photocard templates for users.</p>
             </div>
             <span className="dashboard-chip muted">{photocardTemplates.length} templates</span>
-          </div>
-          <div className="dashboard-note-card">
-            <strong>Public download mode:</strong> {activeTemplateCount} template{activeTemplateCount === 1 ? "" : "s"} currently active on the public photocard page.
           </div>
           <div className="dashboard-form">
             <div className="dashboard-grid">
@@ -1076,8 +710,6 @@ export default function Dashboard() {
             )}
           </div>
         </section>
-          </div>
-        </div>
       </main>
     </div>
   );

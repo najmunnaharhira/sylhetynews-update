@@ -3,8 +3,7 @@
  * When VITE_API_URL is set, admin login and all admin data (news, categories, team) use the backend.
  */
 
-export const ADMIN_TOKEN_KEY = "admin_jwt_token";
-
+// Removed admin token helpers (now in admin folder)
 function getEnvApiUrl(): string {
   const url = import.meta.env.VITE_API_URL;
   return typeof url === "string" ? url.trim() : "";
@@ -17,19 +16,10 @@ export function getApiBaseUrl(): string {
 
 export function isBackendConfigured(): boolean {
   const provider = (import.meta.env.VITE_DATA_PROVIDER || "").toLowerCase();
-  if (provider === "firebase") return false;
+  // Firebase provider removed
   return true;
 }
 
 export function getAdminToken(): string | null {
-  if (typeof localStorage === "undefined") return null;
-  return localStorage.getItem(ADMIN_TOKEN_KEY);
-}
-
-export function setAdminToken(token: string): void {
-  localStorage.setItem(ADMIN_TOKEN_KEY, token);
-}
-
-export function clearAdminToken(): void {
-  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  return localStorage.getItem("admin_jwt_token");
 }
