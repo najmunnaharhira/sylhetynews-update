@@ -9,9 +9,21 @@ import { photocardService } from "@/services/apiService";
 import type { PhotoCardTemplate } from "@/types/photocard";
 
 const featuredNews = getFeaturedNews();
-const PHOTO_CARD_WIDTH = 1080;
-const PHOTO_CARD_HEIGHT = 1350;
+const BASE_PHOTO_CARD_WIDTH = 1080;
+const BASE_PHOTO_CARD_HEIGHT = 1350;
 const PHOTO_CARD_LOGO = "/logo-main.jpeg";
+
+type PhotoCardOrientation = "portrait" | "square" | "landscape";
+
+type PhotoCardFormat = {
+  id: string;
+  label: string;
+  medium: string;
+  description: string;
+  width: number;
+  height: number;
+  orientation: PhotoCardOrientation;
+};
 
 type CustomCardSettings = {
   imageScale: number;
@@ -57,6 +69,93 @@ const defaultSettings: CustomCardSettings = {
   detailsColor: "#e2e8f0",
   websiteFontSize: 28,
   websiteColor: "#ffffff",
+};
+
+const socialFormats: PhotoCardFormat[] = [
+  {
+    id: "instagram-portrait",
+    label: "Portrait Post",
+    medium: "Instagram Feed",
+    description: "Best for feed posts with more room for long headlines.",
+    width: 1080,
+    height: 1350,
+    orientation: "portrait",
+  },
+  {
+    id: "instagram-story",
+    label: "Story Cover",
+    medium: "Instagram Story",
+    description: "Tall format for stories, reel covers, and vertical social promos.",
+    width: 1080,
+    height: 1920,
+    orientation: "portrait",
+  },
+  {
+    id: "instagram-square",
+    label: "Square Post",
+    medium: "Instagram / Facebook",
+    description: "Balanced square card for feed sharing and community updates.",
+    width: 1080,
+    height: 1080,
+    orientation: "square",
+  },
+  {
+    id: "facebook-square",
+    label: "Social Square",
+    medium: "Facebook Post",
+    description: "Slightly larger square export for broad social reposting.",
+    width: 1200,
+    height: 1200,
+    orientation: "square",
+  },
+  {
+    id: "youtube-thumbnail",
+    label: "Thumbnail",
+    medium: "YouTube",
+    description: "Wide layout for video thumbnails and breaking coverage.",
+    width: 1280,
+    height: 720,
+    orientation: "landscape",
+  },
+  {
+    id: "wide-banner",
+    label: "Wide Banner",
+    medium: "Website / Share Card",
+    description: "Landscape banner for homepage promos and social link shares.",
+    width: 1200,
+    height: 630,
+    orientation: "landscape",
+  },
+];
+
+const defaultSocialFormat = socialFormats[0];
+
+const orientationOptions: Array<{
+  id: PhotoCardOrientation;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "portrait",
+    label: "Portrait",
+    description: "Feed posts and story-first layouts.",
+  },
+  {
+    id: "square",
+    label: "Square",
+    description: "Balanced cards for cross-posting.",
+  },
+  {
+    id: "landscape",
+    label: "Landscape",
+    description: "YouTube thumbnails and wide banners.",
+  },
+];
+
+const orientationLabels: Record<PhotoCardOrientation, string> = {
+  portrait: "Portrait",
+  square: "Square",
+  landscape: "Landscape",
 };
 
 const portalPresets = [
@@ -128,6 +227,45 @@ const portalPresets = [
     },
   },
 ] as const;
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const resolveSettingsForFormat = (
+  settings: CustomCardSettings,
+  format: Pick<PhotoCardFormat, "width" | "height" | "orientation">,
+): CustomCardSettings => {
+  const scaleX = format.width / BASE_PHOTO_CARD_WIDTH;
+  const scaleY = format.height / BASE_PHOTO_CARD_HEIGHT;
+  const typeScale = Math.min(
+    scaleX,
+    Math.max(format.orientation === "landscape" ? 0.72 : 0.82, scaleY),
+  );
+
+  return {
+    ...settings,
+    imageOffsetX: Math.round(settings.imageOffsetX * scaleX),
+    imageOffsetY: Math.round(settings.imageOffsetY * scaleY),
+    logoWidth: clamp(
+      Math.round(settings.logoWidth * Math.min(scaleX, 1.18)),
+      140,
+      Math.max(180, format.width - 180),
+    ),
+    headlineTop: clamp(Math.round(settings.headlineTop * scaleY), 96, format.height - 220),
+    headlineWidth: clamp(
+      Math.round(settings.headlineWidth * scaleX),
+      320,
+      Math.max(420, format.width - 140),
+    ),
+    headlineFontSize: clamp(Math.round(settings.headlineFontSize * typeScale), 44, 120),
+    footerHeight: clamp(
+      Math.round(settings.footerHeight * scaleY),
+      140,
+      Math.max(180, Math.round(format.height * 0.38)),
+    ),
+    detailsFontSize: clamp(Math.round(settings.detailsFontSize * typeScale), 20, 52),
+    websiteFontSize: clamp(Math.round(settings.websiteFontSize * typeScale), 20, 42),
+  };
+};
 
 const toDownloadName = (title: string) =>
   title
@@ -305,16 +443,21 @@ const createCustomPhotocard = async ({
   details,
   websiteLabel,
   settings,
+  format,
 }: {
   imageUrl: string;
   headline: string;
   details: string;
   websiteLabel: string;
   settings: CustomCardSettings;
+  format: PhotoCardFormat;
 }) => {
+  const resolvedSettings = resolveSettingsForFormat(settings, format);
+  const cardWidth = format.width;
+  const cardHeight = format.height;
   const canvas = document.createElement("canvas");
-  canvas.width = PHOTO_CARD_WIDTH;
-  canvas.height = PHOTO_CARD_HEIGHT;
+  canvas.width = cardWidth;
+  canvas.height = cardHeight;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -325,42 +468,42 @@ const createCustomPhotocard = async ({
     const backgroundImage = await loadCanvasImage(imageUrl);
 
     ctx.fillStyle = "#020817";
-    ctx.fillRect(0, 0, PHOTO_CARD_WIDTH, PHOTO_CARD_HEIGHT);
-    drawCoverImage(ctx, backgroundImage, PHOTO_CARD_WIDTH, PHOTO_CARD_HEIGHT, {
-      zoomPercent: settings.imageScale,
-      offsetX: settings.imageOffsetX,
-      offsetY: settings.imageOffsetY,
+    ctx.fillRect(0, 0, cardWidth, cardHeight);
+    drawCoverImage(ctx, backgroundImage, cardWidth, cardHeight, {
+      zoomPercent: resolvedSettings.imageScale,
+      offsetX: resolvedSettings.imageOffsetX,
+      offsetY: resolvedSettings.imageOffsetY,
     });
 
-    ctx.fillStyle = hexToRgba(settings.overlayColor, settings.overlayOpacity / 100);
-    ctx.fillRect(0, 0, PHOTO_CARD_WIDTH, PHOTO_CARD_HEIGHT);
+    ctx.fillStyle = hexToRgba(resolvedSettings.overlayColor, resolvedSettings.overlayOpacity / 100);
+    ctx.fillRect(0, 0, cardWidth, cardHeight);
 
     const topGlow = ctx.createRadialGradient(180, 120, 0, 180, 120, 720);
     topGlow.addColorStop(0, "rgba(255, 255, 255, 0.18)");
     topGlow.addColorStop(0.35, "rgba(255, 255, 255, 0.07)");
     topGlow.addColorStop(1, "rgba(255, 255, 255, 0)");
     ctx.fillStyle = topGlow;
-    ctx.fillRect(0, 0, PHOTO_CARD_WIDTH, PHOTO_CARD_HEIGHT);
+    ctx.fillRect(0, 0, cardWidth, cardHeight);
 
-    const depthGradient = ctx.createLinearGradient(0, 0, 0, PHOTO_CARD_HEIGHT);
+    const depthGradient = ctx.createLinearGradient(0, 0, 0, cardHeight);
     depthGradient.addColorStop(0, "rgba(2, 6, 23, 0.08)");
     depthGradient.addColorStop(0.45, "rgba(2, 6, 23, 0.04)");
     depthGradient.addColorStop(0.78, "rgba(2, 6, 23, 0.24)");
     depthGradient.addColorStop(1, "rgba(2, 6, 23, 0.52)");
     ctx.fillStyle = depthGradient;
-    ctx.fillRect(0, 0, PHOTO_CARD_WIDTH, PHOTO_CARD_HEIGHT);
+    ctx.fillRect(0, 0, cardWidth, cardHeight);
 
-    await drawLogo(ctx, settings.logoWidth);
+    await drawLogo(ctx, resolvedSettings.logoWidth);
 
-    const maxHeadlineHeight = PHOTO_CARD_HEIGHT - settings.footerHeight - settings.headlineTop - 72;
-    const headlineLineHeight = settings.headlineFontSize * settings.headlineLineHeight;
+    const maxHeadlineHeight = cardHeight - resolvedSettings.footerHeight - resolvedSettings.headlineTop - 72;
+    const headlineLineHeight = resolvedSettings.headlineFontSize * resolvedSettings.headlineLineHeight;
     const maxHeadlineLines = Math.max(1, Math.floor(maxHeadlineHeight / headlineLineHeight));
-    const headlineX = settings.headlineAlign === "center" ? PHOTO_CARD_WIDTH / 2 : 60;
+    const headlineX = resolvedSettings.headlineAlign === "center" ? cardWidth / 2 : 60;
 
-    ctx.fillStyle = settings.headlineColor;
-    ctx.font = `700 ${settings.headlineFontSize}px "Noto Sans Bengali", "Segoe UI", sans-serif`;
+    ctx.fillStyle = resolvedSettings.headlineColor;
+    ctx.font = `700 ${resolvedSettings.headlineFontSize}px "Noto Sans Bengali", "Segoe UI", sans-serif`;
     ctx.textBaseline = "top";
-    ctx.textAlign = settings.headlineAlign;
+    ctx.textAlign = resolvedSettings.headlineAlign;
     ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
     ctx.shadowBlur = 20;
     ctx.shadowOffsetY = 8;
@@ -368,10 +511,10 @@ const createCustomPhotocard = async ({
     const headlineLines = wrapCanvasText(
       ctx,
       headline,
-      settings.headlineWidth,
-      Math.min(settings.headlineMaxLines, maxHeadlineLines),
+      resolvedSettings.headlineWidth,
+      Math.min(resolvedSettings.headlineMaxLines, maxHeadlineLines),
     );
-    let headlineY = settings.headlineTop;
+    let headlineY = resolvedSettings.headlineTop;
     headlineLines.forEach((line) => {
       ctx.fillText(line, headlineX, headlineY);
       headlineY += headlineLineHeight;
@@ -382,50 +525,48 @@ const createCustomPhotocard = async ({
     ctx.shadowOffsetY = 0;
     ctx.textAlign = "left";
 
-    drawRoundedRectPath(ctx, 22, 22, PHOTO_CARD_WIDTH - 44, PHOTO_CARD_HEIGHT - 44, 32);
+    drawRoundedRectPath(ctx, 22, 22, cardWidth - 44, cardHeight - 44, 32);
     ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    const footerGradient = ctx.createLinearGradient(
-      0,
-      PHOTO_CARD_HEIGHT - settings.footerHeight,
-      0,
-      PHOTO_CARD_HEIGHT,
-    );
+    const footerGradient = ctx.createLinearGradient(0, cardHeight - resolvedSettings.footerHeight, 0, cardHeight);
     footerGradient.addColorStop(
       0,
-      hexToRgba(settings.footerBackground, Math.max(0, settings.footerOpacity / 100 - 0.14)),
+      hexToRgba(
+        resolvedSettings.footerBackground,
+        Math.max(0, resolvedSettings.footerOpacity / 100 - 0.14),
+      ),
     );
     footerGradient.addColorStop(
       1,
-      hexToRgba(settings.footerBackground, settings.footerOpacity / 100),
+      hexToRgba(resolvedSettings.footerBackground, resolvedSettings.footerOpacity / 100),
     );
     ctx.fillStyle = footerGradient;
-    ctx.fillRect(0, PHOTO_CARD_HEIGHT - settings.footerHeight, PHOTO_CARD_WIDTH, settings.footerHeight);
+    ctx.fillRect(0, cardHeight - resolvedSettings.footerHeight, cardWidth, resolvedSettings.footerHeight);
     ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
-    ctx.fillRect(42, PHOTO_CARD_HEIGHT - settings.footerHeight, PHOTO_CARD_WIDTH - 84, 2);
+    ctx.fillRect(42, cardHeight - resolvedSettings.footerHeight, cardWidth - 84, 2);
 
-    const footerTop = PHOTO_CARD_HEIGHT - settings.footerHeight;
+    const footerTop = cardHeight - resolvedSettings.footerHeight;
     const footerPaddingX = 54;
     const footerPaddingY = 42;
     const websiteColumnWidth = 300;
     const websiteText = websiteLabel.toUpperCase();
-    ctx.font = `700 ${settings.websiteFontSize}px "Segoe UI", sans-serif`;
+    ctx.font = `700 ${resolvedSettings.websiteFontSize}px "Segoe UI", sans-serif`;
     const websiteTextWidth = ctx.measureText(websiteText).width;
     const websitePillWidth = Math.min(Math.max(websiteTextWidth + 68, 210), websiteColumnWidth);
-    const websitePillHeight = settings.websiteFontSize + 38;
-    const websitePillX = PHOTO_CARD_WIDTH - footerPaddingX - websitePillWidth;
+    const websitePillHeight = resolvedSettings.websiteFontSize + 38;
+    const websitePillX = cardWidth - footerPaddingX - websitePillWidth;
     const websitePillY = footerTop + footerPaddingY;
     const detailsWidth = Math.max(320, websitePillX - footerPaddingX - 44);
-    const detailsLineHeight = settings.detailsFontSize * 1.4;
+    const detailsLineHeight = resolvedSettings.detailsFontSize * 1.4;
     const detailsMaxLines = Math.max(
       1,
-      Math.floor((settings.footerHeight - footerPaddingY * 2) / detailsLineHeight),
+      Math.floor((resolvedSettings.footerHeight - footerPaddingY * 2) / detailsLineHeight),
     );
 
-    ctx.fillStyle = settings.detailsColor;
-    ctx.font = `500 ${settings.detailsFontSize}px "Noto Sans Bengali", "Segoe UI", sans-serif`;
+    ctx.fillStyle = resolvedSettings.detailsColor;
+    ctx.font = `500 ${resolvedSettings.detailsFontSize}px "Noto Sans Bengali", "Segoe UI", sans-serif`;
     ctx.textBaseline = "top";
     const detailLines = wrapCanvasText(ctx, details, detailsWidth, Math.min(5, detailsMaxLines));
     let detailsY = footerTop + footerPaddingY;
@@ -439,18 +580,18 @@ const createCustomPhotocard = async ({
       websitePillX - 24,
       footerTop + 32,
       2,
-      Math.max(0, settings.footerHeight - 64),
+      Math.max(0, resolvedSettings.footerHeight - 64),
     );
 
     drawRoundedRectPath(ctx, websitePillX, websitePillY, websitePillWidth, websitePillHeight, websitePillHeight / 2);
     ctx.fillStyle = "rgba(255, 255, 255, 0.10)";
     ctx.fill();
-    ctx.strokeStyle = hexToRgba(settings.websiteColor, 0.45);
+    ctx.strokeStyle = hexToRgba(resolvedSettings.websiteColor, 0.45);
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    ctx.fillStyle = settings.websiteColor;
-    ctx.font = `700 ${settings.websiteFontSize}px "Segoe UI", sans-serif`;
+    ctx.fillStyle = resolvedSettings.websiteColor;
+    ctx.font = `700 ${resolvedSettings.websiteFontSize}px "Segoe UI", sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
@@ -542,6 +683,10 @@ export default function PhotoCardStudio() {
   const [headlineText, setHeadlineText] = useState(selectedArticle.title);
   const [cardDetails, setCardDetails] = useState(selectedArticle.excerpt);
   const [websiteLabel, setWebsiteLabel] = useState("sylhetynews.com");
+  const [selectedOrientation, setSelectedOrientation] = useState<PhotoCardOrientation>(
+    defaultSocialFormat.orientation,
+  );
+  const [selectedFormatId, setSelectedFormatId] = useState<string>(defaultSocialFormat.id);
   const [selectedPresetId, setSelectedPresetId] = useState<string>("prime");
   const [customSettings, setCustomSettings] = useState<CustomCardSettings>(defaultSettings);
   const [downloadError, setDownloadError] = useState("");
@@ -593,7 +738,7 @@ export default function PhotoCardStudio() {
     if (!node) return;
 
     const updateScale = () => {
-      setPreviewScale(node.clientWidth / PHOTO_CARD_WIDTH);
+      setPreviewScale(Math.min(1, node.clientWidth / previewFormat.width));
     };
 
     updateScale();
@@ -604,11 +749,24 @@ export default function PhotoCardStudio() {
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [mode, selectedFormatId]);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === selectedTemplateId) ?? templates[0] ?? null,
     [selectedTemplateId, templates],
+  );
+  const selectedFormat = useMemo(
+    () => socialFormats.find((format) => format.id === selectedFormatId) ?? defaultSocialFormat,
+    [selectedFormatId],
+  );
+  const visibleFormats = useMemo(
+    () => socialFormats.filter((format) => format.orientation === selectedOrientation),
+    [selectedOrientation],
+  );
+  const previewFormat = mode === "custom" ? selectedFormat : defaultSocialFormat;
+  const previewSettings = useMemo(
+    () => resolveSettingsForFormat(customSettings, previewFormat),
+    [customSettings, previewFormat],
   );
 
   const previewImage =
@@ -620,14 +778,16 @@ export default function PhotoCardStudio() {
   const finalHeadline = headlineText.trim() || selectedArticle.title;
   const finalWebsiteLabel = websiteLabel.trim() || "sylhetynews.com";
   const headlineBlockLeft =
-    customSettings.headlineAlign === "center"
-      ? (PHOTO_CARD_WIDTH - customSettings.headlineWidth) / 2
+    previewSettings.headlineAlign === "center"
+      ? (previewFormat.width - previewSettings.headlineWidth) / 2
       : 60;
+  const previewDetailsMaxWidth = Math.max(320, previewFormat.width - 440);
 
   const updateSetting = <K extends keyof CustomCardSettings>(
     key: K,
     value: CustomCardSettings[K],
   ) => {
+    setMode("custom");
     setSelectedPresetId("custom");
     setCustomSettings((current) => ({
       ...current,
@@ -639,11 +799,36 @@ export default function PhotoCardStudio() {
     const preset = portalPresets.find((item) => item.id === presetId);
     if (!preset) return;
 
+    setMode("custom");
     setSelectedPresetId(preset.id);
     setCustomSettings((current) => ({
       ...current,
       ...preset.settings,
     }));
+  };
+
+  const resetCustomLayout = () => {
+    setMode("custom");
+    setSelectedPresetId("prime");
+    setCustomSettings(defaultSettings);
+  };
+
+  const handleOrientationSelect = (orientation: PhotoCardOrientation) => {
+    setMode("custom");
+    setSelectedOrientation(orientation);
+    const nextFormat = socialFormats.find((format) => format.orientation === orientation);
+    if (nextFormat) {
+      setSelectedFormatId(nextFormat.id);
+    }
+  };
+
+  const handleFormatSelect = (formatId: string) => {
+    const nextFormat = socialFormats.find((format) => format.id === formatId);
+    if (!nextFormat) return;
+
+    setMode("custom");
+    setSelectedOrientation(nextFormat.orientation);
+    setSelectedFormatId(nextFormat.id);
   };
 
   const handleCustomDownload = async () => {
@@ -657,9 +842,10 @@ export default function PhotoCardStudio() {
         details: detailText,
         websiteLabel: finalWebsiteLabel,
         settings: customSettings,
+        format: selectedFormat,
       });
 
-      downloadDataUrl(photocardUrl, `${selectedArticle.title}-custom-photocard`);
+      downloadDataUrl(photocardUrl, `${selectedArticle.title}-${selectedFormat.label}-photocard`);
     } catch (error) {
       setDownloadError(
         error instanceof Error ? error.message : "Unable to prepare the photocard download.",
@@ -672,8 +858,8 @@ export default function PhotoCardStudio() {
   return (
     <Layout>
       <section className="container mx-auto px-4 py-8">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(360px,1fr)]">
-          <div className="rounded-[28px] border border-news-border bg-card p-6 shadow-xl shadow-black/5">
+        <div className="grid gap-8 lg:grid-cols-[minmax(360px,1fr)_minmax(0,1.8fr)]">
+          <div className="order-2 rounded-[28px] border border-news-border bg-card p-6 shadow-xl shadow-black/5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary/70">
@@ -683,7 +869,7 @@ export default function PhotoCardStudio() {
                   Premium newsroom photocard studio
                 </h1>
                 <p className="mt-3 max-w-2xl text-news-subtext">
-                  Build a cleaner portal-style photocard with editorial presets, crop controls, premium framing, and full headline and footer customization before export.
+                  Build the card in steps: select a story, choose the right publishing size, fine-tune each section, then review the preview before export.
                 </p>
               </div>
               <div className="inline-flex rounded-full border border-news-border bg-muted p-1">
@@ -713,16 +899,46 @@ export default function PhotoCardStudio() {
               </div>
             </div>
 
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="rounded-full bg-muted px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+                {mode === "custom" ? "Custom Layout" : "Admin Template"}
+              </span>
+              {mode === "custom" ? (
+                <>
+                  <span className="rounded-full bg-muted px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+                    {selectedFormat.medium}
+                  </span>
+                  <span className="rounded-full bg-muted px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+                    {selectedFormat.width} x {selectedFormat.height}
+                  </span>
+                  <span className="rounded-full bg-muted px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+                    {orientationLabels[selectedFormat.orientation]}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowGuides((current) => !current)}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition ${
+                      showGuides
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-news-border bg-background text-news-subtext hover:border-primary/40 hover:text-primary"
+                    }`}
+                  >
+                    {showGuides ? "Hide Guides" : "Show Guides"}
+                  </button>
+                </>
+              ) : null}
+            </div>
+
             <div
               ref={previewRef}
               className="relative mt-8 overflow-hidden rounded-[32px] border border-white/10 bg-news-slate shadow-2xl shadow-news-slate/20"
-              style={{ aspectRatio: `${PHOTO_CARD_WIDTH} / ${PHOTO_CARD_HEIGHT}` }}
+              style={{ aspectRatio: `${previewFormat.width} / ${previewFormat.height}` }}
             >
               <div
                 className="absolute left-0 top-0 origin-top-left"
                 style={{
-                  width: PHOTO_CARD_WIDTH,
-                  height: PHOTO_CARD_HEIGHT,
+                  width: previewFormat.width,
+                  height: previewFormat.height,
                   transform: `scale(${previewScale})`,
                 }}
               >
@@ -733,7 +949,7 @@ export default function PhotoCardStudio() {
                   style={
                     mode === "custom"
                       ? {
-                          transform: `translate(${customSettings.imageOffsetX}px, ${customSettings.imageOffsetY}px) scale(${customSettings.imageScale / 100})`,
+                          transform: `translate(${previewSettings.imageOffsetX}px, ${previewSettings.imageOffsetY}px) scale(${previewSettings.imageScale / 100})`,
                           transformOrigin: "center center",
                         }
                       : undefined
@@ -746,8 +962,8 @@ export default function PhotoCardStudio() {
                       className="absolute inset-0"
                       style={{
                         backgroundColor: hexToRgba(
-                          customSettings.overlayColor,
-                          customSettings.overlayOpacity / 100,
+                          previewSettings.overlayColor,
+                          previewSettings.overlayOpacity / 100,
                         ),
                       }}
                     />
@@ -771,7 +987,7 @@ export default function PhotoCardStudio() {
                         <div className="pointer-events-none absolute inset-[44px] rounded-[28px] border border-dashed border-white/20" />
                         <div
                           className="pointer-events-none absolute left-[54px] right-[54px] border-t border-dashed border-white/25"
-                          style={{ top: PHOTO_CARD_HEIGHT - customSettings.footerHeight }}
+                          style={{ top: previewFormat.height - previewSettings.footerHeight }}
                         />
                       </>
                     ) : null}
@@ -779,7 +995,7 @@ export default function PhotoCardStudio() {
                     <div
                       className="absolute left-[26px] top-[24px] rounded-[28px] border border-white/20 bg-white/10 px-6 py-[17px] shadow-[0_16px_50px_rgba(2,6,23,0.3)]"
                     >
-                      <div style={{ width: customSettings.logoWidth }}>
+                      <div style={{ width: previewSettings.logoWidth }}>
                         <img
                           src={PHOTO_CARD_LOGO}
                           alt="Sylhety News"
@@ -792,21 +1008,21 @@ export default function PhotoCardStudio() {
                       className="absolute"
                       style={{
                         left: headlineBlockLeft,
-                        top: customSettings.headlineTop,
-                        width: customSettings.headlineWidth,
+                        top: previewSettings.headlineTop,
+                        width: previewSettings.headlineWidth,
                       }}
                     >
                       <h2
                         style={{
-                          color: customSettings.headlineColor,
-                          fontSize: customSettings.headlineFontSize,
-                          lineHeight: customSettings.headlineLineHeight,
+                          color: previewSettings.headlineColor,
+                          fontSize: previewSettings.headlineFontSize,
+                          lineHeight: previewSettings.headlineLineHeight,
                           textShadow: "0 8px 24px rgba(0, 0, 0, 0.55)",
                           fontWeight: 700,
-                          textAlign: customSettings.headlineAlign,
+                          textAlign: previewSettings.headlineAlign,
                           display: "-webkit-box",
                           WebkitBoxOrient: "vertical",
-                          WebkitLineClamp: customSettings.headlineMaxLines,
+                          WebkitLineClamp: previewSettings.headlineMaxLines,
                           overflow: "hidden",
                         }}
                       >
@@ -817,13 +1033,13 @@ export default function PhotoCardStudio() {
                     <div
                       className="absolute bottom-0 left-0 right-0"
                       style={{
-                        height: customSettings.footerHeight,
+                        height: previewSettings.footerHeight,
                         background: `linear-gradient(180deg, ${hexToRgba(
-                          customSettings.footerBackground,
-                          Math.max(0, customSettings.footerOpacity / 100 - 0.14),
+                          previewSettings.footerBackground,
+                          Math.max(0, previewSettings.footerOpacity / 100 - 0.14),
                         )} 0%, ${hexToRgba(
-                          customSettings.footerBackground,
-                          customSettings.footerOpacity / 100,
+                          previewSettings.footerBackground,
+                          previewSettings.footerOpacity / 100,
                         )} 100%)`,
                         borderTop: "2px solid rgba(255, 255, 255, 0.16)",
                         padding: "42px 54px",
@@ -833,10 +1049,10 @@ export default function PhotoCardStudio() {
                         <p
                           className="min-w-0 flex-1"
                           style={{
-                            color: customSettings.detailsColor,
-                            fontSize: customSettings.detailsFontSize,
+                            color: previewSettings.detailsColor,
+                            fontSize: previewSettings.detailsFontSize,
                             lineHeight: 1.4,
-                            maxWidth: 640,
+                            maxWidth: previewDetailsMaxWidth,
                           }}
                         >
                           {detailText || "Add footer details or comments from the control panel."}
@@ -845,13 +1061,13 @@ export default function PhotoCardStudio() {
                         <div
                           className="shrink-0 rounded-full border bg-white/10 px-8 py-4 shadow-[0_12px_28px_rgba(2,6,23,0.22)]"
                           style={{
-                            borderColor: hexToRgba(customSettings.websiteColor, 0.45),
+                            borderColor: hexToRgba(previewSettings.websiteColor, 0.45),
                           }}
                         >
                           <span
                             style={{
-                              color: customSettings.websiteColor,
-                              fontSize: customSettings.websiteFontSize,
+                              color: previewSettings.websiteColor,
+                              fontSize: previewSettings.websiteFontSize,
                               letterSpacing: "0.24em",
                               fontWeight: 700,
                               textTransform: "uppercase",
@@ -895,7 +1111,7 @@ export default function PhotoCardStudio() {
                     ? "Download Admin Template"
                     : isGeneratingDownload
                       ? "Preparing Custom Photocard..."
-                      : "Download Custom Photocard"
+                      : `Download ${selectedFormat.label}`
                 }
                 onClick={mode === "custom" ? handleCustomDownload : undefined}
                 disabled={mode === "custom" ? isGeneratingDownload : !selectedTemplate}
@@ -903,7 +1119,7 @@ export default function PhotoCardStudio() {
               <p className="text-sm text-news-subtext">
                 {mode === "template"
                   ? "Admin template mode downloads the active photocard uploaded from the dashboard."
-                  : "Custom layout exports the exact logo, headline, footer link, and comment settings shown in the preview."}
+                  : `${selectedFormat.medium} export downloads at ${selectedFormat.width} x ${selectedFormat.height} in ${orientationLabels[selectedFormat.orientation].toLowerCase()} format.`}
               </p>
             </div>
 
@@ -914,11 +1130,14 @@ export default function PhotoCardStudio() {
             ) : null}
           </div>
 
-          <section className="rounded-[28px] border border-news-border bg-card p-4 shadow-xl shadow-black/5">
+          <section className="order-1 rounded-[28px] border border-news-border bg-card p-4 shadow-xl shadow-black/5">
             <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary/70">
+                Step 1
+              </p>
               <h2 className="text-xl font-semibold text-news-headline">Story Selector</h2>
               <p className="mt-2 text-sm text-news-subtext">
-                Choose a news image, then customize the headline and footer the way you want.
+                Choose a news image first, then build the photocard around that story.
               </p>
             </div>
 
@@ -940,24 +1159,79 @@ export default function PhotoCardStudio() {
             </div>
 
             <div className="mt-8 rounded-3xl border border-news-border bg-muted/40 p-4">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-news-headline">Portal Presets</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary/70">
+                    Step 2
+                  </p>
+                  <h2 className="mt-2 text-xl font-semibold text-news-headline">Publish Medium</h2>
                   <p className="mt-2 text-sm text-news-subtext">
-                    Start from a professional portal-style preset, then fine-tune the card.
+                    Choose the orientation first, then the exact social size for Instagram, YouTube, or wide sharing.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowGuides((current) => !current)}
-                  className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                    showGuides
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-news-border bg-background text-news-headline hover:border-primary/40 hover:text-primary"
-                  }`}
-                >
-                  {showGuides ? "Hide Safe Guides" : "Show Safe Guides"}
-                </button>
+                <span className="rounded-full bg-background px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+                  Custom export only
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {orientationOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => handleOrientationSelect(option.id)}
+                    className={`rounded-[22px] border p-4 text-left transition ${
+                      selectedOrientation === option.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-news-border bg-background hover:border-primary/40"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-news-headline">{option.label}</p>
+                    <p className="mt-2 text-sm text-news-subtext">{option.description}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                {visibleFormats.map((format) => (
+                  <button
+                    key={format.id}
+                    type="button"
+                    onClick={() => handleFormatSelect(format.id)}
+                    className={`rounded-[22px] border p-4 text-left transition ${
+                      selectedFormatId === format.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-news-border bg-background hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/70">
+                          {format.medium}
+                        </p>
+                        <p className="mt-2 text-base font-semibold text-news-headline">{format.label}</p>
+                        <p className="mt-2 text-sm text-news-subtext">{format.description}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-news-subtext">
+                        <span className="rounded-full bg-background px-3 py-2">
+                          {format.width} x {format.height}
+                        </span>
+                        <span className="rounded-full bg-background px-3 py-2">
+                          {orientationLabels[format.orientation]}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-3xl border border-news-border bg-muted/40 p-4">
+              <div>
+                <h2 className="text-xl font-semibold text-news-headline">Portal Presets</h2>
+                <p className="mt-2 text-sm text-news-subtext">
+                  Start from a professional portal-style preset, then fine-tune the card.
+                </p>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -991,13 +1265,10 @@ export default function PhotoCardStudio() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setCustomSettings(defaultSettings);
-                    setSelectedPresetId("prime");
-                  }}
+                  onClick={resetCustomLayout}
                   className="rounded-full border border-news-border bg-background px-4 py-2 text-xs font-semibold text-news-headline transition hover:border-primary/40 hover:text-primary"
                 >
-                  Reset Settings
+                  Reset Layout
                 </button>
               </div>
 
@@ -1037,7 +1308,7 @@ export default function PhotoCardStudio() {
             <div className="mt-6 rounded-3xl border border-news-border bg-muted/40 p-4">
               <h2 className="text-xl font-semibold text-news-headline">Image Framing</h2>
               <p className="mt-2 text-sm text-news-subtext">
-                Reframe the source photo for Facebook format without changing the story.
+                Reframe the source photo for the selected social size without changing the story.
               </p>
 
               <div className="mt-4 grid gap-5">
@@ -1065,24 +1336,24 @@ export default function PhotoCardStudio() {
                   unit="px"
                   onChange={(value) => updateSetting("imageOffsetY", value)}
                 />
+                <RangeControl
+                  label="Overlay Strength"
+                  value={customSettings.overlayOpacity}
+                  min={0}
+                  max={85}
+                  unit="%"
+                  onChange={(value) => updateSetting("overlayOpacity", value)}
+                />
               </div>
             </div>
 
             <div className="mt-6 rounded-3xl border border-news-border bg-muted/40 p-4">
-              <h2 className="text-xl font-semibold text-news-headline">Layout Controls</h2>
+              <h2 className="text-xl font-semibold text-news-headline">Headline Layout</h2>
               <p className="mt-2 text-sm text-news-subtext">
-                Adjust the visual balance of the logo, headline, and footer.
+                Adjust the position, width, and typography of the main headline area.
               </p>
 
               <div className="mt-4 grid gap-5">
-                <RangeControl
-                  label="Logo Width"
-                  value={customSettings.logoWidth}
-                  min={120}
-                  max={320}
-                  unit="px"
-                  onChange={(value) => updateSetting("logoWidth", value)}
-                />
                 <RangeControl
                   label="Headline Top Position"
                   value={customSettings.headlineTop}
@@ -1146,6 +1417,24 @@ export default function PhotoCardStudio() {
                   step={0.01}
                   onChange={(value) => updateSetting("headlineLineHeight", value)}
                 />
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-news-border bg-muted/40 p-4">
+              <h2 className="text-xl font-semibold text-news-headline">Footer and Branding</h2>
+              <p className="mt-2 text-sm text-news-subtext">
+                Fine-tune the logo, footer height, comment sizing, and website badge.
+              </p>
+
+              <div className="mt-4 grid gap-5">
+                <RangeControl
+                  label="Logo Width"
+                  value={customSettings.logoWidth}
+                  min={120}
+                  max={320}
+                  unit="px"
+                  onChange={(value) => updateSetting("logoWidth", value)}
+                />
                 <RangeControl
                   label="Footer Height"
                   value={customSettings.footerHeight}
@@ -1169,14 +1458,6 @@ export default function PhotoCardStudio() {
                   max={40}
                   unit="px"
                   onChange={(value) => updateSetting("websiteFontSize", value)}
-                />
-                <RangeControl
-                  label="Overlay Strength"
-                  value={customSettings.overlayOpacity}
-                  min={0}
-                  max={85}
-                  unit="%"
-                  onChange={(value) => updateSetting("overlayOpacity", value)}
                 />
                 <RangeControl
                   label="Footer Opacity"
