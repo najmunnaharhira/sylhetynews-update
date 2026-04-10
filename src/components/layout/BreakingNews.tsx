@@ -10,20 +10,16 @@ const BreakingNews = () => {
   const duplicatedNews = [...breakingNews, ...breakingNews];
 
   return (
-    <div className="bg-muted border-b border-news-border">
+    <div className="ticker-wrapper py-2 border-b border-news-border">
       <div className="container mx-auto px-4 flex items-center">
-        <div className="flex-shrink-0 bg-primary text-primary-foreground px-4 py-2.5 font-bengali font-bold text-sm">
+        <div className="flex-shrink-0 bg-primary text-primary-foreground px-3 py-1 font-bengali font-semibold text-sm rounded-sm mr-3">
           সংবাদ শিরোনাম
         </div>
-        <div className="overflow-hidden flex-1 py-2">
+        <div className="overflow-hidden flex-1">
           <div className="ticker-content">
             {duplicatedNews.map((news, index) => (
-              <span
-                key={index}
-                className="inline-block mx-6 text-news-headline font-bengali text-sm"
-              >
-                <span className="text-primary mr-2">●</span>
-                {news}
+              <span key={index} className="inline-block mx-6 text-news-headline font-bengali">
+                ● {news}
               </span>
             ))}
           </div>

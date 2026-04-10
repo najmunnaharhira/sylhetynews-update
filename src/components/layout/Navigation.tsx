@@ -9,7 +9,6 @@ const navItems = [
   { name: "রাজনীতি", path: "/politics" },
   { name: "প্রবাস", path: "/expat" },
   { name: "খেলাধুলা", path: "/sports" },
-  { name: "মতামত", path: "/opinion" },
   { name: "ফটোকার্ড", path: "/photocard" },
 ];
 
@@ -18,7 +17,7 @@ const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-primary sticky top-0 z-50 shadow-lg">
+    <nav className="bg-primary sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4">
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center justify-center">
@@ -26,7 +25,7 @@ const Navigation = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`px-5 py-3 text-primary-foreground font-bengali font-medium text-sm tracking-wide transition-all duration-200 hover:bg-news-dark-red ${
+              className={`news-nav-item ${
                 location.pathname === item.path
                   ? "bg-news-dark-red"
                   : ""
@@ -38,13 +37,13 @@ const Navigation = () => {
         </div>
 
         {/* Mobile Navigation Toggle */}
-        <div className="md:hidden flex items-center justify-between py-3">
+        <div className="md:hidden flex items-center justify-between py-2">
           <span className="text-primary-foreground font-bengali font-semibold">
             মেনু
           </span>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-primary-foreground p-2 hover:bg-news-dark-red rounded transition-colors"
+            className="text-primary-foreground p-2"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -53,13 +52,13 @@ const Navigation = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-news-dark-red pb-2">
+          <div className="md:hidden border-t border-news-dark-red">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-3 text-primary-foreground font-bengali font-medium text-sm transition-colors hover:bg-news-dark-red ${
+                className={`block news-nav-item ${
                   location.pathname === item.path
                     ? "bg-news-dark-red"
                     : ""
