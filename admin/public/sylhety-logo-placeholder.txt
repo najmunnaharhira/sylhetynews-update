@@ -1,1 +1,0 @@
-Place sylhety-logo.jpeg (or sylhety-logo.png) here for the admin login and dashboard header. The app will work without it; the logo area will be hidden if the image is missing.
