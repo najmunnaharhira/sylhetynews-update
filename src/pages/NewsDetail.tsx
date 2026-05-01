@@ -1,107 +1,136 @@
+import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Calendar, User, ArrowLeft, Share2, Eye, Clock } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
-import { newsData, getLatestNews } from "@/data/newsData";
-import { Calendar, User, ArrowLeft, Share2 } from "lucide-react";
+import TrendingWidget from "@/components/news/TrendingWidget";
+import Comments from "@/components/news/Comments";
+import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
+import { useArticleBySlug, useLatestArticles, incrementViews } from "@/hooks/useArticles";
+import { useI18n } from "@/contexts/I18nContext";
+import { formatDate, readingTime, banglaDigits } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const NewsDetail = () => {
-  const { id } = useParams<{ id: string }>();
-  const news = newsData.find((n) => n.id === id);
-  const latestNews = getLatestNews(5);
+  const { id: slug } = useParams<{ id: string }>();
+  const { lang, t } = useI18n();
+  const { data: news, isLoading } = useArticleBySlug(slug);
+  const { data: latest = [] } = useLatestArticles(5);
 
-  if (!news) {
+  useEffect(() => {
+    if (slug && news) incrementViews(slug);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, news?.id]);
+
+  if (isLoading) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-12 text-center">
-          <h1 className="text-2xl font-bengali font-bold mb-4">
-            সংবাদটি পাওয়া যায়নি
-          </h1>
-          <Link to="/" className="text-primary hover:underline font-bengali">
-            প্রচ্ছদে ফিরে যান
-          </Link>
+        <div className="container mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+          <Skeleton className="h-96" />
         </div>
       </Layout>
     );
   }
 
+  if (!news) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-12 text-center">
+          <h1 className="text-2xl font-bengali font-bold mb-4">{t("noResults")}</h1>
+          <Link to="/" className="text-primary hover:underline font-bengali">{t("backHome")}</Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  const title = lang === "en" && news.title_en ? news.title_en : news.title_bn;
+  const cat = lang === "en" ? news.category?.name_en : news.category?.name_bn;
+
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: news.title,
-        text: news.excerpt,
-        url: window.location.href,
-      });
+      navigator.share({ title, text: news.summary || "", url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
     }
+  };
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: title,
+    image: news.image_url ? [news.image_url] : undefined,
+    datePublished: news.published_at,
+    dateModified: news.updated_at,
+    author: news.author ? [{ "@type": "Person", name: news.author }] : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "Sylhety News",
+    },
+    description: news.summary || undefined,
+    articleSection: cat,
   };
 
   return (
     <Layout>
+      <Seo
+        title={`${title} | ${lang === "en" ? "Sylhety News" : "সিলেটি নিউজ"}`}
+        description={news.summary || title}
+        image={news.image_url || undefined}
+        type="article"
+        jsonLd={jsonLd}
+      />
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content - 2/3 width */}
           <article className="lg:col-span-2">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1 text-sm text-primary mb-4 hover:underline font-bengali"
-            >
+            <Link to="/" className="inline-flex items-center gap-1 text-sm text-primary mb-4 hover:underline font-bengali">
               <ArrowLeft className="w-4 h-4" />
-              প্রচ্ছদে ফিরে যান
+              {t("backHome")}
             </Link>
 
             <div className="bg-card border border-news-border rounded-sm overflow-hidden">
-              <img
-                src={news.image}
-                alt={news.title}
-                className="w-full h-64 md:h-96 object-cover"
-              />
-
+              {news.image_url && (
+                <img src={news.image_url} alt={title} className="w-full h-64 md:h-96 object-cover" />
+              )}
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="news-category-tag">{news.categoryBn}</span>
+                  {cat && <span className="news-category-tag">{cat}</span>}
                 </div>
 
-                <h1 className="news-headline text-2xl md:text-3xl mb-4">
-                  {news.title}
-                </h1>
+                <h1 className="news-headline text-2xl md:text-3xl mb-4">{title}</h1>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-news-subtext mb-6 pb-6 border-b border-news-border">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {news.date}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <User className="w-4 h-4" />
-                    {news.author}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleShare}
-                    className="ml-auto"
-                  >
-                    <Share2 className="w-4 h-4 mr-1" />
-                    শেয়ার
+                  <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{formatDate(news.published_at, lang)}</span>
+                  {news.author && <span className="flex items-center gap-1"><User className="w-4 h-4" />{news.author}</span>}
+                  <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{readingTime(news.content, lang)} {t("minRead")}</span>
+                  <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{lang === "bn" ? banglaDigits(news.views) : news.views}</span>
+                  <Button variant="ghost" size="sm" onClick={handleShare} className="ml-auto">
+                    <Share2 className="w-4 h-4 mr-1" />{t("share")}
                   </Button>
                 </div>
 
                 <div className="prose prose-lg max-w-none font-bengali">
-                  <p className="text-foreground leading-relaxed text-lg">
-                    {news.content}
-                  </p>
-                  <p className="text-foreground leading-relaxed mt-4">
-                    এই সংবাদ সম্পর্কে আরও তথ্যের জন্য আমাদের সাথে যোগাযোগ করুন।
-                    সিলেটি নিউজ সর্বদা আপনাদের পাশে আছে সঠিক তথ্য নিয়ে।
-                  </p>
+                  {news.summary && <p className="text-foreground leading-relaxed text-lg font-medium mb-4">{news.summary}</p>}
+                  {news.content.split(/\n+/).map((p, i) => (
+                    <p key={i} className="text-foreground leading-relaxed mt-4">{p}</p>
+                  ))}
                 </div>
               </div>
             </div>
+
+            <Comments articleId={news.id} />
           </article>
 
-          {/* Sidebar - 1/3 width */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-20">
-              <LatestNewsSidebar news={latestNews} />
+          <div className="lg:col-span-1 space-y-6">
+            <div className="sticky top-20 space-y-6">
+              <TrendingWidget />
+              <LatestNewsSidebar news={latest} />
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import LeadNews from "@/components/news/LeadNews";
 import TopStories from "@/components/news/TopStories";
@@ -6,71 +7,49 @@ import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
 import FacebookEmbed from "@/components/news/FacebookEmbed";
 import WeatherWidget from "@/components/news/WeatherWidget";
 import CategorySection from "@/components/news/CategorySection";
-import {
-  getFeaturedNews,
-  getLatestNews,
-  getNewsByCategory,
-} from "@/data/newsData";
+import TrendingWidget from "@/components/news/TrendingWidget";
+import NewsletterSignup from "@/components/news/NewsletterSignup";
+import Seo from "@/components/Seo";
+import { useFeaturedArticle, useLatestArticles, useArticlesByCategory } from "@/hooks/useArticles";
+import { useI18n } from "@/contexts/I18nContext";
 
 const Index = () => {
-  const featuredNews = getFeaturedNews();
-  const latestNews = getLatestNews(6);
-  const sylhetNews = getNewsByCategory("sylhet");
-  const nationalNews = getNewsByCategory("national");
-  const sportsNews = getNewsByCategory("sports");
+  const { t, lang } = useI18n();
+  const { data: featured } = useFeaturedArticle();
+  const { data: latest = [] } = useLatestArticles(8);
+  const { data: sylhet } = useArticlesByCategory("sylhet", 0, 6);
+  const { data: national } = useArticlesByCategory("national", 0, 6);
+  const { data: sports } = useArticlesByCategory("sports", 0, 6);
 
-  // Get a featured Sylhet news for the special section
-  const sylhetSpecialNews = sylhetNews[0] || featuredNews;
+  const sylhetItems = sylhet?.items || [];
+  const sylhetSpecial = sylhetItems[0] || featured || null;
 
   return (
     <Layout>
+      <Seo
+        title={lang === "en" ? "Sylhety News — Sylhet's most-read online newspaper" : "সিলেটি নিউজ — সিলেটের সর্বাধিক পঠিত অনলাইন সংবাদপত্র"}
+        description={t("siteTagline")}
+        type="website"
+      />
       <div className="container mx-auto px-4 py-6">
-        {/* Hero Section - 3 Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
-          {/* Lead News - 50% */}
-          <div className="lg:col-span-6">
-            <LeadNews news={featuredNews} />
-          </div>
-
-          {/* Top Stories - 25% */}
-          <div className="lg:col-span-3">
-            <TopStories news={latestNews} />
-          </div>
-
-          {/* Sylhet Special - 25% */}
-          <div className="lg:col-span-3">
-            <SylhetSpecial news={sylhetSpecialNews} />
-          </div>
+          <div className="lg:col-span-6"><LeadNews news={featured || latest[0]} /></div>
+          <div className="lg:col-span-3"><TopStories news={latest} /></div>
+          <div className="lg:col-span-3"><SylhetSpecial news={sylhetSpecial} /></div>
         </div>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* News Sections - 2/3 width */}
           <div className="lg:col-span-2 space-y-8">
-            <CategorySection
-              title="সিলেট"
-              news={sylhetNews}
-              categoryPath="/sylhet"
-            />
-            <CategorySection
-              title="জাতীয়"
-              news={nationalNews}
-              categoryPath="/national"
-            />
-            <CategorySection
-              title="খেলাধুলা"
-              news={sportsNews}
-              categoryPath="/sports"
-            />
+            <CategorySection title={t("sylhet")} news={sylhetItems} categoryPath="/sylhet" />
+            <CategorySection title={t("national")} news={national?.items || []} categoryPath="/national" />
+            <CategorySection title={t("sports")} news={sports?.items || []} categoryPath="/sports" />
           </div>
-
-          {/* Right Sidebar - 1/3 width */}
           <div className="lg:col-span-1 space-y-6">
             <WeatherWidget />
-            <LatestNewsSidebar news={latestNews} />
-            <div className="sticky top-20">
-              <FacebookEmbed />
-            </div>
+            <TrendingWidget />
+            <LatestNewsSidebar news={latest.slice(0, 6)} />
+            <NewsletterSignup />
+            <FacebookEmbed />
           </div>
         </div>
       </div>
