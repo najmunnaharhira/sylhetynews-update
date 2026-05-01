@@ -1,300 +1,188 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Card } from '../ui/card';
-import { AlertCircle, Upload, X } from 'lucide-react';
-import { newsService, imageService, categoryService } from '../../services/firebaseService';
-import { NewsArticle, NewsCategory } from '../../types/news';
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Loader2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { slugify } from "@/lib/format";
+import type { Article, CategoryRow } from "@/types/article";
 
-interface AdminNewsFormProps {
-  news?: NewsArticle;
+interface Props {
+  article?: Article;
   onSuccess?: () => void;
 }
 
-export default function AdminNewsForm({ news, onSuccess }: AdminNewsFormProps) {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
-    defaultValues: news || {
-      title: '',
-      content: '',
-      summary: '',
-      category: '',
-      author: '',
-      featured: false,
-      tags: [] as string[],
+interface FormValues {
+  title_bn: string;
+  title_en: string;
+  slug: string;
+  summary: string;
+  content: string;
+  category_id: string;
+  author: string;
+  tags: string;
+  featured: boolean;
+  published: boolean;
+  image_url: string;
+}
+
+export default function AdminNewsForm({ article, onSuccess }: Props) {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+    defaultValues: {
+      title_bn: article?.title_bn || "",
+      title_en: article?.title_en || "",
+      slug: article?.slug || "",
+      summary: article?.summary || "",
+      content: article?.content || "",
+      category_id: article?.category_id || "",
+      author: article?.author || "",
+      tags: (article?.tags || []).join(", "),
+      featured: article?.featured || false,
+      published: article?.published ?? true,
+      image_url: article?.image_url || "",
     },
   });
-
-  const [categories, setCategories] = useState<NewsCategory[]>([]);
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>(news?.imageUrl || '');
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const imgUrl = watch("image_url");
+  const titleBn = watch("title_bn");
 
   useEffect(() => {
-    loadCategories();
+    supabase.from("categories").select("*").order("sort_order").then(({ data }) => setCategories((data as CategoryRow[]) || []));
   }, []);
 
-  const loadCategories = async () => {
-    try {
-      const cats = await categoryService.getAllCategories();
-      setCategories(cats);
-    } catch (err) {
-      console.error('Error loading categories:', err);
+  useEffect(() => {
+    if (!article && titleBn && !watch("slug")) {
+      setValue("slug", slugify(titleBn));
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [titleBn]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `news/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("article-images").upload(path, file, { upsert: false });
+    if (error) {
+      toast.error(error.message);
+      setUploading(false);
+      return;
     }
+    const { data } = supabase.storage.from("article-images").getPublicUrl(path);
+    setValue("image_url", data.publicUrl);
+    setUploading(false);
   };
 
-  const onSubmit = async (data: Record<string, any>) => {
-    try {
-      setError('');
-      setSuccess('');
-      setLoading(true);
-
-      let imageUrl = imagePreview;
-
-      // Upload image if new one selected
-      if (image) {
-        imageUrl = await imageService.uploadImage(image, 'news');
-      }
-
-      const articleData = {
-        title: data.title,
-        content: data.content,
-        summary: data.summary,
-        category: data.category,
-        author: data.author,
-        imageUrl,
-        featured: data.featured || false,
-        tags: data.tags.split(',').map((t: string) => t.trim()),
-        published: data.published || false,
-      };
-
-      if (news?.id) {
-        // Update existing
-        await newsService.updateNews(news.id, articleData);
-        setSuccess('Article updated successfully!');
-      } else {
-        // Create new
-        await newsService.createNews(articleData);
-        setSuccess('Article created successfully!');
-      }
-
-      setTimeout(() => {
-        onSuccess?.();
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Error saving article');
-    } finally {
-      setLoading(false);
+  const onSubmit = async (v: FormValues) => {
+    setLoading(true);
+    const payload = {
+      title_bn: v.title_bn,
+      title_en: v.title_en || null,
+      slug: v.slug || slugify(v.title_bn),
+      summary: v.summary || null,
+      content: v.content,
+      category_id: v.category_id || null,
+      author: v.author || null,
+      tags: v.tags ? v.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+      featured: v.featured,
+      published: v.published,
+      image_url: v.image_url || null,
+    };
+    const { error } = article
+      ? await supabase.from("articles").update(payload).eq("id", article.id)
+      : await supabase.from("articles").insert(payload);
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
     }
+    toast.success(article ? "Updated" : "Created");
+    onSuccess?.();
   };
 
   return (
-    <Card className="p-6 bg-white">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex gap-2">
-            <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-            <p className="text-red-700">{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-700">{success}</p>
-          </div>
-        )}
-
-        {/* Featured Image */}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Featured Image
-          </label>
-          <div className="flex gap-4">
-            {imagePreview && (
-              <div className="relative w-48 h-32 bg-gray-100 rounded-lg overflow-hidden">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-                {image && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImage(null);
-                      setImagePreview(news?.imageUrl || '');
-                    }}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded hover:bg-red-600"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            )}
-            <label className="flex-1">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-indigo-500 transition-colors">
-                <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                <p className="text-sm text-gray-600">
-                  {image ? 'Click to change image' : 'Click or drag image here'}
-                </p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </div>
-            </label>
-          </div>
+          <label className="text-sm font-medium block mb-1">Title (Bangla) *</label>
+          <Input {...register("title_bn", { required: true, maxLength: 500 })} />
+          {errors.title_bn && <p className="text-xs text-destructive">Required</p>}
         </div>
-
-        {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title *
-          </label>
-          <Input
-            {...register('title', { required: 'Title is required' })}
-            placeholder="Article title"
-            className="w-full"
-          />
-          {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-          )}
+          <label className="text-sm font-medium block mb-1">Title (English)</label>
+          <Input {...register("title_en", { maxLength: 500 })} />
         </div>
+      </div>
 
-        {/* Summary */}
+      <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Summary *
-          </label>
-          <textarea
-            {...register('summary', { required: 'Summary is required' })}
-            placeholder="Brief summary (shown in listings)"
-            rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          {errors.summary && (
-            <p className="text-red-500 text-sm mt-1">{errors.summary.message}</p>
-          )}
+          <label className="text-sm font-medium block mb-1">Slug</label>
+          <Input {...register("slug", { maxLength: 120 })} placeholder="auto-generated" />
         </div>
-
-        {/* Content */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Content *
-          </label>
-          <textarea
-            {...register('content', { required: 'Content is required' })}
-            placeholder="Full article content"
-            rows={8}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
-          />
-          {errors.content && (
-            <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
-          )}
-        </div>
-
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category *
-          </label>
-          <select
-            {...register('category', { required: 'Category is required' })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
+          <label className="text-sm font-medium block mb-1">Category</label>
+          <select {...register("category_id")} className="w-full h-10 border border-input bg-background rounded-md px-3 text-sm">
+            <option value="">—</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name_bn} / {c.name_en}</option>)}
           </select>
-          {errors.category && (
-            <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
-          )}
         </div>
+      </div>
 
-        {/* Author */}
+      <div>
+        <label className="text-sm font-medium block mb-1">Summary</label>
+        <textarea {...register("summary", { maxLength: 500 })} rows={2} className="w-full border border-input bg-background rounded-md px-3 py-2 text-sm" />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium block mb-1">Content *</label>
+        <textarea {...register("content", { required: true })} rows={10} className="w-full border border-input bg-background rounded-md px-3 py-2 text-sm font-bengali" />
+        {errors.content && <p className="text-xs text-destructive">Required</p>}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Author
-          </label>
-          <Input
-            {...register('author')}
-            placeholder="Author name"
-            className="w-full"
-          />
+          <label className="text-sm font-medium block mb-1">Author</label>
+          <Input {...register("author", { maxLength: 100 })} />
         </div>
-
-        {/* Tags */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tags
-          </label>
-          <Input
-            {...register('tags')}
-            placeholder="tag1, tag2, tag3"
-            className="w-full"
-          />
-          <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+          <label className="text-sm font-medium block mb-1">Tags (comma-separated)</label>
+          <Input {...register("tags")} placeholder="sylhet, bangladesh" />
         </div>
+      </div>
 
-        {/* Checkboxes */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              {...register('featured')}
-              className="rounded border-gray-300"
-            />
-            <span className="text-sm font-medium text-gray-700">Featured Article</span>
+      <div>
+        <label className="text-sm font-medium block mb-1">Image</label>
+        <div className="flex items-center gap-3">
+          {imgUrl && <img src={imgUrl} alt="" className="w-24 h-16 object-cover rounded border" />}
+          <label className="cursor-pointer flex items-center gap-2 text-sm border border-dashed border-news-border rounded-md px-3 py-2 hover:bg-muted">
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            Upload
+            <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
           </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              {...register('published')}
-              className="rounded border-gray-300"
-              defaultChecked={news?.published || false}
-            />
-            <span className="text-sm font-medium text-gray-700">Published</span>
-          </label>
+          <Input {...register("image_url")} placeholder="or paste image URL" className="flex-1" />
         </div>
+      </div>
 
-        {/* Submit Buttons */}
-        <div className="flex gap-3 pt-4">
-          <Button
-            type="submit"
-            disabled={loading}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-          >
-            {loading ? 'Saving...' : news ? 'Update Article' : 'Create Article'}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onSuccess?.()}
-            className="flex-1"
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </Card>
+      <div className="flex gap-6">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" {...register("featured")} /> Featured
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" {...register("published")} /> Published
+        </label>
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <Button type="submit" disabled={loading} className="flex-1">
+          {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {article ? "Update" : "Create"}
+        </Button>
+        {onSuccess && <Button type="button" variant="outline" onClick={onSuccess} className="flex-1">Cancel</Button>}
+      </div>
+    </form>
   );
 }

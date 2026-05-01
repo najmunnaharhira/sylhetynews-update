@@ -1,208 +1,82 @@
-import { useState, useEffect, FormEvent } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Card } from '../ui/card';
-import { Edit2, Trash2, Plus, AlertCircle } from 'lucide-react';
-import { categoryService } from '../../services/firebaseService';
-import { NewsCategory } from '../../types/news';
+import { useEffect, useState } from "react";
+import { Edit2, Trash2, Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { slugify } from "@/lib/format";
+import type { CategoryRow } from "@/types/article";
 
 export default function AdminCategoryManager() {
-  const [categories, setCategories] = useState<NewsCategory[]>([]);
+  const [items, setItems] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', slug: '' });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [editing, setEditing] = useState<CategoryRow | null>(null);
+  const [form, setForm] = useState({ name_bn: "", name_en: "", slug: "", sort_order: 0 });
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      const cats = await categoryService.getAllCategories();
-      setCategories(cats);
-    } catch (err) {
-      console.error('Error loading categories:', err);
-      setError('Failed to load categories');
-    } finally {
-      setLoading(false);
-    }
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("categories").select("*").order("sort_order");
+    setItems((data as CategoryRow[]) || []);
+    setLoading(false);
   };
+  useEffect(() => { load(); }, []);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (!formData.name.trim()) {
-      setError('Category name is required');
-      return;
-    }
-
-    const slug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-');
-
-    try {
-      if (editingId) {
-        // Update
-        await categoryService.updateCategory(editingId, {
-          name: formData.name,
-          slug,
-        });
-        setSuccess('Category updated successfully!');
-      } else {
-        // Create
-        await categoryService.createCategory({
-          name: formData.name,
-          slug,
-        });
-        setSuccess('Category created successfully!');
-      }
-
-      setFormData({ name: '', slug: '' });
-      setEditingId(null);
-      loadCategories();
-
-      setTimeout(() => setSuccess(''), 2000);
-    } catch (err: any) {
-      setError(err.message || 'Error saving category');
-    }
+    if (!form.name_bn) return toast.error("Name (Bangla) required");
+    const payload = { ...form, slug: form.slug || slugify(form.name_en || form.name_bn) };
+    const { error } = editing
+      ? await supabase.from("categories").update(payload).eq("id", editing.id)
+      : await supabase.from("categories").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success(editing ? "Updated" : "Created");
+    setForm({ name_bn: "", name_en: "", slug: "", sort_order: 0 });
+    setEditing(null);
+    load();
   };
 
-  const handleEdit = (category: NewsCategory) => {
-    setEditingId(category.id);
-    setFormData({
-      name: category.name,
-      slug: category.slug,
-    });
+  const remove = async (id: string) => {
+    if (!confirm("Delete category?")) return;
+    const { error } = await supabase.from("categories").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else load();
   };
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      try {
-        await categoryService.deleteCategory(id);
-        setSuccess('Category deleted successfully!');
-        loadCategories();
-        setTimeout(() => setSuccess(''), 2000);
-      } catch (err: any) {
-        setError(err.message || 'Error deleting category');
-      }
-    }
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setFormData({ name: '', slug: '' });
-    setError('');
-  };
-
-  if (loading) {
-    return <div className="text-center py-8 text-gray-600">Loading...</div>;
-  }
 
   return (
     <div className="space-y-6">
-      {/* Form */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {editingId ? 'Edit Category' : 'Add New Category'}
-        </h3>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex gap-2">
-            <AlertCircle className="text-red-500 flex-shrink-0" size={18} />
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-700 text-sm">{success}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category Name *
-            </label>
-            <Input
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., Breaking News, Sports, Technology"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              URL Slug
-            </label>
-            <Input
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              placeholder="Auto-generated from name"
-            />
-            <p className="text-xs text-gray-500 mt-1">Leave blank to auto-generate</p>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <Button
-              type="submit"
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-            >
-              {editingId ? 'Update Category' : 'Add Category'}
-            </Button>
-            {editingId && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-            )}
+      <Card className="p-4">
+        <h3 className="font-bold mb-3">{editing ? "Edit category" : "Add category"}</h3>
+        <form onSubmit={submit} className="grid md:grid-cols-4 gap-2">
+          <Input placeholder="বাংলা নাম" value={form.name_bn} onChange={(e) => setForm({ ...form, name_bn: e.target.value })} />
+          <Input placeholder="English name" value={form.name_en} onChange={(e) => setForm({ ...form, name_en: e.target.value })} />
+          <Input placeholder="slug (auto)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+          <Input type="number" placeholder="Sort" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
+          <div className="md:col-span-4 flex gap-2">
+            <Button type="submit">{editing ? "Update" : "Add"}</Button>
+            {editing && <Button type="button" variant="outline" onClick={() => { setEditing(null); setForm({ name_bn: "", name_en: "", slug: "", sort_order: 0 }); }}>Cancel</Button>}
           </div>
         </form>
       </Card>
 
-      {/* Categories List */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
-        {categories.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-600">No categories yet. Create your first one!</p>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {categories.map((category) => (
-              <Card key={category.id} className="p-4 flex justify-between items-center">
-                <div>
-                  <h4 className="font-medium text-gray-900">{category.name}</h4>
-                  <p className="text-sm text-gray-600">{category.slug}</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEdit(category)}
-                  >
-                    <Edit2 className="text-blue-600" size={18} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDelete(category.id)}
-                  >
-                    <Trash2 className="text-red-600" size={18} />
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="text-center py-6"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
+      ) : (
+        <div className="grid gap-2">
+          {items.map((c) => (
+            <Card key={c.id} className="p-3 flex justify-between items-center">
+              <div>
+                <div className="font-bengali font-semibold">{c.name_bn} <span className="text-sm text-news-subtext">/ {c.name_en}</span></div>
+                <div className="text-xs text-news-subtext">/{c.slug} · order {c.sort_order}</div>
+              </div>
+              <div className="flex gap-1">
+                <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setForm({ name_bn: c.name_bn, name_en: c.name_en, slug: c.slug, sort_order: c.sort_order }); }}><Edit2 className="w-4 h-4" /></Button>
+                <Button size="icon" variant="ghost" onClick={() => remove(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
