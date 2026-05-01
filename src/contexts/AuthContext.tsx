@@ -1,92 +1,71 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User as FirebaseUser, onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth, db } from '../config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { User } from '../types/news';
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-interface AuthContextType {
-  user: FirebaseUser | null;
-  userData: User | null;
+interface AuthCtx {
+  user: User | null;
+  session: Session | null;
   isAdmin: boolean;
+  isEditor: boolean;
   loading: boolean;
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
+const Ctx = createContext<AuthCtx>({
   user: null,
-  userData: null,
+  session: null,
   isAdmin: false,
+  isEditor: false,
   loading: true,
   logout: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [userData, setUserData] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+
+  const fetchRoles = async (uid: string) => {
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+    setRoles((data || []).map((r: any) => r.role));
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          setUser(firebaseUser);
-
-          // Fetch user data from Firestore
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-
-          if (userDocSnap.exists()) {
-            const data = userDocSnap.data() as User;
-            setUserData(data);
-            setIsAdmin(data.role === 'admin' || data.role === 'editor');
-          } else {
-            // User doesn't exist in Firestore, create basic entry
-            const adminEmails = import.meta.env.VITE_ADMIN_EMAILS?.split(',') || [];
-            const role = adminEmails.includes(firebaseUser.email)
-              ? 'admin'
-              : 'viewer';
-
-            setUserData({
-              id: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || '',
-              photoURL: firebaseUser.photoURL || '',
-              role,
-              createdAt: new Date(),
-            });
-            setIsAdmin(role === 'admin');
-          }
-        } else {
-          setUser(null);
-          setUserData(null);
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
+    // Listener first
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) {
+        // Defer DB call
+        setTimeout(() => fetchRoles(s.user.id), 0);
+      } else {
+        setRoles([]);
       }
     });
 
-    return () => unsubscribe();
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) fetchRoles(s.user.id);
+      setLoading(false);
+    });
+
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const logout = async () => {
-    await signOut(auth);
+    await supabase.auth.signOut();
   };
 
+  const isAdmin = roles.includes("admin");
+  const isEditor = isAdmin || roles.includes("editor");
+
   return (
-    <AuthContext.Provider value={{ user, userData, isAdmin, loading, logout }}>
+    <Ctx.Provider value={{ user, session, isAdmin, isEditor, loading, logout }}>
       {children}
-    </AuthContext.Provider>
+    </Ctx.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(Ctx);
