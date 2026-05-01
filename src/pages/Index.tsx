@@ -4,6 +4,7 @@ import TopStories from "@/components/news/TopStories";
 import SylhetSpecial from "@/components/news/SylhetSpecial";
 import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
 import FacebookEmbed from "@/components/news/FacebookEmbed";
+import WeatherWidget from "@/components/news/WeatherWidget";
 import CategorySection from "@/components/news/CategorySection";
 import {
   getFeaturedNews,
@@ -65,6 +66,7 @@ const Index = () => {
 
           {/* Right Sidebar - 1/3 width */}
           <div className="lg:col-span-1 space-y-6">
+            <WeatherWidget />
             <LatestNewsSidebar news={latestNews} />
             <div className="sticky top-20">
               <FacebookEmbed />
