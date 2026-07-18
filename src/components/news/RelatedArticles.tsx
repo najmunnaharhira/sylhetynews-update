@@ -10,7 +10,7 @@ interface Props {
 }
 
 const RelatedArticles = ({ categoryId, excludeId }: Props) => {
-  const { t } = useI18n();
+  const { lang } = useI18n();
   const { data = [] } = useQuery({
     queryKey: ["related", categoryId, excludeId],
     enabled: !!categoryId,
@@ -35,7 +35,7 @@ const RelatedArticles = ({ categoryId, excludeId }: Props) => {
   return (
     <section className="mt-8" aria-labelledby="related-heading">
       <h2 id="related-heading" className="section-title mb-4">
-        {t("relatedNews") || "সম্পর্কিত সংবাদ"}
+        {lang === "en" ? "Related News" : "সম্পর্কিত সংবাদ"}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {data.map((a) => (
