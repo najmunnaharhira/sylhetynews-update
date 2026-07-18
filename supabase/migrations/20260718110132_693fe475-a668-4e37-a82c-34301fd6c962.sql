@@ -1,0 +1,1 @@
+UPDATE public.categories SET slug='cumilla', name_bn='কুমিল্লা', name_en='Cumilla' WHERE slug='sylhet';
