@@ -9,6 +9,7 @@ import WeatherWidget from "@/components/news/WeatherWidget";
 import CategorySection from "@/components/news/CategorySection";
 import TrendingWidget from "@/components/news/TrendingWidget";
 import NewsletterSignup from "@/components/news/NewsletterSignup";
+import AdSlot from "@/components/AdSlot";
 import Seo from "@/components/Seo";
 import { useFeaturedArticle, useLatestArticles, useArticlesByCategory } from "@/hooks/useArticles";
 import { useI18n } from "@/contexts/I18nContext";
