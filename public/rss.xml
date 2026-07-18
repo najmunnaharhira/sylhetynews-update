@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-  <title>সিলেটি নিউজ</title>
+  <title>কুমিল্লা নিউজ</title>
   <link>https://sylhetlynews.lovable.app</link>
-  <description>সিলেটের সর্বাধিক পঠিত অনলাইন সংবাদপত্র</description>
+  <description>কুমিল্লার সর্বাধিক পঠিত অনলাইন সংবাদপত্র</description>
   <language>bn</language>
-  <lastBuildDate>Sat, 18 Jul 2026 10:58:48 GMT</lastBuildDate>
+  <lastBuildDate>Sat, 18 Jul 2026 11:03:11 GMT</lastBuildDate>
   <atom:link href="https://sylhetlynews.lovable.app/rss.xml" rel="self" type="application/rss+xml" />
   <item>
     <title>সিলেটে ঐতিহাসিক বন্যার পর পুনর্বাসন কার্যক্রম শুরু</title>
@@ -13,7 +13,7 @@
     <guid isPermaLink="true">https://sylhetlynews.lovable.app/news/sylhet-flood-rehabilitation-2026</guid>
     <pubDate>Thu, 30 Apr 2026 06:38:28 GMT</pubDate>
     <description>সিলেট বিভাগে সাম্প্রতিক বন্যায় ক্ষতিগ্রস্ত পরিবারগুলোর জন্য পুনর্বাসন কার্যক্রম পুরোদমে চলছে।</description>
-    <category>সিলেট</category>
+    <category>কুমিল্লা</category>
     <dc:creator>রহিম উদ্দিন</dc:creator>
     <enclosure url="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&amp;q=80" type="image/jpeg" />
   </item>
@@ -53,7 +53,7 @@
     <guid isPermaLink="true">https://sylhetlynews.lovable.app/news/sylhet-airport-new-routes</guid>
     <pubDate>Sun, 26 Apr 2026 06:38:28 GMT</pubDate>
     <description>দুবাই ও সিঙ্গাপুরে সরাসরি ফ্লাইট চালু হয়েছে।</description>
-    <category>সিলেট</category>
+    <category>কুমিল্লা</category>
     <dc:creator>সাবরিনা আক্তার</dc:creator>
     <enclosure url="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&amp;q=80" type="image/jpeg" />
   </item>
@@ -73,7 +73,7 @@
     <guid isPermaLink="true">https://sylhetlynews.lovable.app/news/sylhet-it-park-announcement</guid>
     <pubDate>Fri, 24 Apr 2026 06:38:28 GMT</pubDate>
     <description>হাজারো তরুণের কর্মসংস্থানের সম্ভাবনা।</description>
-    <category>সিলেট</category>
+    <category>কুমিল্লা</category>
     <dc:creator>তানভীর আহমেদ</dc:creator>
     <enclosure url="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&amp;q=80" type="image/jpeg" />
   </item>

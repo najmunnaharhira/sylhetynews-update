@@ -47,7 +47,7 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-gradient-to-br from-news-slate to-primary flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 shadow-xl">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold font-bengali mb-1">সিলেটি নিউজ</h1>
+          <h1 className="text-2xl font-bold font-bengali mb-1">কুমিল্লা নিউজ</h1>
           <p className="text-sm text-news-subtext">{isSignUp ? "Create account" : "Sign in"}</p>
         </div>
 

@@ -17,7 +17,7 @@ const SylhetSpecial = ({ news }: { news: Article | null | undefined }) => {
   return (
     <div className="bg-card border border-news-border rounded-md overflow-hidden h-full flex flex-col">
       <div className="bg-primary px-4 py-3">
-        <h2 className="text-white font-bengali font-bold text-base">{t("sylhetSpecial")}</h2>
+        <h2 className="text-white font-bengali font-bold text-base">{t("cumillaSpecial")}</h2>
       </div>
       <Link to={`/news/${news.slug}`} className="flex-1 group">
         <div className="relative overflow-hidden">

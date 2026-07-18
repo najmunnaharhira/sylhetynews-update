@@ -25,7 +25,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/sylhet" element={<CategoryPage />} />
+              <Route path="/cumilla" element={<CategoryPage />} />
               <Route path="/national" element={<CategoryPage />} />
               <Route path="/politics" element={<CategoryPage />} />
               <Route path="/expat" element={<CategoryPage />} />

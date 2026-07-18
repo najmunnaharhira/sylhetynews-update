@@ -46,7 +46,7 @@ const PhotoCard = () => {
       ctx.fillStyle = "#fff";
       ctx.font = "bold 52px 'Hind Siliguri', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(lang === "en" ? "Sylhety News" : "সিলেটি নিউজ", size / 2, 80);
+      ctx.fillText(lang === "en" ? "Cumilla News" : "কুমিল্লা নিউজ", size / 2, 80);
       ctx.strokeStyle = "rgba(153,27,27,0.9)";
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(size/2-100, 100); ctx.lineTo(size/2+100, 100); ctx.stroke();
@@ -81,7 +81,7 @@ const PhotoCard = () => {
       ctx.textAlign = "right";
       ctx.fillText(formatDate(selected.published_at, lang), size - 50, size - 45);
       ctx.textAlign = "left";
-      ctx.fillText("sylhetynews.com", 50, size - 45);
+      ctx.fillText("cumillanews.com", 50, size - 45);
 
       setGenerated(canvas.toDataURL("image/png"));
       setBusy(false);

@@ -73,7 +73,7 @@ const NewsDetail = () => {
     author: news.author ? [{ "@type": "Person", name: news.author }] : undefined,
     publisher: {
       "@type": "Organization",
-      name: "Sylhety News",
+      name: "Cumilla News",
     },
     description: news.summary || undefined,
     articleSection: cat,
@@ -82,7 +82,7 @@ const NewsDetail = () => {
   return (
     <Layout>
       <Seo
-        title={`${title} | ${lang === "en" ? "Sylhety News" : "সিলেটি নিউজ"}`}
+        title={`${title} | ${lang === "en" ? "Cumilla News" : "কুমিল্লা নিউজ"}`}
         description={news.summary || title}
         image={news.image_url || undefined}
         type="article"

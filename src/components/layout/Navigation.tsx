@@ -10,7 +10,7 @@ const Navigation = () => {
 
   const items = [
     { name: t("home"), path: "/" },
-    { name: t("sylhet"), path: "/sylhet" },
+    { name: t("cumilla"), path: "/cumilla" },
     { name: t("national"), path: "/national" },
     { name: t("politics"), path: "/politics" },
     { name: t("expat"), path: "/expat" },

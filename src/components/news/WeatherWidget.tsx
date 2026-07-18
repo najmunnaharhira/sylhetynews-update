@@ -1,14 +1,14 @@
 import { Cloud, Droplets, Wind, Thermometer } from "lucide-react";
 
 const WeatherWidget = () => {
-  // Static weather data for Sylhet
+  // Static weather data for Cumilla
   // In production, this would fetch from a weather API
   const weatherData = {
     temp: "২৮",
     condition: "আংশিক মেঘলা",
     humidity: "৭৫",
     wind: "১২",
-    location: "সিলেট",
+    location: "কুমিল্লা",
   };
 
   return (

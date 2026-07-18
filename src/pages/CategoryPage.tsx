@@ -15,7 +15,7 @@ const PAGE_SIZE = 10;
 
 const CategoryPage = () => {
   const location = useLocation();
-  const slug = location.pathname.replace("/", "") || "sylhet";
+  const slug = location.pathname.replace("/", "") || "cumilla";
   const { lang, t } = useI18n();
   const [page, setPage] = useState(0);
   const { data: cats = [] } = useCategories();
@@ -26,7 +26,7 @@ const CategoryPage = () => {
 
   return (
     <Layout>
-      <Seo title={`${title} | ${lang === "en" ? "Sylhety News" : "সিলেটি নিউজ"}`} description={t("siteTagline")} />
+      <Seo title={`${title} | ${lang === "en" ? "Cumilla News" : "কুমিল্লা নিউজ"}`} description={t("siteTagline")} />
       <div className="container mx-auto px-4 py-6">
         <h1 className="section-title text-2xl mb-6">{title}</h1>
 

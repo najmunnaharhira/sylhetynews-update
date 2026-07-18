@@ -18,7 +18,7 @@ interface SitemapEntry {
 
 const staticEntries: SitemapEntry[] = [
   { path: "/", changefreq: "hourly", priority: "1.0" },
-  { path: "/sylhet", changefreq: "hourly", priority: "0.9" },
+  { path: "/cumilla", changefreq: "hourly", priority: "0.9" },
   { path: "/national", changefreq: "hourly", priority: "0.9" },
   { path: "/politics", changefreq: "hourly", priority: "0.8" },
   { path: "/expat", changefreq: "hourly", priority: "0.8" },
@@ -107,9 +107,9 @@ function buildRss(articles: ArticleRow[]) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
-  <title>সিলেটি নিউজ</title>
+  <title>কুমিল্লা নিউজ</title>
   <link>${BASE_URL}</link>
-  <description>সিলেটের সর্বাধিক পঠিত অনলাইন সংবাদপত্র</description>
+  <description>কুমিল্লার সর্বাধিক পঠিত অনলাইন সংবাদপত্র</description>
   <language>bn</language>
   <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
   <atom:link href="${BASE_URL}/rss.xml" rel="self" type="application/rss+xml" />

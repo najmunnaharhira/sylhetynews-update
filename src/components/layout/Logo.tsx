@@ -18,11 +18,11 @@ const Logo = () => {
           <Link to="/" className="flex flex-col items-center">
             <img 
               src={logoImage} 
-              alt="Sylhety News" 
+              alt="Cumilla News" 
               className="h-14 md:h-16 w-auto"
             />
             <p className="text-xs text-news-subtext font-bengali mt-1 tracking-wide">
-              সিলেটের সর্বাধিক পঠিত অনলাইন সংবাদপত্র
+              কুমিল্লার সর্বাধিক পঠিত অনলাইন সংবাদপত্র
             </p>
           </Link>
 
