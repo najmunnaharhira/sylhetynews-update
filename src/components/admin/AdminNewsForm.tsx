@@ -150,7 +150,7 @@ export default function AdminNewsForm({ article, onSuccess }: Props) {
         </div>
         <div>
           <label className="text-sm font-medium block mb-1">Tags (comma-separated)</label>
-          <Input {...register("tags")} placeholder="sylhet, bangladesh" />
+          <Input {...register("tags")} placeholder="cumilla, bangladesh" />
         </div>
       </div>
 

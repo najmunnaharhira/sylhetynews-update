@@ -56,7 +56,7 @@ export default function AdminDashboard() {
           <div className="p-4 border-b border-white/10">
             <Link to="/" className="flex items-center gap-2 hover:text-primary">
               <Home className="w-5 h-5" />
-              <span className="font-bengali font-bold">সিলেটি নিউজ</span>
+              <span className="font-bengali font-bold">কুমিল্লা নিউজ</span>
             </Link>
             <p className="text-xs text-white/60 font-bengali mt-1">অ্যাডমিন প্যানেল</p>
           </div>

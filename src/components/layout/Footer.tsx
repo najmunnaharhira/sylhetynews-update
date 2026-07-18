@@ -9,10 +9,10 @@ const Footer = () => {
           {/* About Section */}
           <div>
             <h3 className="text-xl font-bold font-bengali mb-4 text-primary">
-              সিলেটি নিউজ
+              কুমিল্লা নিউজ
             </h3>
             <p className="text-sm font-bengali text-white/80 leading-relaxed">
-              সিলেটি নিউজ হলো সিলেটের একটি জনপ্রিয় অনলাইন সংবাদ পোর্টাল। আমরা সিলেট, বাংলাদেশ এবং আন্তর্জাতিক সব খবর প্রকাশ করি।
+              কুমিল্লা নিউজ হলো কুমিল্লার একটি জনপ্রিয় অনলাইন সংবাদ পোর্টাল। আমরা কুমিল্লা, বাংলাদেশ এবং আন্তর্জাতিক সব খবর প্রকাশ করি।
             </p>
           </div>
 
@@ -26,8 +26,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/sylhet" className="text-white/80 hover:text-primary transition-colors">
-                  সিলেট
+                <Link to="/cumilla" className="text-white/80 hover:text-primary transition-colors">
+                  কুমিল্লা
                 </Link>
               </li>
               <li>
@@ -49,7 +49,7 @@ const Footer = () => {
             <ul className="space-y-3 font-bengali text-sm">
               <li className="flex items-center gap-2 text-white/80">
                 <MapPin className="w-4 h-4 flex-shrink-0 text-primary" />
-                <span>সিলেট, বাংলাদেশ</span>
+                <span>কুমিল্লা, বাংলাদেশ</span>
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Phone className="w-4 h-4 flex-shrink-0 text-primary" />
@@ -57,7 +57,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Mail className="w-4 h-4 flex-shrink-0 text-primary" />
-                <span>info@sylhetynews.com</span>
+                <span>info@cumillanews.com</span>
               </li>
             </ul>
             <div className="flex items-center gap-4 mt-5">
@@ -66,13 +66,14 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all"
+                aria-label="Facebook"
               >
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all">
+              <a href="#" aria-label="Twitter" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all">
                 <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all">
+              <a href="#" aria-label="Youtube" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/80 hover:bg-primary hover:text-white transition-all">
                 <Youtube className="w-4 h-4" />
               </a>
             </div>
@@ -80,7 +81,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-6 text-center font-bengali text-sm text-white/60">
-          <p>© {new Date().getFullYear()} সিলেটি নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
+          <p>© {new Date().getFullYear()} কুমিল্লা নিউজ। সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
       </div>
     </footer>

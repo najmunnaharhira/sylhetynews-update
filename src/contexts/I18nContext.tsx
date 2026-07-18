@@ -5,7 +5,7 @@ export type Lang = "bn" | "en";
 const dict = {
   bn: {
     home: "প্রচ্ছদ",
-    sylhet: "সিলেট",
+    cumilla: "কুমিল্লা",
     national: "জাতীয়",
     politics: "রাজনীতি",
     expat: "প্রবাস",
@@ -14,7 +14,7 @@ const dict = {
     photocard: "ফটোকার্ড",
     latestNews: "সর্বশেষ সংবাদ",
     topStories: "শীর্ষ সংবাদ",
-    sylhetSpecial: "সিলেট বিশেষ",
+    cumillaSpecial: "কুমিল্লা বিশেষ",
     trending: "জনপ্রিয়",
     seeMore: "আরও দেখুন",
     search: "সংবাদ অনুসন্ধান করুন...",
@@ -39,11 +39,11 @@ const dict = {
     noArticles: "এই বিভাগে কোনো সংবাদ নেই।",
     weather: "আবহাওয়া",
     menu: "মেনু",
-    siteTagline: "সিলেটের সর্বাধিক পঠিত অনলাইন সংবাদপত্র",
+    siteTagline: "কুমিল্লার সর্বাধিক পঠিত অনলাইন সংবাদপত্র",
   },
   en: {
     home: "Home",
-    sylhet: "Sylhet",
+    cumilla: "Cumilla",
     national: "National",
     politics: "Politics",
     expat: "Expat",
@@ -52,7 +52,7 @@ const dict = {
     photocard: "PhotoCard",
     latestNews: "Latest News",
     topStories: "Top Stories",
-    sylhetSpecial: "Sylhet Special",
+    cumillaSpecial: "Cumilla Special",
     trending: "Trending",
     seeMore: "See more",
     search: "Search news...",
@@ -77,7 +77,7 @@ const dict = {
     noArticles: "No articles in this category.",
     weather: "Weather",
     menu: "Menu",
-    siteTagline: "Sylhet's most-read online newspaper",
+    siteTagline: "Cumilla's most-read online newspaper",
   },
 } as const;
 

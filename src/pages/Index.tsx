@@ -18,17 +18,17 @@ const Index = () => {
   const { t, lang } = useI18n();
   const { data: featured } = useFeaturedArticle();
   const { data: latest = [] } = useLatestArticles(8);
-  const { data: sylhet } = useArticlesByCategory("sylhet", 0, 6);
+  const { data: cumilla } = useArticlesByCategory("cumilla", 0, 6);
   const { data: national } = useArticlesByCategory("national", 0, 6);
   const { data: sports } = useArticlesByCategory("sports", 0, 6);
 
-  const sylhetItems = sylhet?.items || [];
-  const sylhetSpecial = sylhetItems[0] || featured || null;
+  const cumillaItems = cumilla?.items || [];
+  const cumillaSpecial = cumillaItems[0] || featured || null;
 
   return (
     <Layout>
       <Seo
-        title={lang === "en" ? "Sylhety News — Sylhet's most-read online newspaper" : "সিলেটি নিউজ — সিলেটের সর্বাধিক পঠিত অনলাইন সংবাদপত্র"}
+        title={lang === "en" ? "Cumilla News — Cumilla's most-read online newspaper" : "কুমিল্লা নিউজ — কুমিল্লার সর্বাধিক পঠিত অনলাইন সংবাদপত্র"}
         description={t("siteTagline")}
         type="website"
       />
@@ -36,14 +36,14 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-8">
           <div className="lg:col-span-6"><LeadNews news={featured || latest[0]} /></div>
           <div className="lg:col-span-3"><TopStories news={latest} /></div>
-          <div className="lg:col-span-3"><SylhetSpecial news={sylhetSpecial} /></div>
+          <div className="lg:col-span-3"><SylhetSpecial news={cumillaSpecial} /></div>
         </div>
 
         <AdSlot size="leaderboard" className="mb-8" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-8">
-            <CategorySection title={t("sylhet")} news={sylhetItems} categoryPath="/sylhet" />
+            <CategorySection title={t("cumilla")} news={cumillaItems} categoryPath="/cumilla" />
             <AdSlot size="leaderboard" />
             <CategorySection title={t("national")} news={national?.items || []} categoryPath="/national" />
             <CategorySection title={t("sports")} news={sports?.items || []} categoryPath="/sports" />
