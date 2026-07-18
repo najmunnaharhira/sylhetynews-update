@@ -5,6 +5,8 @@ import Layout from "@/components/layout/Layout";
 import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
 import TrendingWidget from "@/components/news/TrendingWidget";
 import Comments from "@/components/news/Comments";
+import RelatedArticles from "@/components/news/RelatedArticles";
+import AdSlot from "@/components/AdSlot";
 import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { useArticleBySlug, useLatestArticles, incrementViews } from "@/hooks/useArticles";
