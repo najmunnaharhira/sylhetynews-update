@@ -5,6 +5,8 @@ import Layout from "@/components/layout/Layout";
 import LatestNewsSidebar from "@/components/news/LatestNewsSidebar";
 import TrendingWidget from "@/components/news/TrendingWidget";
 import Comments from "@/components/news/Comments";
+import RelatedArticles from "@/components/news/RelatedArticles";
+import AdSlot from "@/components/AdSlot";
 import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { useArticleBySlug, useLatestArticles, incrementViews } from "@/hooks/useArticles";
@@ -124,13 +126,19 @@ const NewsDetail = () => {
               </div>
             </div>
 
+            <AdSlot size="leaderboard" className="my-6" />
+
+            <RelatedArticles categoryId={news.category_id} excludeId={news.id} />
+
             <Comments articleId={news.id} />
           </article>
 
           <div className="lg:col-span-1 space-y-6">
             <div className="sticky top-20 space-y-6">
+              <AdSlot size="rectangle" />
               <TrendingWidget />
               <LatestNewsSidebar news={latest} />
+              <AdSlot size="rectangle" />
             </div>
           </div>
         </div>

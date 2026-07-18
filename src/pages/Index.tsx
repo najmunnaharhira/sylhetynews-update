@@ -9,6 +9,7 @@ import WeatherWidget from "@/components/news/WeatherWidget";
 import CategorySection from "@/components/news/CategorySection";
 import TrendingWidget from "@/components/news/TrendingWidget";
 import NewsletterSignup from "@/components/news/NewsletterSignup";
+import AdSlot from "@/components/AdSlot";
 import Seo from "@/components/Seo";
 import { useFeaturedArticle, useLatestArticles, useArticlesByCategory } from "@/hooks/useArticles";
 import { useI18n } from "@/contexts/I18nContext";
@@ -38,14 +39,18 @@ const Index = () => {
           <div className="lg:col-span-3"><SylhetSpecial news={sylhetSpecial} /></div>
         </div>
 
+        <AdSlot size="leaderboard" className="mb-8" />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-8">
             <CategorySection title={t("sylhet")} news={sylhetItems} categoryPath="/sylhet" />
+            <AdSlot size="leaderboard" />
             <CategorySection title={t("national")} news={national?.items || []} categoryPath="/national" />
             <CategorySection title={t("sports")} news={sports?.items || []} categoryPath="/sports" />
           </div>
           <div className="lg:col-span-1 space-y-6">
             <WeatherWidget />
+            <AdSlot size="rectangle" />
             <TrendingWidget />
             <LatestNewsSidebar news={latest.slice(0, 6)} />
             <NewsletterSignup />
